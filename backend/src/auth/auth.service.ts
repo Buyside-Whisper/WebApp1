@@ -1,4 +1,9 @@
-import { Injectable, Logger, OnModuleInit, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  OnModuleInit,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -20,13 +25,14 @@ export class AuthService implements OnModuleInit {
     private readonly config: ConfigService,
   ) {}
 
-  // Local development: make sure the one superuser exists (the person who sells the app).
   async onModuleInit(): Promise<void> {
     if (await this.usersRepository.existsBy({ role: UserRole.SUPERUSER })) {
       return;
     }
-    const username = this.config.get<string>('SUPERUSER_USERNAME') ?? 'superuser';
-    const password = this.config.get<string>('SUPERUSER_PASSWORD') ?? 'superuser';
+    const username =
+      this.config.get<string>('SUPERUSER_USERNAME') ?? 'superuser';
+    const password =
+      this.config.get<string>('SUPERUSER_PASSWORD') ?? 'superuser';
     await this.usersRepository.save(
       this.usersRepository.create({
         username,
@@ -38,22 +44,38 @@ export class AuthService implements OnModuleInit {
         employeeId: null,
       }),
     );
-    this.logger.log(`Created the superuser "${username}" (set SUPERUSER_PASSWORD in .env to change the password)`);
+    this.logger.log(
+      `Created the superuser "${username}" (set SUPERUSER_PASSWORD in .env to change the password)`,
+    );
   }
 
-  // `superuser` picks which login page is being used; the two never accept each other's accounts.
-  async login(username: string, password: string, superuser: boolean): Promise<{ token: string; user: SessionUser }> {
+  async login(
+    username: string,
+    password: string,
+    superuser: boolean,
+  ): Promise<{ token: string; user: SessionUser }> {
     const user = await this.usersRepository.findOne({
       where: { username: username.trim() },
       relations: { company: true, employee: true },
     });
-    const authUser = user && verifyPassword(password, user.passwordHash) ? this.toAuthUser(user) : null;
+    const authUser =
+      user && verifyPassword(password, user.passwordHash)
+        ? this.toAuthUser(user)
+        : null;
 
-    if (!user || !authUser || (user.role === UserRole.SUPERUSER) !== superuser) {
+    if (
+      !user ||
+      !authUser ||
+      (user.role === UserRole.SUPERUSER) !== superuser
+    ) {
       throw new UnauthorizedException('Wrong username or password');
     }
 
-    await this.audit.record(authUser, 'auth.login', `${authUser.displayName} logged in`);
+    await this.audit.record(
+      authUser,
+      'auth.login',
+      `${authUser.displayName} logged in`,
+    );
     return { token: signToken(user.id), user: toSessionUser(authUser) };
   }
 

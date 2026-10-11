@@ -58,7 +58,14 @@ const ERROR_MESSAGES: Record<string, string> = {
 
 @Component({
   selector: 'app-employees-list',
-  imports: [CredentialsModal, DatePipe, FormsModule, LucideAngularModule, Modal, ReactiveFormsModule],
+  imports: [
+    CredentialsModal,
+    DatePipe,
+    FormsModule,
+    LucideAngularModule,
+    Modal,
+    ReactiveFormsModule,
+  ],
   templateUrl: './employees-list.html',
   styleUrl: './employees-list.css',
 })
@@ -81,9 +88,13 @@ export class EmployeesList implements OnInit {
   // at least one of them.
   protected readonly places = signal<{ id: string; name: string }[]>([]);
   protected readonly placeIds = signal<string[]>([]);
-  protected readonly placeKind = computed(() => (this.auth.user()?.module === 'wms' ? 'warehouse' : 'store'));
+  protected readonly placeKind = computed(() =>
+    this.auth.user()?.module === 'wms' ? 'warehouse' : 'store',
+  );
   protected readonly ownModule = computed(() => this.auth.user()?.module ?? null);
-  protected readonly availableModules = computed<AppModule[]>(() => this.auth.user()?.companyModules ?? []);
+  protected readonly availableModules = computed<AppModule[]>(
+    () => this.auth.user()?.companyModules ?? [],
+  );
   // Roles this user may give to a new person.
   protected readonly availableRoles = computed<EmployeeRole[]>(() => {
     switch (this.auth.user()?.role) {
@@ -109,7 +120,6 @@ export class EmployeesList implements OnInit {
     }
   });
 
-  // Shown once after a login is issued.
   protected readonly credentials = signal<Credentials | null>(null);
   protected readonly loginError = signal('');
 
@@ -123,7 +133,6 @@ export class EmployeesList implements OnInit {
   protected readonly isAddOpen = signal(false);
   protected readonly serverError = signal('');
 
-  // ── Search and filter ─────────────────────────────────────────────────────
   protected readonly search = signal('');
   protected readonly roleFilter = signal<'all' | 'none' | EmployeeRole>('all');
 
@@ -199,20 +208,21 @@ export class EmployeesList implements OnInit {
       if (this.placeKind() === 'warehouse') {
         this.warehouseService
           .list()
-          .subscribe((list) => this.places.set(list.map((w) => ({ id: w.id, name: `${w.code} ${w.name}` }))));
+          .subscribe((list) =>
+            this.places.set(list.map((w) => ({ id: w.id, name: `${w.code} ${w.name}` }))),
+          );
       } else {
-        this.storeService.list().subscribe((list) => this.places.set(list.map((s) => ({ id: s.id, name: s.name }))));
+        this.storeService
+          .list()
+          .subscribe((list) => this.places.set(list.map((s) => ({ id: s.id, name: s.name }))));
       }
     }
   }
 
-  // Only the newest request may replace the list: answers can arrive out of order when several
-  // reloads fire close together (adding someone reloads, then issuing their login reloads again).
   private latestLoad = 0;
 
   loadEmployees(): void {
     const load = ++this.latestLoad;
-    // Reloads after the first one happen quietly, without flashing "Loading…" over the table.
     if (this.employees().length === 0) {
       this.isLoading.set(true);
     }
@@ -307,15 +317,17 @@ export class EmployeesList implements OnInit {
     );
   }
 
-  // Which rows this user may act on (create login, remove). A module admin handles managers and
-  // people without a role.
   protected canManage(employee: Employee): boolean {
-    return this.auth.user()?.role !== 'module_admin' || employee.role === 'manager' || employee.role === null;
+    return (
+      this.auth.user()?.role !== 'module_admin' ||
+      employee.role === 'manager' ||
+      employee.role === null
+    );
   }
 
   addEmployee(): void {
     if (this.form.invalid) {
-      this.form.markAllAsTouched(); // reveal every error message
+      this.form.markAllAsTouched();
       return;
     }
     if (this.isManager() && this.placeIds().length === 0) {
@@ -345,18 +357,18 @@ export class EmployeesList implements OnInit {
         next: (created) => {
           this.isSaving.set(false);
           this.isAddOpen.set(false);
-          // Show the new person at once; the reload below then confirms it with the server.
-          this.employees.update((list) => [{ ...created, username: created.username ?? null }, ...list]);
+          this.employees.update((list) => [
+            { ...created, username: created.username ?? null },
+            ...list,
+          ]);
           this.showNotice(`Added ${created.firstName} ${created.lastName}`);
           this.loadEmployees();
-          // Anyone with a role gets their login right away, shown once. No role, no login.
           if (created.role && created.status === 'active') {
             this.issueLogin(created);
           }
         },
         error: (error: HttpErrorResponse) => {
           this.isSaving.set(false);
-          // e.g. "An employee with personal ID 01234567890 already exists"
           const message = error.error?.message;
           this.serverError.set(
             Array.isArray(message)
@@ -377,7 +389,9 @@ export class EmployeesList implements OnInit {
   issueLogin(employee: Employee): void {
     if (
       employee.username &&
-      !confirm(`Reset the password of ${employee.firstName} ${employee.lastName}? The old password stops working.`)
+      !confirm(
+        `Reset the password of ${employee.firstName} ${employee.lastName}? The old password stops working.`,
+      )
     ) {
       return;
     }
@@ -411,8 +425,18 @@ function randomPersonDetails() {
   const digits = (length: number) =>
     Array.from({ length }, () => Math.floor(Math.random() * 10)).join('');
   const lastName = pick([
-    'Beridze', 'Kapanadze', 'Gelashvili', 'Chikovani', 'Lomidze', 'Abashidze', 'Meladze',
-    'Tsiklauri', 'Shengelia', 'Javakhishvili', 'Gvelesiani', 'Kvaratskhelia',
+    'Beridze',
+    'Kapanadze',
+    'Gelashvili',
+    'Chikovani',
+    'Lomidze',
+    'Abashidze',
+    'Meladze',
+    'Tsiklauri',
+    'Shengelia',
+    'Javakhishvili',
+    'Gvelesiani',
+    'Kvaratskhelia',
   ]);
   const birthYear = 1975 + Math.floor(Math.random() * 28); // 1975-2002
   const hireYear = birthYear + 20 + Math.floor(Math.random() * 6); // always after birth, 20-25 years on

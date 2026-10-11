@@ -1,4 +1,8 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { AuditService } from '../../audit/audit.service.js';
@@ -38,16 +42,23 @@ export class CompaniesService {
   ) {}
 
   async findAll(): Promise<CompanyView[]> {
-    const companies = await this.companiesRepository.find({ order: { createdAt: 'DESC' } });
+    const companies = await this.companiesRepository.find({
+      order: { createdAt: 'DESC' },
+    });
     return Promise.all(companies.map((company) => this.toView(company)));
   }
 
-  // "Sells" the chosen modules to a new company and issues its system admin's login.
-  async create(actor: AuthUser, dto: CreateCompanyDto): Promise<{ company: CompanyView; credentials: Credentials }> {
+  async create(
+    actor: AuthUser,
+    dto: CreateCompanyDto,
+  ): Promise<{ company: CompanyView; credentials: Credentials }> {
     let company: Company;
     try {
       company = await this.companiesRepository.save(
-        this.companiesRepository.create({ name: dto.name, modules: dto.modules }),
+        this.companiesRepository.create({
+          name: dto.name,
+          modules: dto.modules,
+        }),
       );
     } catch (error) {
       throw this.asConflict(error, dto.name);
@@ -70,7 +81,11 @@ export class CompaniesService {
     return { company: await this.toView(company), credentials };
   }
 
-  async update(actor: AuthUser, id: string, dto: UpdateCompanyDto): Promise<CompanyView> {
+  async update(
+    actor: AuthUser,
+    id: string,
+    dto: UpdateCompanyDto,
+  ): Promise<CompanyView> {
     const company = await this.findEntity(id);
     Object.assign(company, dto);
     try {
@@ -90,19 +105,31 @@ export class CompaniesService {
 
   async resetAdminPassword(actor: AuthUser, id: string): Promise<Credentials> {
     const company = await this.findEntity(id);
-    const admin = await this.usersRepository.findOneByOrFail({ companyId: id, role: UserRole.SYSTEM_ADMIN });
+    const admin = await this.usersRepository.findOneByOrFail({
+      companyId: id,
+      role: UserRole.SYSTEM_ADMIN,
+    });
     const credentials = await this.users.resetPassword(admin);
-    await this.audit.record(actor, 'credentials.reset', `Reset the system admin password of ${company.name}`, id);
+    await this.audit.record(
+      actor,
+      'credentials.reset',
+      `Reset the system admin password of ${company.name}`,
+      id,
+    );
     return credentials;
   }
 
   async remove(actor: AuthUser, id: string): Promise<void> {
     const company = await this.findEntity(id);
-    await this.companiesRepository.remove(company); // everything of the company goes with it
-    await this.audit.record(actor, 'company.delete', `Deleted company ${company.name}`, null);
+    await this.companiesRepository.remove(company);
+    await this.audit.record(
+      actor,
+      'company.delete',
+      `Deleted company ${company.name}`,
+      null,
+    );
   }
 
-  // Modules that need starter data get it when first sold.
   private async setUpModules(company: Company): Promise<void> {
     if (company.modules.includes(AppModuleName.STORE)) {
       await this.pos.ensureSampleProducts(company.id);
@@ -120,7 +147,10 @@ export class CompaniesService {
   }
 
   private async toView(company: Company): Promise<CompanyView> {
-    const admin = await this.usersRepository.findOneBy({ companyId: company.id, role: UserRole.SYSTEM_ADMIN });
+    const admin = await this.usersRepository.findOneBy({
+      companyId: company.id,
+      role: UserRole.SYSTEM_ADMIN,
+    });
     return {
       id: company.id,
       name: company.name,
@@ -128,11 +158,15 @@ export class CompaniesService {
       createdAt: company.createdAt,
       adminName: admin?.displayName ?? null,
       adminUsername: admin?.username ?? null,
-      employeeCount: await this.employeesRepository.countBy({ companyId: company.id }),
+      employeeCount: await this.employeesRepository.countBy({
+        companyId: company.id,
+      }),
     };
   }
 
   private asConflict(error: unknown, name: string): unknown {
-    return isUniqueViolation(error) ? new ConflictException(`A company named "${name}" already exists`) : error;
+    return isUniqueViolation(error)
+      ? new ConflictException(`A company named "${name}" already exists`)
+      : error;
   }
 }

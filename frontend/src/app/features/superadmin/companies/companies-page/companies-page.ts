@@ -29,10 +29,8 @@ export class CompaniesPage implements OnInit {
   protected readonly isSaving = signal(false);
   protected readonly errorMessage = signal('');
 
-  // Shown once after a company is created or an admin password is reset.
   protected readonly credentials = signal<Credentials | null>(null);
 
-  // ── "Sell to a new company" form ──────────────────────────────────────────
   protected readonly isCreateOpen = signal(false);
   protected readonly newName = signal('');
   protected readonly newAdminFirstName = signal('');
@@ -40,7 +38,6 @@ export class CompaniesPage implements OnInit {
   protected readonly newModules = signal<AppModule[]>([]);
   protected readonly formError = signal('');
 
-  // ── Edit modules form ─────────────────────────────────────────────────────
   protected readonly editing = signal<Company | null>(null);
   protected readonly editName = signal('');
   protected readonly editModules = signal<AppModule[]>([]);
@@ -79,8 +76,12 @@ export class CompaniesPage implements OnInit {
   }
 
   create(): void {
-    if (!this.newName().trim() || !this.newAdminFirstName().trim() || !this.newAdminLastName().trim()) {
-      this.formError.set('Company name and the admin\'s first and last name are required.');
+    if (
+      !this.newName().trim() ||
+      !this.newAdminFirstName().trim() ||
+      !this.newAdminLastName().trim()
+    ) {
+      this.formError.set("Company name and the admin's first and last name are required.");
       return;
     }
 
@@ -138,7 +139,11 @@ export class CompaniesPage implements OnInit {
   }
 
   resetPassword(company: Company): void {
-    if (!confirm(`Reset the system admin password of ${company.name}? The old password stops working.`)) {
+    if (
+      !confirm(
+        `Reset the system admin password of ${company.name}? The old password stops working.`,
+      )
+    ) {
       return;
     }
     this.companyService.resetAdminPassword(company.id).subscribe({
@@ -148,7 +153,11 @@ export class CompaniesPage implements OnInit {
   }
 
   remove(company: Company): void {
-    if (!confirm(`Delete ${company.name} and ALL of its data (people, warehouses, sales, logins)? This cannot be undone.`)) {
+    if (
+      !confirm(
+        `Delete ${company.name} and ALL of its data (people, warehouses, sales, logins)? This cannot be undone.`,
+      )
+    ) {
       return;
     }
     this.companyService.remove(company.id).subscribe({
@@ -160,5 +169,9 @@ export class CompaniesPage implements OnInit {
 
 function messageOf(error: HttpErrorResponse, fallback: string): string {
   const message = error.error?.message;
-  return Array.isArray(message) ? message.join(', ') : typeof message === 'string' ? message : fallback;
+  return Array.isArray(message)
+    ? message.join(', ')
+    : typeof message === 'string'
+      ? message
+      : fallback;
 }

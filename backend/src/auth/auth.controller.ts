@@ -18,17 +18,17 @@ class LoginDto {
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  // Company users (system admin, module admin, manager, cashier).
   @Public()
   @Post('login')
   login(@Body() dto: LoginDto): Promise<{ token: string; user: SessionUser }> {
     return this.authService.login(dto.username, dto.password, false);
   }
 
-  // The superuser has his own login page and endpoint.
   @Public()
   @Post('superadmin-login')
-  superadminLogin(@Body() dto: LoginDto): Promise<{ token: string; user: SessionUser }> {
+  superadminLogin(
+    @Body() dto: LoginDto,
+  ): Promise<{ token: string; user: SessionUser }> {
     return this.authService.login(dto.username, dto.password, true);
   }
 

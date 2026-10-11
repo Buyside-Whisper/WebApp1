@@ -22,7 +22,6 @@ import { EmployeeStatus } from './employee-status.enum.js';
 import { CreateEmployeeDto } from './dto/create-employee.dto.js';
 import { UpdateEmployeeDto } from './dto/update-employee.dto.js';
 
-// The login role an employee role turns into.
 const USER_ROLES: Record<EmployeeRole, UserRole> = {
   [EmployeeRole.ADMIN]: UserRole.MODULE_ADMIN,
   [EmployeeRole.MANAGER]: UserRole.MANAGER,
@@ -44,8 +43,6 @@ export class EmployeesService {
     private readonly audit: AuditService,
   ) {}
 
-  // A system admin sees the whole company, a module admin the people of their module, and a
-  // manager only the people of his stores / warehouses.
   async findAll(actor: AuthUser): Promise<Employee[]> {
     const ids = await this.visibleIds(actor);
     if (ids && ids.length === 0) {
@@ -59,12 +56,13 @@ export class EmployeesService {
   }
 
   async findOne(actor: AuthUser, id: string): Promise<Employee> {
-    // Checked on its own: spreading an `id` filter into the query would overwrite the scope's.
     const ids = await this.visibleIds(actor);
     const employee =
       ids && !ids.includes(id)
         ? null
-        : await this.employeesRepository.findOne({ where: { ...this.scope(actor), id } });
+        : await this.employeesRepository.findOne({
+            where: { ...this.scope(actor), id },
+          });
 
     if (!employee) {
       throw new NotFoundException(`Employee ${id} not found`);
@@ -75,19 +73,39 @@ export class EmployeesService {
 
   async create(actor: AuthUser, dto: CreateEmployeeDto): Promise<Employee> {
     const { workplaceIds, ...fields } = dto;
-    const { role, module } = this.resolveRoleAndModule(actor, dto.role ?? null, dto.module ?? null);
+    const { role, module } = this.resolveRoleAndModule(
+      actor,
+      dto.role ?? null,
+      dto.module ?? null,
+    );
     // Whoever a manager adds must work in at least one of his own stores / warehouses, which is
     // also how he keeps seeing them.
-    const link = actor.role === UserRole.MANAGER ? await this.prepareWorkplaces(actor, workplaceIds ?? []) : null;
-    const employee = this.employeesRepository.create({ ...fields, role, module, companyId: actor.companyId! });
+    const link =
+      actor.role === UserRole.MANAGER
+        ? await this.prepareWorkplaces(actor, workplaceIds ?? [])
+        : null;
+    const employee = this.employeesRepository.create({
+      ...fields,
+      role,
+      module,
+      companyId: actor.companyId!,
+    });
     this.assertValidDates(employee);
     const saved = await this.save(employee);
     await link?.(saved);
-    await this.audit.record(actor, 'employee.create', `Added ${this.nameOf(saved)} (${saved.role ?? 'no role'})`);
+    await this.audit.record(
+      actor,
+      'employee.create',
+      `Added ${this.nameOf(saved)} (${saved.role ?? 'no role'})`,
+    );
     return saved;
   }
 
-  async update(actor: AuthUser, id: string, dto: UpdateEmployeeDto): Promise<Employee> {
+  async update(
+    actor: AuthUser,
+    id: string,
+    dto: UpdateEmployeeDto,
+  ): Promise<Employee> {
     const employee = await this.findOne(actor, id);
     this.assertCanChange(actor, employee);
 
@@ -105,7 +123,11 @@ export class EmployeesService {
     this.assertValidDates(employee);
     const saved = await this.save(employee);
     await this.syncLogin(saved);
-    await this.audit.record(actor, 'employee.update', `Updated ${this.nameOf(saved)}`);
+    await this.audit.record(
+      actor,
+      'employee.update',
+      `Updated ${this.nameOf(saved)}`,
+    );
     return saved;
   }
 
@@ -113,7 +135,11 @@ export class EmployeesService {
     const employee = await this.findOne(actor, id);
     this.assertCanChange(actor, employee);
     await this.employeesRepository.remove(employee); // the login goes with it
-    await this.audit.record(actor, 'employee.delete', `Removed ${this.nameOf(employee)}`);
+    await this.audit.record(
+      actor,
+      'employee.delete',
+      `Removed ${this.nameOf(employee)}`,
+    );
   }
 
   // Creates the employee's login, or resets its password if it already exists.
@@ -122,7 +148,9 @@ export class EmployeesService {
     this.assertCanChange(actor, employee);
 
     if (!employee.role || !employee.module) {
-      throw new BadRequestException('People without a role have no access to the app, so no login.');
+      throw new BadRequestException(
+        'People without a role have no access to the app, so no login.',
+      );
     }
     const role = USER_ROLES[employee.role];
     if (employee.status === EmployeeStatus.FORMER) {
@@ -132,7 +160,11 @@ export class EmployeesService {
     const existing = await this.users.findByEmployeeId(employee.id);
     if (existing) {
       const credentials = await this.users.resetPassword(existing);
-      await this.audit.record(actor, 'credentials.reset', `Reset the password of ${this.nameOf(employee)}`);
+      await this.audit.record(
+        actor,
+        'credentials.reset',
+        `Reset the password of ${this.nameOf(employee)}`,
+      );
       return credentials;
     }
 
@@ -144,7 +176,11 @@ export class EmployeesService {
       displayName: this.nameOf(employee),
       employeeId: employee.id,
     });
-    await this.audit.record(actor, 'credentials.issue', `Issued a login for ${this.nameOf(employee)} (${role})`);
+    await this.audit.record(
+      actor,
+      'credentials.issue',
+      `Issued a login for ${this.nameOf(employee)} (${role})`,
+    );
     return credentials;
   }
 
@@ -166,25 +202,47 @@ export class EmployeesService {
     const where = { companyId: actor.companyId!, managerId: actor.employeeId! };
     const workplaces =
       actor.module === AppModuleName.WMS
-        ? await this.warehousesRepository.find({ where, relations: { members: true } })
-        : await this.storesRepository.find({ where, relations: { members: true } });
-    return workplaces.flatMap((workplace) => workplace.members.map((member) => member.id));
+        ? await this.warehousesRepository.find({
+            where,
+            relations: { members: true },
+          })
+        : await this.storesRepository.find({
+            where,
+            relations: { members: true },
+          });
+    return workplaces.flatMap((workplace) =>
+      workplace.members.map((member) => member.id),
+    );
   }
 
   // Checks the picked stores (Store manager) or warehouses (WMS manager) are ones he manages, and
   // returns a function that adds the new person to them.
-  private async prepareWorkplaces(actor: AuthUser, ids: string[]): Promise<(person: Employee) => Promise<void>> {
+  private async prepareWorkplaces(
+    actor: AuthUser,
+    ids: string[],
+  ): Promise<(person: Employee) => Promise<void>> {
     const uniqueIds = [...new Set(ids)];
     const kind = actor.module === AppModuleName.WMS ? 'warehouse' : 'store';
     if (uniqueIds.length === 0) {
-      throw new BadRequestException(`Choose the ${kind}(s) this person works in`);
+      throw new BadRequestException(
+        `Choose the ${kind}(s) this person works in`,
+      );
     }
-    const where = { id: In(uniqueIds), companyId: actor.companyId!, managerId: actor.employeeId! };
+    const where = {
+      id: In(uniqueIds),
+      companyId: actor.companyId!,
+      managerId: actor.employeeId!,
+    };
 
     if (actor.module === AppModuleName.WMS) {
-      const warehouses = await this.warehousesRepository.find({ where, relations: { members: true } });
+      const warehouses = await this.warehousesRepository.find({
+        where,
+        relations: { members: true },
+      });
       if (warehouses.length !== uniqueIds.length) {
-        throw new BadRequestException('You can only pick warehouses that you manage');
+        throw new BadRequestException(
+          'You can only pick warehouses that you manage',
+        );
       }
       return async (person) => {
         for (const warehouse of warehouses) {
@@ -194,7 +252,10 @@ export class EmployeesService {
       };
     }
 
-    const stores = await this.storesRepository.find({ where, relations: { members: true } });
+    const stores = await this.storesRepository.find({
+      where,
+      relations: { members: true },
+    });
     if (stores.length !== uniqueIds.length) {
       throw new BadRequestException('You can only pick stores that you manage');
     }
@@ -219,12 +280,17 @@ export class EmployeesService {
     // managers, managers add cashiers.
     if (actor.role === UserRole.MODULE_ADMIN) {
       if (role !== null && role !== EmployeeRole.MANAGER) {
-        throw new ForbiddenException('Module admins can only give the manager role');
+        throw new ForbiddenException(
+          'Module admins can only give the manager role',
+        );
       }
       module = actor.module;
     } else if (actor.role === UserRole.MANAGER) {
       // Store managers add cashiers; WMS has no cashiers, so its managers add people without a role.
-      if (role !== null && !(role === EmployeeRole.CASHIER && actor.module === AppModuleName.STORE)) {
+      if (
+        role !== null &&
+        !(role === EmployeeRole.CASHIER && actor.module === AppModuleName.STORE)
+      ) {
         throw new ForbiddenException(
           actor.module === AppModuleName.STORE
             ? 'Managers can only give the cashier role'
@@ -235,13 +301,17 @@ export class EmployeesService {
     } else if (role === null) {
       module = null; // a system admin's role-less people belong to the company, not a module
     } else if (role !== EmployeeRole.ADMIN) {
-      throw new ForbiddenException('The system admin can only give the module admin role');
+      throw new ForbiddenException(
+        'The system admin can only give the module admin role',
+      );
     }
     if (role !== null && !module) {
       throw new BadRequestException('Choose a module for this role');
     }
     if (module && !actor.companyModules.includes(module)) {
-      throw new BadRequestException(`Your company has not bought the ${module.toUpperCase()} module`);
+      throw new BadRequestException(
+        `Your company has not bought the ${module.toUpperCase()} module`,
+      );
     }
     if (role === EmployeeRole.CASHIER && module !== AppModuleName.STORE) {
       throw new BadRequestException('Cashiers belong to the Store module');
@@ -252,11 +322,23 @@ export class EmployeesService {
   // A module admin handles managers and people without a role; a manager handles cashiers and
   // people without a role (his scope already limits him to the people of his stores).
   private assertCanChange(actor: AuthUser, employee: Employee): void {
-    if (actor.role === UserRole.MODULE_ADMIN && employee.role !== null && employee.role !== EmployeeRole.MANAGER) {
-      throw new ForbiddenException('Module admins can only change managers and people without a role');
+    if (
+      actor.role === UserRole.MODULE_ADMIN &&
+      employee.role !== null &&
+      employee.role !== EmployeeRole.MANAGER
+    ) {
+      throw new ForbiddenException(
+        'Module admins can only change managers and people without a role',
+      );
     }
-    if (actor.role === UserRole.MANAGER && employee.role !== null && employee.role !== EmployeeRole.CASHIER) {
-      throw new ForbiddenException('Managers can only change cashiers and people without a role');
+    if (
+      actor.role === UserRole.MANAGER &&
+      employee.role !== null &&
+      employee.role !== EmployeeRole.CASHIER
+    ) {
+      throw new ForbiddenException(
+        'Managers can only change cashiers and people without a role',
+      );
     }
   }
 

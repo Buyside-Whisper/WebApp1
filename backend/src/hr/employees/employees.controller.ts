@@ -18,7 +18,6 @@ import { Employee } from './employee.entity.js';
 
 @Controller('employees')
 @Access('hr')
-// Admins, and Store managers (who only see and handle the cashiers of their own stores).
 @Roles(...ADMIN_ROLES, UserRole.MANAGER)
 export class EmployeesController {
   constructor(private readonly employeesService: EmployeesService) {}
@@ -29,12 +28,18 @@ export class EmployeesController {
   }
 
   @Get(':id')
-  findOne(@CurrentUser() user: AuthUser, @Param('id') id: string): Promise<Employee> {
+  findOne(
+    @CurrentUser() user: AuthUser,
+    @Param('id') id: string,
+  ): Promise<Employee> {
     return this.employeesService.findOne(user, id);
   }
 
   @Post()
-  create(@CurrentUser() user: AuthUser, @Body() dto: CreateEmployeeDto): Promise<Employee> {
+  create(
+    @CurrentUser() user: AuthUser,
+    @Body() dto: CreateEmployeeDto,
+  ): Promise<Employee> {
     return this.employeesService.create(user, dto);
   }
 
@@ -48,14 +53,20 @@ export class EmployeesController {
   }
 
   @Delete(':id')
-  remove(@CurrentUser() user: AuthUser, @Param('id') id: string): Promise<void> {
+  remove(
+    @CurrentUser() user: AuthUser,
+    @Param('id') id: string,
+  ): Promise<void> {
     return this.employeesService.remove(user, id);
   }
 
   // Creates the employee's login, or resets the password of the existing one. The plain
   // password is in this response only.
   @Post(':id/credentials')
-  issueCredentials(@CurrentUser() user: AuthUser, @Param('id') id: string): Promise<Credentials> {
+  issueCredentials(
+    @CurrentUser() user: AuthUser,
+    @Param('id') id: string,
+  ): Promise<Credentials> {
     return this.employeesService.issueCredentials(user, id);
   }
 }

@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Like, Repository } from 'typeorm';
 import { AuditService } from '../../audit/audit.service.js';
@@ -71,7 +75,10 @@ export class WarehousesService {
     });
     return managers
       .filter((manager) => manager.status === EmployeeStatus.ACTIVE)
-      .map((manager) => ({ id: manager.id, name: `${manager.firstName} ${manager.lastName}` }));
+      .map((manager) => ({
+        id: manager.id,
+        name: `${manager.firstName} ${manager.lastName}`,
+      }));
   }
 
   async create(actor: AuthUser, dto: CreateWarehouseDto): Promise<Warehouse> {
@@ -82,11 +89,19 @@ export class WarehousesService {
     });
     warehouse.code = await this.nextCode(actor.companyId!, dto.type);
     const saved = await this.warehousesRepository.save(warehouse);
-    await this.audit.record(actor, 'warehouse.create', `Created warehouse ${saved.code} ${saved.name}`);
+    await this.audit.record(
+      actor,
+      'warehouse.create',
+      `Created warehouse ${saved.code} ${saved.name}`,
+    );
     return this.findOne(actor, saved.id);
   }
 
-  async update(actor: AuthUser, id: string, dto: UpdateWarehouseDto): Promise<Warehouse> {
+  async update(
+    actor: AuthUser,
+    id: string,
+    dto: UpdateWarehouseDto,
+  ): Promise<Warehouse> {
     const warehouse = await this.findEntity(actor, id);
 
     // The code encodes the type, so a type change gets a new code.
@@ -101,18 +116,28 @@ export class WarehousesService {
     }
     delete (warehouse as Partial<Warehouse>).manager; // the id column is the source of truth
     await this.warehousesRepository.save(warehouse);
-    await this.audit.record(actor, 'warehouse.update', `Updated warehouse ${warehouse.code} ${warehouse.name}`);
+    await this.audit.record(
+      actor,
+      'warehouse.update',
+      `Updated warehouse ${warehouse.code} ${warehouse.name}`,
+    );
     return this.findOne(actor, id);
   }
 
   async remove(actor: AuthUser, id: string): Promise<void> {
     const warehouse = await this.findEntity(actor, id);
     await this.warehousesRepository.remove(warehouse);
-    await this.audit.record(actor, 'warehouse.delete', `Deleted warehouse ${warehouse.code} ${warehouse.name}`);
+    await this.audit.record(
+      actor,
+      'warehouse.delete',
+      `Deleted warehouse ${warehouse.code} ${warehouse.name}`,
+    );
   }
 
   private async findEntity(actor: AuthUser, id: string): Promise<Warehouse> {
-    const warehouse = await this.warehousesRepository.findOne({ where: { id, companyId: actor.companyId! } });
+    const warehouse = await this.warehousesRepository.findOne({
+      where: { id, companyId: actor.companyId! },
+    });
 
     if (!warehouse) {
       throw new NotFoundException(`Warehouse ${id} not found`);
@@ -122,15 +147,25 @@ export class WarehousesService {
   }
 
   // The picked manager must be a WMS manager of the same company.
-  private async checkedManagerId(actor: AuthUser, managerId: string | null | undefined): Promise<string | null> {
+  private async checkedManagerId(
+    actor: AuthUser,
+    managerId: string | null | undefined,
+  ): Promise<string | null> {
     if (!managerId) {
       return null;
     }
     const manager = await this.employeesRepository.findOne({
-      where: { id: managerId, companyId: actor.companyId!, role: EmployeeRole.MANAGER, module: AppModuleName.WMS },
+      where: {
+        id: managerId,
+        companyId: actor.companyId!,
+        role: EmployeeRole.MANAGER,
+        module: AppModuleName.WMS,
+      },
     });
     if (!manager) {
-      throw new BadRequestException('The manager must be an employee with the manager role in WMS');
+      throw new BadRequestException(
+        'The manager must be an employee with the manager role in WMS',
+      );
     }
     return manager.id;
   }
@@ -145,13 +180,19 @@ export class WarehousesService {
   }
 
   // Highest existing number for the type's prefix + 1, e.g. WH-SALE-02 -> WH-SALE-03.
-  private async nextCode(companyId: string, type: WarehouseType): Promise<string> {
+  private async nextCode(
+    companyId: string,
+    type: WarehouseType,
+  ): Promise<string> {
     const prefix = CODE_PREFIXES[type];
     const existing = await this.warehousesRepository.find({
       select: { code: true },
       where: { companyId, code: Like(`${prefix}-%`) },
     });
-    const highest = Math.max(0, ...existing.map((w) => Number(w.code.slice(prefix.length + 1)) || 0));
+    const highest = Math.max(
+      0,
+      ...existing.map((w) => Number(w.code.slice(prefix.length + 1)) || 0),
+    );
     return `${prefix}-${String(highest + 1).padStart(2, '0')}`;
   }
 }

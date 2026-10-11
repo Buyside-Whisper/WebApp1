@@ -2,10 +2,14 @@ import { Routes } from '@angular/router';
 import { Shell } from './layout/shell/shell';
 import { NotFoundPage } from './layout/not-found/not-found-page';
 import { SuperadminShell } from './layout/superadmin-shell/superadmin-shell';
-import { accessGuard, companyUserGuard, landingGuard, superuserGuard } from './core/auth/auth.guards';
+import {
+  accessGuard,
+  companyUserGuard,
+  landingGuard,
+  superuserGuard,
+} from './core/auth/auth.guards';
 
 export const routes: Routes = [
-  // Company users log in here; the superuser has a separate page and a separate area.
   {
     path: 'login',
     loadComponent: () => import('./features/auth/login-page/login-page').then((m) => m.LoginPage),
@@ -24,7 +28,6 @@ export const routes: Routes = [
     loadChildren: () => import('./features/superadmin/superadmin.routes'),
   },
 
-  // The company's app: sidebar + the modules the company bought.
   {
     path: '',
     component: Shell,

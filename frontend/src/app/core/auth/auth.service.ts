@@ -23,7 +23,6 @@ export class AuthService {
       .pipe(tap((session) => this.setSession(session)));
   }
 
-  // The superuser has his own login endpoint and page.
   superadminLogin(username: string, password: string): Observable<Session> {
     return this.http
       .post<Session>(`${API_BASE_URL}/auth/superadmin-login`, { username, password })

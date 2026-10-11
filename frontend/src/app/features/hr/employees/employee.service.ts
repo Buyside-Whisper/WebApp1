@@ -21,7 +21,6 @@ export class EmployeeService {
     return this.http.post<Employee>(API_URL, payload);
   }
 
-  // Creates the employee's login, or resets its password if it already exists.
   issueCredentials(id: string): Observable<Credentials> {
     return this.http.post<Credentials>(`${API_URL}/${id}/credentials`, {});
   }

@@ -26,8 +26,6 @@ export class Employee extends TenantEntity {
   @Column({ name: 'last_name' })
   lastName!: string;
 
-  // Georgian personal number (პირადი ნომერი): 11 digits. The new columns are nullable only
-  // because employees created before they existed have no value; the API requires them.
   @Column({
     name: 'personal_id',
     type: 'varchar',
@@ -55,17 +53,18 @@ export class Employee extends TenantEntity {
   @Column({ type: 'varchar', nullable: true })
   position!: string | null;
 
-  // Last working day. Empty while the employee still works here.
   @Column({ name: 'end_date', type: 'date', nullable: true })
   endDate!: string | null;
 
-  // Null = no role = no access to the app.
   @Column({ type: 'enum', enum: EmployeeRole, nullable: true })
   role!: EmployeeRole | null;
 
-  // The module this person works in. Required for module admins, managers and cashiers; people
-  // without a role belong to one only if a module admin or manager added them.
-  @Column({ type: 'enum', enum: AppModuleName, enumName: 'app_module', nullable: true })
+  @Column({
+    type: 'enum',
+    enum: AppModuleName,
+    enumName: 'app_module',
+    nullable: true,
+  })
   module!: AppModuleName | null;
 
   @CreateDateColumn({ name: 'created_at' })
@@ -74,11 +73,8 @@ export class Employee extends TenantEntity {
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt!: Date;
 
-  // Not stored: always calculated from the end date, so it can never contradict it and it
-  // switches to FORMER by itself once the end date has passed.
   status!: EmployeeStatus;
 
-  // Not stored: the login (if any) issued for this employee. Filled in by the service.
   username?: string | null;
 
   @AfterLoad()

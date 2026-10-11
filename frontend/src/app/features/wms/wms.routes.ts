@@ -10,7 +10,6 @@ export default [
   },
   {
     path: 'products',
-    // Managers only see their warehouses.
     canActivate: [accessGuard('wms', ['system_admin', 'module_admin'])],
     loadComponent: () =>
       import('./products/products-list/products-list').then((m) => m.ProductsList),
