@@ -37,7 +37,6 @@ export class WarehousesService {
     private readonly audit: AuditService,
   ) {}
 
-  // Admins see every warehouse of the company; a manager only the ones he manages.
   async findAll(actor: AuthUser): Promise<Warehouse[]> {
     const warehouses = await this.warehousesRepository.find({
       where:

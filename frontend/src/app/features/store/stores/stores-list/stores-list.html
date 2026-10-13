@@ -4,9 +4,11 @@
       <p class="page-eyebrow">Store</p>
       <h1 class="page-title">Stores</h1>
       <p class="page-description">
-        @if (isAdmin()) {
+        @if (canManage()) {
           Your shops, each with one manager picked from the people you added in HR. A store's cashiers are
           added by its manager in HR.
+        } @else if (isAdmin()) {
+          All of the company's stores. They are created and edited by the Store admin.
         } @else {
           The stores you manage.
         }
@@ -14,7 +16,7 @@
     </div>
   </div>
 
-  @if (isAdmin()) {
+  @if (canManage()) {
     <div class="page-card">
       <form class="page-stack" (ngSubmit)="save()">
         <div class="form-grid">
@@ -100,8 +102,10 @@
       <p class="page-description">Loading…</p>
     } @else if (stores().length === 0) {
       <p class="page-description">
-        @if (isAdmin()) {
+        @if (canManage()) {
           No stores yet. Add the first one above.
+        } @else if (isAdmin()) {
+          No stores yet. The Store admin adds them.
         } @else {
           No stores are assigned to you yet.
         }
@@ -115,7 +119,7 @@
               <th>Address</th>
               <th>Manager</th>
               <th class="cell-number">Registers</th>
-              @if (isAdmin()) {
+              @if (canManage()) {
                 <th>Actions</th>
               }
             </tr>
@@ -127,7 +131,7 @@
                 <td>{{ store.address }}</td>
                 <td>{{ store.manager?.name ?? '–' }}</td>
                 <td class="cell-number">{{ store.registers }}</td>
-                @if (isAdmin()) {
+                @if (canManage()) {
                   <td>
                     <div class="button-row button-row--tight">
                       <button type="button" class="button button--secondary button--sm" (click)="edit(store)">

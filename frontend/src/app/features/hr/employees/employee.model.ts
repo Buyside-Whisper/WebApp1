@@ -17,7 +17,6 @@ export interface Employee {
   personalId: string | null;
   email: string | null;
   phone: string | null;
-  branch: string | null;
   birthDate: string | null;
   hireDate: string | null;
   position: string | null;
@@ -36,7 +35,6 @@ export interface CreateEmployeePayload {
   personalId: string;
   email: string;
   phone: string;
-  branch: string;
   birthDate: string;
   hireDate: string;
   position: string;

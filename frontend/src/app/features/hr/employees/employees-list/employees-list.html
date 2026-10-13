@@ -5,12 +5,13 @@
       <h1 class="page-title">Employees</h1>
       <p class="page-description">
         @if (isSystemAdmin()) {
-          Your whole team. A role gives a person a login and a limited view; with no role they are just a
-          record here, described by their position.
+          Your whole team. A role gives a person a login and a limited view; with no role they are
+          just a record here, described by their position.
         } @else if (isManager()) {
           The people of your {{ placeKind() }}s. Add someone without a role{{
             placeKind() === 'store' ? ', or a cashier (they get a login),' : ''
-          }} and pick the {{ placeKind() }}(s) they work in.
+          }}
+          and pick the {{ placeKind() }}(s) they work in.
         } @else {
           The people of your module. Add managers (they get a login) or people without a role.
         }
@@ -83,7 +84,6 @@
               <th>Personal ID</th>
               <th>Email</th>
               <th>Phone</th>
-              <th>Branch</th>
               <th>Role</th>
               <th>Login</th>
               <th>Status</th>
@@ -107,7 +107,7 @@
                 </td>
                 <td>{{ employee.email ?? '–' }}</td>
                 <td class="nowrap">{{ employee.phone ?? '–' }}</td>
-                <td>{{ employee.branch ?? '–' }}</td>
+
                 <td>
                   <span
                     class="badge"
@@ -127,10 +127,16 @@
                   } @else if (employee.username) {
                     <code class="code-tag">{{ employee.username }}</code>
                     <div>
-                      <button type="button" class="link-button" (click)="issueLogin(employee)">Reset password</button>
+                      <button type="button" class="link-button" (click)="issueLogin(employee)">
+                        Reset password
+                      </button>
                     </div>
                   } @else if (canHaveLogin(employee)) {
-                    <button type="button" class="button button--secondary button--sm" (click)="issueLogin(employee)">
+                    <button
+                      type="button"
+                      class="button button--secondary button--sm"
+                      (click)="issueLogin(employee)"
+                    >
                       Create login
                     </button>
                   } @else {
@@ -179,8 +185,8 @@
   <form class="page-stack" [formGroup]="form" (ngSubmit)="addEmployee()" novalidate>
     @if (quickAdd) {
       <p class="field-hint">
-        Quick add (temporary): fill in first name, position, role and where they work. The greyed-out
-        fields are filled with random data.
+        Quick add (temporary): fill in first name, position, role and where they work. The
+        greyed-out fields are filled with random data.
       </p>
     }
     <div class="employee-form-grid">
@@ -254,25 +260,6 @@
       </div>
 
       <div class="field">
-        <label for="branch">Branch</label>
-        <input
-          id="branch"
-          class="text-input"
-          formControlName="branch"
-          list="employeeBranches"
-          placeholder="Enter branch"
-        />
-        <datalist id="employeeBranches">
-          @for (option of branches(); track option) {
-            <option [value]="option"></option>
-          }
-        </datalist>
-        @if (errorFor('branch'); as message) {
-          <span class="field-error">{{ message }}</span>
-        }
-      </div>
-
-      <div class="field">
         <label for="position">Position</label>
         <input
           id="position"
@@ -292,7 +279,9 @@
       </div>
 
       <div class="field">
-        <label for="role">Role <span class="label-hint">(no role = no access to the app)</span></label>
+        <label for="role"
+          >Role <span class="label-hint">(no role = no access to the app)</span></label
+        >
         <select id="role" class="text-select" formControlName="role" (change)="onRoleChange()">
           <option value="">No role</option>
           @for (role of availableRoles(); track role) {
@@ -318,7 +307,9 @@
         <div class="field">
           <span class="field-label">Module</span>
           <div class="status-preview">
-            <span class="badge badge--admin">{{ ownModule() ? moduleLabels[ownModule()!] : '–' }}</span>
+            <span class="badge badge--admin">{{
+              ownModule() ? moduleLabels[ownModule()!] : '–'
+            }}</span>
             <span class="label-hint">Your own module</span>
           </div>
         </div>
@@ -332,7 +323,11 @@
           <div class="chip-list">
             @for (place of places(); track place.id) {
               <label class="check-chip" [class.check-chip--on]="placeIds().includes(place.id)">
-                <input type="checkbox" [checked]="placeIds().includes(place.id)" (change)="togglePlace(place)" />
+                <input
+                  type="checkbox"
+                  [checked]="placeIds().includes(place.id)"
+                  (change)="togglePlace(place)"
+                />
                 {{ place.name }}
               </label>
             } @empty {

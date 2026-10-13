@@ -40,10 +40,6 @@ export class Employee extends TenantEntity {
   @Column({ type: 'varchar', nullable: true })
   phone!: string | null;
 
-  @Column({ type: 'varchar', nullable: true })
-  branch!: string | null;
-
-  // `date` columns are returned as 'YYYY-MM-DD' strings (no time zone involved).
   @Column({ name: 'birth_date', type: 'date', nullable: true })
   birthDate!: string | null;
 

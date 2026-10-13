@@ -1,14 +1,15 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
 import { AuthUser } from '../../auth/auth-user.js';
 import { Access, CurrentUser, Roles } from '../../auth/decorators.js';
-import { ADMIN_ROLES } from '../../auth/user-role.enum.js';
+import { ADMIN_ROLES, UserRole } from '../../auth/user-role.enum.js';
 import { AppModuleName } from '../../companies/app-module.enum.js';
 import { ProductsService } from './products.service.js';
 import { CreateProductDto } from './dto/create-product.dto.js';
 import { UpdateProductDto } from './dto/update-product.dto.js';
 import { Product } from './product.entity.js';
 
-// Products are managed by the admins only (managers just see their warehouses).
+// Both admins may read products (managers just see their warehouses). Only the WMS admin creates,
+// edits and deletes them: the method-level @Roles below overrides the class-level one.
 @Controller('products')
 @Access(AppModuleName.WMS)
 @Roles(...ADMIN_ROLES)
@@ -26,16 +27,19 @@ export class ProductsController {
   }
 
   @Post()
+  @Roles(UserRole.MODULE_ADMIN)
   create(@CurrentUser() user: AuthUser, @Body() dto: CreateProductDto): Promise<Product> {
     return this.productsService.create(user, dto);
   }
 
   @Patch(':id')
+  @Roles(UserRole.MODULE_ADMIN)
   update(@CurrentUser() user: AuthUser, @Param('id') id: string, @Body() dto: UpdateProductDto): Promise<Product> {
     return this.productsService.update(user, id, dto);
   }
 
   @Delete(':id')
+  @Roles(UserRole.MODULE_ADMIN)
   remove(@CurrentUser() user: AuthUser, @Param('id') id: string): Promise<void> {
     return this.productsService.remove(user, id);
   }

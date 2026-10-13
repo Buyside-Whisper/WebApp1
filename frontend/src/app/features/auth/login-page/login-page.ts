@@ -5,7 +5,6 @@ import { Router, RouterLink } from '@angular/router';
 import { landingUrl } from '../../../core/auth/access';
 import { AuthService } from '../../../core/auth/auth.service';
 
-// Login for company users: system admins, module admins, managers and cashiers.
 @Component({
   selector: 'app-login-page',
   imports: [FormsModule, RouterLink],

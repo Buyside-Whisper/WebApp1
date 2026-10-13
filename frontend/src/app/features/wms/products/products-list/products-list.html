@@ -5,10 +5,14 @@
       <h1 class="page-title">Products</h1>
       <p class="page-description">
         Products, their total amount, and the warehouses where they can be found.
+        @if (!canManage()) {
+          They are added and edited by the WMS admin.
+        }
       </p>
     </div>
   </div>
 
+  @if (canManage()) {
   <div class="page-card">
     <form class="page-stack" (ngSubmit)="saveProduct()">
       <div class="form-grid">
@@ -141,12 +145,21 @@
       </div>
     </form>
   </div>
+  } @else if (errorMessage()) {
+    <p class="field-error">{{ errorMessage() }}</p>
+  }
 
   <div class="page-card">
     @if (isLoading()) {
       <p class="page-description">Loading…</p>
     } @else if (products().length === 0) {
-      <p class="page-description">No products yet. Add the first one above.</p>
+      <p class="page-description">
+        @if (canManage()) {
+          No products yet. Add the first one above.
+        } @else {
+          No products yet. The WMS admin adds them.
+        }
+      </p>
     } @else {
       <div class="table-scroll">
         <table class="data-table">
@@ -159,7 +172,9 @@
               <th class="cell-number">Amount</th>
               <th>Unit</th>
               <th>Warehouses</th>
-              <th>Actions</th>
+              @if (canManage()) {
+                <th>Actions</th>
+              }
             </tr>
           </thead>
           <tbody>
@@ -182,6 +197,7 @@
                     }
                   </div>
                 </td>
+                @if (canManage()) {
                 <td>
                   <div class="button-row button-row--tight">
                     <button
@@ -200,6 +216,7 @@
                     </button>
                   </div>
                 </td>
+                }
               </tr>
             }
           </tbody>

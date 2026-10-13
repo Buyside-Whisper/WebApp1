@@ -2,6 +2,7 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
+import { AuthService } from '../../../../core/auth/auth.service';
 import { Warehouse } from '../../warehouses/warehouse.model';
 import { WarehouseService } from '../../warehouses/warehouse.service';
 import { Product, ProductUnit } from '../product.model';
@@ -16,6 +17,10 @@ import { ProductService } from '../product.service';
 export class ProductsList implements OnInit {
   private readonly productService = inject(ProductService);
   private readonly warehouseService = inject(WarehouseService);
+  private readonly auth = inject(AuthService);
+
+  // Only the WMS admin changes products; the system admin sees them read-only.
+  protected readonly canManage = computed(() => this.auth.user()?.role === 'module_admin');
 
   protected readonly products = signal<Product[]>([]);
   protected readonly warehouses = signal<Warehouse[]>([]);
@@ -42,6 +47,9 @@ export class ProductsList implements OnInit {
 
   ngOnInit(): void {
     this.loadProducts();
+    if (!this.canManage()) {
+      return; // the warehouse checkboxes are only needed by the form
+    }
     this.warehouseService.list().subscribe({
       next: (warehouses) => this.warehouses.set(warehouses),
       error: () => this.errorMessage.set('Could not load warehouses. Is the backend running?'),

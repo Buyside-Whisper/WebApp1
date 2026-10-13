@@ -15,11 +15,13 @@ export class WarehousesList implements OnInit {
   private readonly warehouseService = inject(WarehouseService);
   private readonly auth = inject(AuthService);
 
-  // Admins manage warehouses; a manager only sees the ones assigned to him (read-only).
+  // Admins see every warehouse; only the WMS admin may change them. The system admin sees all of
+  // them read-only, a manager only the ones assigned to him (read-only).
   protected readonly isAdmin = computed(() => {
     const role = this.auth.user()?.role;
     return role === 'system_admin' || role === 'module_admin';
   });
+  protected readonly canManage = computed(() => this.auth.user()?.role === 'module_admin');
   protected readonly managerOptions = signal<ManagerOption[]>([]);
 
   protected readonly warehouses = signal<Warehouse[]>([]);
@@ -40,7 +42,7 @@ export class WarehousesList implements OnInit {
 
   ngOnInit(): void {
     this.loadWarehouses();
-    if (this.isAdmin()) {
+    if (this.canManage()) {
       this.warehouseService.managerOptions().subscribe((options) => this.managerOptions.set(options));
     }
   }

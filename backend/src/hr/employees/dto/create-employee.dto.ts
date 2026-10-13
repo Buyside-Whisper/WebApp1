@@ -43,11 +43,6 @@ export class CreateEmployeeDto {
   })
   phone!: string;
 
-  @Transform(trim)
-  @IsString()
-  @IsNotEmpty()
-  branch!: string;
-
   @IsISO8601({ strict: true })
   @Matches(/^\d{4}-\d{2}-\d{2}$/, { message: 'birthDate must be YYYY-MM-DD' })
   birthDate!: string;

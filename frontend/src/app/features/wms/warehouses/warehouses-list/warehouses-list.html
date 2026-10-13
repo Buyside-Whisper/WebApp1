@@ -4,8 +4,10 @@
       <p class="page-eyebrow">WMS</p>
       <h1 class="page-title">Warehouses</h1>
       <p class="page-description">
-        @if (isAdmin()) {
+        @if (canManage()) {
           Main and sales warehouses. Codes are assigned automatically from the type.
+        } @else if (isAdmin()) {
+          All of the company's warehouses. They are created and edited by the WMS admin.
         } @else {
           The warehouses you manage.
         }
@@ -13,7 +15,7 @@
     </div>
   </div>
 
-  @if (isAdmin()) {
+  @if (canManage()) {
   <div class="page-card">
     <form class="page-stack" (ngSubmit)="saveWarehouse()">
       <div class="form-grid">
@@ -121,7 +123,7 @@
   </div>
   }
 
-  @if (!isAdmin() && errorMessage()) {
+  @if (!canManage() && errorMessage()) {
     <p class="field-error">{{ errorMessage() }}</p>
   }
 
@@ -130,8 +132,10 @@
       <p class="page-description">Loading…</p>
     } @else if (warehouses().length === 0) {
       <p class="page-description">
-        @if (isAdmin()) {
+        @if (canManage()) {
           No warehouses yet. Add the first one above.
+        } @else if (isAdmin()) {
+          No warehouses yet. The WMS admin adds them.
         } @else {
           No warehouses are assigned to you yet.
         }
@@ -149,7 +153,7 @@
               <th>Manager</th>
               <th class="cell-number">Stock</th>
               <th>Status</th>
-              @if (isAdmin()) {
+              @if (canManage()) {
                 <th>Actions</th>
               }
             </tr>
@@ -195,7 +199,7 @@
                     {{ warehouse.status === 'active' ? 'Active' : 'Inactive' }}
                   </span>
                 </td>
-                @if (isAdmin()) {
+                @if (canManage()) {
                 <td>
                   <div class="button-row button-row--tight">
                     <button
