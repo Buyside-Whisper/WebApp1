@@ -1,7 +1,13 @@
 import { Component, OnInit, WritableSignal, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { FormsModule } from '@angular/forms';
+import {
+  AbstractControl,
+  FormBuilder,
+  FormsModule,
+  ReactiveFormsModule,
+  ValidationErrors,
+} from '@angular/forms';
 import { LucideAngularModule, Plus } from 'lucide-angular';
 import { AppModule, Credentials, MODULE_LABELS } from '../../../../core/auth/auth.model';
 import { CredentialsModal } from '../../../../shared/credentials-modal/credentials-modal';
@@ -13,7 +19,14 @@ const ALL_MODULES: AppModule[] = ['wms', 'store', 'restaurant'];
 
 @Component({
   selector: 'app-companies-page',
-  imports: [CredentialsModal, DatePipe, FormsModule, LucideAngularModule, Modal],
+  imports: [
+    CredentialsModal,
+    DatePipe,
+    FormsModule,
+    LucideAngularModule,
+    Modal,
+    ReactiveFormsModule,
+  ],
   templateUrl: './companies-page.html',
   styleUrl: './companies-page.css',
 })
@@ -41,6 +54,13 @@ export class CompaniesPage implements OnInit {
   protected readonly editing = signal<Company | null>(null);
   protected readonly editName = signal('');
   protected readonly editModules = signal<AppModule[]>([]);
+  private readonly fb = inject(FormBuilder).nonNullable;
+
+  protected readonly form1 = this.fb.group({
+    companyName: [''],
+    adminFirst: [''],
+    adminLast: [''],
+  });
 
   ngOnInit(): void {
     this.load();
@@ -76,22 +96,24 @@ export class CompaniesPage implements OnInit {
   }
 
   create(): void {
-    if (
-      !this.newName().trim() ||
-      !this.newAdminFirstName().trim() ||
-      !this.newAdminLastName().trim()
-    ) {
-      this.formError.set("Company name and the admin's first and last name are required.");
-      return;
-    }
+    const value = this.form1.getRawValue();
+    console.log(value);
+    // if (
+    //   !this.newName().trim() ||
+    //   !this.newAdminFirstName().trim() ||
+    //   !this.newAdminLastName().trim()
+    // ) {
+    //   this.formError.set("Company name and the admin's first and last name are required.");
+    //   return;
+    // }
 
     this.isSaving.set(true);
     this.formError.set('');
     this.companyService
       .create({
-        name: this.newName().trim(),
-        adminFirstName: this.newAdminFirstName().trim(),
-        adminLastName: this.newAdminLastName().trim(),
+        name: value.companyName.trim(),
+        adminFirstName: value.adminFirst.trim(),
+        adminLastName: value.adminLast.trim(),
         modules: this.newModules(),
       })
       .subscribe({

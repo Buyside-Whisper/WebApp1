@@ -439,7 +439,6 @@ function moduleForRole(group: AbstractControl): ValidationErrors | null {
   return role && !module ? { moduleRequired: true } : null;
 }
 
-// Like Validators.required, but also rejects text that is only spaces.
 function notBlank(control: AbstractControl<string>): ValidationErrors | null {
   return control.value?.trim() ? null : { blank: true };
 }

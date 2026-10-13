@@ -22,7 +22,9 @@
     @if (isLoading()) {
       <p class="page-description">Loading…</p>
     } @else if (companies().length === 0) {
-      <p class="page-description">No companies yet. Use “Sell to a new company” to add the first one.</p>
+      <p class="page-description">
+        No companies yet. Use “Sell to a new company” to add the first one.
+      </p>
     } @else {
       <div class="table-scroll">
         <table class="data-table">
@@ -60,13 +62,25 @@
                 <td class="nowrap">{{ company.createdAt | date: 'mediumDate' }}</td>
                 <td>
                   <div class="button-row button-row--tight">
-                    <button type="button" class="button button--secondary button--sm" (click)="openEdit(company)">
+                    <button
+                      type="button"
+                      class="button button--secondary button--sm"
+                      (click)="openEdit(company)"
+                    >
                       Modules
                     </button>
-                    <button type="button" class="button button--secondary button--sm" (click)="resetPassword(company)">
+                    <button
+                      type="button"
+                      class="button button--secondary button--sm"
+                      (click)="resetPassword(company)"
+                    >
                       Reset password
                     </button>
-                    <button type="button" class="button button--secondary button--sm" (click)="remove(company)">
+                    <button
+                      type="button"
+                      class="button button--secondary button--sm"
+                      (click)="remove(company)"
+                    >
                       Delete
                     </button>
                   </div>
@@ -81,29 +95,45 @@
 </div>
 
 <app-modal [open]="isCreateOpen()" title="Sell to a new company" (closed)="isCreateOpen.set(false)">
-  <form class="page-stack" (ngSubmit)="create()">
+  <form class="page-stack" [formGroup]="form1" (ngSubmit)="create()">
     <div class="field">
       <label for="companyName">Company name</label>
-      <input id="companyName" class="text-input" name="name" [(ngModel)]="newName" placeholder="e.g. Acme Retail" />
+      <input
+        id="companyName"
+        class="text-input"
+        formControlName="companyName"
+        placeholder="e.g. Acme Retail"
+      />
     </div>
 
     <div class="company-form-row">
       <div class="field">
         <label for="adminFirst">System admin: first name</label>
-        <input id="adminFirst" class="text-input" name="first" [(ngModel)]="newAdminFirstName" />
+        <input
+          id="adminFirst"
+          class="text-input"
+          formControlName="adminFirst"
+          placeholder="David"
+        />
       </div>
       <div class="field">
         <label for="adminLast">Last name</label>
-        <input id="adminLast" class="text-input" name="last" [(ngModel)]="newAdminLastName" />
+        <input id="adminLast" class="text-input" formControlName="adminLast" placeholder="David" />
       </div>
     </div>
 
     <div class="field">
-      <span class="field-label">Modules sold <span class="label-hint">(HR is always included)</span></span>
+      <span class="field-label"
+        >Modules sold <span class="label-hint">(HR is always included)</span></span
+      >
       <div class="module-picker">
         @for (module of modules; track module) {
           <label class="module-option" [class.module-option--on]="newModules().includes(module)">
-            <input type="checkbox" [checked]="newModules().includes(module)" (change)="toggle(newModules, module)" />
+            <input
+              type="checkbox"
+              [checked]="newModules().includes(module)"
+              (change)="toggle(newModules, module)"
+            />
             {{ labels[module] }}
           </label>
         }
@@ -115,7 +145,9 @@
     }
 
     <div class="button-row modal-actions">
-      <button type="button" class="button button--secondary" (click)="isCreateOpen.set(false)">Cancel</button>
+      <button type="button" class="button button--secondary" (click)="isCreateOpen.set(false)">
+        Cancel
+      </button>
       <button type="submit" class="button button--primary" [disabled]="isSaving()">
         {{ isSaving() ? 'Creating…' : 'Create and issue login' }}
       </button>
@@ -135,7 +167,11 @@
       <div class="module-picker">
         @for (module of modules; track module) {
           <label class="module-option" [class.module-option--on]="editModules().includes(module)">
-            <input type="checkbox" [checked]="editModules().includes(module)" (change)="toggle(editModules, module)" />
+            <input
+              type="checkbox"
+              [checked]="editModules().includes(module)"
+              (change)="toggle(editModules, module)"
+            />
             {{ labels[module] }}
           </label>
         }
@@ -150,7 +186,9 @@
     }
 
     <div class="button-row modal-actions">
-      <button type="button" class="button button--secondary" (click)="editing.set(null)">Cancel</button>
+      <button type="button" class="button button--secondary" (click)="editing.set(null)">
+        Cancel
+      </button>
       <button type="submit" class="button button--primary" [disabled]="isSaving()">
         {{ isSaving() ? 'Saving…' : 'Save' }}
       </button>
