@@ -149,6 +149,19 @@ Read this before adding any module, endpoint or page.
   an expense, all Restaurant pages). Products ignore warehouse members, and warehouse stock is still
   hand-entered.
 
+## Working state and conventions to know
+
+- **Forms:** the Add employee modal and the create-company modal use **reactive forms** with the
+  `notBlank` validator and an error-message table; other pages still use template-driven `ngModel`
+  with signals (the user is practising the switch). `FormsModule` stays in a component's imports as
+  long as any `[(ngModel)]` remains in its template.
+- **The user's editor reformats files on save (Prettier)**, so diffs often contain whitespace-only
+  line-wrapping changes. Judge changes by behaviour, not by diff size.
+- **The user is learning** Angular and NestJS (comes from React) and often asks "how does this
+  actually work" questions. Answer with the real mechanism and point at the real files; verify
+  against the code or the database instead of describing from memory. They also asked to be told
+  when something they want looks like a mistake (see memory notes).
+
 ## Structure
 
 Module = folder, submodule = subfolder, and the URL follows the same path on both sides:
@@ -206,6 +219,12 @@ sidebar WMS → Products = frontend route `/wms/products` = API `/wms/products`.
 - **`ng build` (production) needs internet**: it inlines the Google Fonts stylesheet and fails
   with "Inlining of fonts failed" when offline. Use `npx ng build --configuration development` to
   check that the frontend compiles.
+- **VS Code Angular template features (hover / Ctrl+Click in `.html`)** need the Angular Language
+  Service to attach to `frontend/tsconfig.app.json`. A stray default `tsconfig.json` in
+  `/home/David/Desktop/Job/` once swallowed the whole tree (every project under `Job/`) and broke it;
+  the user deleted it. If it breaks again, read the extension log under
+  `~/.config/Code/logs/<session>/window1/exthost/output_logging_*/*Angular Language Service.log`
+  (look for "Enabling language service for ..." and "Could not determine component").
 - **`ng` on this machine is NOT Angular**: `ng-common` (a text editor) was once installed by mistake
   and froze terminals via the Angular completion line in `~/.bashrc` (now commented out). Always use
   `npx ng ...` from `frontend/`.

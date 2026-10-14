@@ -60,8 +60,6 @@ export class EmployeesController {
     return this.employeesService.remove(user, id);
   }
 
-  // Creates the employee's login, or resets the password of the existing one. The plain
-  // password is in this response only.
   @Post(':id/credentials')
   issueCredentials(
     @CurrentUser() user: AuthUser,

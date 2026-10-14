@@ -315,11 +315,11 @@ export class EmployeesList implements OnInit {
     }
 
     const value = this.form.getRawValue();
+
     this.isSaving.set(true);
     this.serverError.set('');
     this.employeeService
       .create({
-        ...value,
         role: value.role || null,
         firstName: value.firstName.trim(),
         lastName: value.lastName.trim(),
@@ -327,6 +327,8 @@ export class EmployeesList implements OnInit {
         email: value.email.trim(),
         phone: value.phone.trim(),
         position: value.position.trim(),
+        birthDate: value.birthDate,
+        hireDate: value.hireDate,
         endDate: value.endDate || null,
         module: value.role || !this.isSystemAdmin() ? value.module || null : null,
         ...(this.isManager() ? { workplaceIds: this.placeIds() } : {}),

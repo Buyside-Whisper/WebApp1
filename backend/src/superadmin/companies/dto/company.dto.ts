@@ -1,8 +1,16 @@
 import { Transform } from 'class-transformer';
-import { ArrayUnique, IsArray, IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import {
+  ArrayUnique,
+  IsArray,
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 import { AppModuleName } from '../../../companies/app-module.enum.js';
 
-const trim = ({ value }: { value: unknown }) => (typeof value === 'string' ? value.trim() : value);
+const trim = ({ value }: { value: unknown }) =>
+  typeof value === 'string' ? value.trim() : value;
 
 export class CreateCompanyDto {
   @Transform(trim)
@@ -10,7 +18,6 @@ export class CreateCompanyDto {
   @IsNotEmpty()
   name!: string;
 
-  // The person who gets the first login: the company's system admin.
   @Transform(trim)
   @IsString()
   @IsNotEmpty()

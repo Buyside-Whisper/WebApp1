@@ -17,6 +17,18 @@ import { CompanyService } from '../company.service';
 
 const ALL_MODULES: AppModule[] = ['wms', 'store', 'restaurant'];
 
+const ERROR_MESSAGES: Record<string, string> = {
+  required: 'This field is required.',
+  blank: 'This field is required.',
+  email: 'Enter a valid email address.',
+  personalId: 'Personal ID must be exactly 11 digits.',
+  phone: 'Enter a valid phone number.',
+  notInPast: 'Date of birth must be in the past.',
+  moduleRequired: 'Choose a module for this role.',
+};
+
+type FieldName = 'companyName' | 'adminFirst' | 'adminLast';
+
 @Component({
   selector: 'app-companies-page',
   imports: [
@@ -45,9 +57,7 @@ export class CompaniesPage implements OnInit {
   protected readonly credentials = signal<Credentials | null>(null);
 
   protected readonly isCreateOpen = signal(false);
-  protected readonly newName = signal('');
-  protected readonly newAdminFirstName = signal('');
-  protected readonly newAdminLastName = signal('');
+
   protected readonly newModules = signal<AppModule[]>([]);
   protected readonly formError = signal('');
 
@@ -56,10 +66,10 @@ export class CompaniesPage implements OnInit {
   protected readonly editModules = signal<AppModule[]>([]);
   private readonly fb = inject(FormBuilder).nonNullable;
 
-  protected readonly form1 = this.fb.group({
-    companyName: [''],
-    adminFirst: [''],
-    adminLast: [''],
+  protected readonly form = this.fb.group({
+    companyName: ['', notBlank],
+    adminFirst: ['', notBlank],
+    adminLast: ['', notBlank],
   });
 
   ngOnInit(): void {
@@ -81,9 +91,7 @@ export class CompaniesPage implements OnInit {
   }
 
   openCreate(): void {
-    this.newName.set('');
-    this.newAdminFirstName.set('');
-    this.newAdminLastName.set('');
+    this.form.reset();
     this.newModules.set([]);
     this.formError.set('');
     this.isCreateOpen.set(true);
@@ -95,18 +103,22 @@ export class CompaniesPage implements OnInit {
     );
   }
 
-  create(): void {
-    const value = this.form1.getRawValue();
-    console.log(value);
-    // if (
-    //   !this.newName().trim() ||
-    //   !this.newAdminFirstName().trim() ||
-    //   !this.newAdminLastName().trim()
-    // ) {
-    //   this.formError.set("Company name and the admin's first and last name are required.");
-    //   return;
-    // }
+  protected errorFor(name: FieldName): string {
+    const control = this.form.controls[name];
+    if (!control.touched || !control.errors) {
+      return '';
+    }
+    const key = Object.keys(control.errors)[0];
+    return ERROR_MESSAGES[key] ?? 'Invalid value.';
+  }
 
+  create(): void {
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
+    }
+
+    const value = this.form.getRawValue();
     this.isSaving.set(true);
     this.formError.set('');
     this.companyService
@@ -196,4 +208,8 @@ function messageOf(error: HttpErrorResponse, fallback: string): string {
     : typeof message === 'string'
       ? message
       : fallback;
+}
+
+function notBlank(control: AbstractControl<string>): ValidationErrors | null {
+  return control.value?.trim() ? null : { blank: true };
 }

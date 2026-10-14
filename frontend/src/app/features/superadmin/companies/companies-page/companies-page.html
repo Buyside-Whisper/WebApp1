@@ -95,7 +95,7 @@
 </div>
 
 <app-modal [open]="isCreateOpen()" title="Sell to a new company" (closed)="isCreateOpen.set(false)">
-  <form class="page-stack" [formGroup]="form1" (ngSubmit)="create()">
+  <form class="page-stack" [formGroup]="form" (ngSubmit)="create()">
     <div class="field">
       <label for="companyName">Company name</label>
       <input
@@ -104,6 +104,9 @@
         formControlName="companyName"
         placeholder="e.g. Acme Retail"
       />
+      @if (errorFor('companyName'); as message) {
+        <span class="field-error">{{ message }}</span>
+      }
     </div>
 
     <div class="company-form-row">
@@ -115,10 +118,21 @@
           formControlName="adminFirst"
           placeholder="David"
         />
+        @if (errorFor('adminFirst'); as message) {
+          <span class="field-error">{{ message }}</span>
+        }
       </div>
       <div class="field">
-        <label for="adminLast">Last name</label>
-        <input id="adminLast" class="text-input" formControlName="adminLast" placeholder="David" />
+        <label for="adminLast">System admin: last name</label>
+        <input
+          id="adminLast"
+          class="text-input"
+          formControlName="adminLast"
+          placeholder="Gogichaishvili"
+        />
+        @if (errorFor('adminLast'); as message) {
+          <span class="field-error">{{ message }}</span>
+        }
       </div>
     </div>
 

@@ -78,8 +78,7 @@ export class EmployeesService {
       dto.role ?? null,
       dto.module ?? null,
     );
-    // Whoever a manager adds must work in at least one of his own stores / warehouses, which is
-    // also how he keeps seeing them.
+
     const link =
       actor.role === UserRole.MANAGER
         ? await this.prepareWorkplaces(actor, workplaceIds ?? [])
@@ -215,8 +214,6 @@ export class EmployeesService {
     );
   }
 
-  // Checks the picked stores (Store manager) or warehouses (WMS manager) are ones he manages, and
-  // returns a function that adds the new person to them.
   private async prepareWorkplaces(
     actor: AuthUser,
     ids: string[],
@@ -275,9 +272,6 @@ export class EmployeesService {
   ): { role: EmployeeRole | null; module: AppModuleName | null } {
     let module = requested;
 
-    // Everyone with HR may add people without a role (no access to the app). With a role, each
-    // level adds exactly one level down: the system admin adds module admins, module admins add
-    // managers, managers add cashiers.
     if (actor.role === UserRole.MODULE_ADMIN) {
       if (role !== null && role !== EmployeeRole.MANAGER) {
         throw new ForbiddenException(
@@ -286,7 +280,6 @@ export class EmployeesService {
       }
       module = actor.module;
     } else if (actor.role === UserRole.MANAGER) {
-      // Store managers add cashiers; WMS has no cashiers, so its managers add people without a role.
       if (
         role !== null &&
         !(role === EmployeeRole.CASHIER && actor.module === AppModuleName.STORE)
@@ -299,7 +292,7 @@ export class EmployeesService {
       }
       module = actor.module;
     } else if (role === null) {
-      module = null; // a system admin's role-less people belong to the company, not a module
+      module = null;
     } else if (role !== EmployeeRole.ADMIN) {
       throw new ForbiddenException(
         'The system admin can only give the module admin role',
@@ -319,8 +312,6 @@ export class EmployeesService {
     return { role, module };
   }
 
-  // A module admin handles managers and people without a role; a manager handles cashiers and
-  // people without a role (his scope already limits him to the people of his stores).
   private assertCanChange(actor: AuthUser, employee: Employee): void {
     if (
       actor.role === UserRole.MODULE_ADMIN &&
