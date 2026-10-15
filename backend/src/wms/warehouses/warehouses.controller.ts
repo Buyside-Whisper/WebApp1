@@ -11,7 +11,7 @@ import { AuthUser } from '../../auth/auth-user.js';
 import { Access, CurrentUser, Roles } from '../../auth/decorators.js';
 import { UserRole } from '../../auth/user-role.enum.js';
 import { AppModuleName } from '../../companies/app-module.enum.js';
-import { ManagerOption, WarehousesService } from './warehouses.service.js';
+import { ManagerOption, WarehouseOption, WarehousesService } from './warehouses.service.js';
 import { CreateWarehouseDto } from './dto/create-warehouse.dto.js';
 import { UpdateWarehouseDto } from './dto/update-warehouse.dto.js';
 import { Warehouse } from './warehouse.entity.js';
@@ -24,6 +24,13 @@ export class WarehousesController {
   @Get()
   findAll(@CurrentUser() user: AuthUser): Promise<Warehouse[]> {
     return this.warehousesService.findAll(user);
+  }
+
+  // All of the company's warehouses, minimal (no manager / HR data), for the pickers on receipts
+  // and transfers. Managers need it too: they send goods to warehouses they don't run.
+  @Get('options')
+  options(@CurrentUser() user: AuthUser): Promise<WarehouseOption[]> {
+    return this.warehousesService.options(user);
   }
 
   @Get('manager-options')

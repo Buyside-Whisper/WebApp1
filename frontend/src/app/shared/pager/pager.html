@@ -1,0 +1,52 @@
+@let p = pagination();
+<div class="pager">
+  <div class="pager__info">
+    <span>{{ p.from() }}–{{ p.to() }} of {{ p.total() }}</span>
+    <label class="pager__size">
+      Rows per page
+      <select class="text-select" [value]="p.pageSize()" (change)="changeSize($event)">
+        @for (size of pageSizes; track size) {
+          <option [value]="size" [selected]="size === p.pageSize()">{{ size }}</option>
+        }
+      </select>
+    </label>
+  </div>
+
+  @if (p.pageCount() > 1) {
+    <nav class="pager__pages" aria-label="Pages">
+      <button
+        type="button"
+        class="pager__button"
+        [disabled]="p.current() === 1"
+        aria-label="Previous page"
+        (click)="p.goTo(p.current() - 1)"
+      >
+        <lucide-icon [img]="PrevIcon" [size]="16"></lucide-icon>
+      </button>
+      @for (page of pageNumbers(); track $index) {
+        @if (page === null) {
+          <span class="pager__gap">…</span>
+        } @else {
+          <button
+            type="button"
+            class="pager__button"
+            [class.pager__button--current]="page === p.current()"
+            [attr.aria-current]="page === p.current() ? 'page' : null"
+            (click)="p.goTo(page)"
+          >
+            {{ page }}
+          </button>
+        }
+      }
+      <button
+        type="button"
+        class="pager__button"
+        [disabled]="p.current() === p.pageCount()"
+        aria-label="Next page"
+        (click)="p.goTo(p.current() + 1)"
+      >
+        <lucide-icon [img]="NextIcon" [size]="16"></lucide-icon>
+      </button>
+    </nav>
+  }
+</div>

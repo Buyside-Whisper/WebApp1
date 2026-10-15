@@ -1,0 +1,166 @@
+<form class="page-stack" (ngSubmit)="save()">
+  <div class="form-grid">
+    <div class="field">
+      <label for="productName">Product</label>
+      <input
+        id="productName"
+        class="text-input"
+        type="text"
+        name="name"
+        [(ngModel)]="name"
+        placeholder="e.g. Snickers 50g"
+        required
+      />
+    </div>
+
+    <div class="field">
+      <label for="productBarcode">Barcode</label>
+      <input
+        id="productBarcode"
+        class="text-input"
+        type="text"
+        name="barcode"
+        [(ngModel)]="barcode"
+        placeholder="e.g. 5000159461122"
+        required
+      />
+    </div>
+
+    <div class="field">
+      <label for="productCategory">Category</label>
+      <input
+        id="productCategory"
+        class="text-input"
+        type="text"
+        name="category"
+        list="productCategories"
+        [(ngModel)]="category"
+        placeholder="e.g. Sweets"
+        required
+      />
+      <datalist id="productCategories">
+        @for (option of categories(); track option) {
+          <option [value]="option"></option>
+        }
+      </datalist>
+    </div>
+
+    <div class="field">
+      <label for="productGroup">Group</label>
+      <input
+        id="productGroup"
+        class="text-input"
+        type="text"
+        name="group"
+        list="productGroups"
+        [(ngModel)]="group"
+        placeholder="e.g. Chocolate"
+        required
+      />
+      <datalist id="productGroups">
+        @for (option of groups(); track option) {
+          <option [value]="option"></option>
+        }
+      </datalist>
+    </div>
+
+    <div class="field">
+      <label for="productSupplier">Supplier</label>
+      <input
+        id="productSupplier"
+        class="text-input"
+        type="text"
+        name="supplier"
+        list="productSuppliers"
+        [(ngModel)]="supplier"
+        placeholder="e.g. Mars Georgia"
+        required
+      />
+      <datalist id="productSuppliers">
+        @for (option of suppliers(); track option) {
+          <option [value]="option"></option>
+        }
+      </datalist>
+    </div>
+
+    <div class="field">
+      <label for="productStatus">Production status</label>
+      <select id="productStatus" class="text-select" name="status" [(ngModel)]="status">
+        <option value="active">Active</option>
+        <option value="inactive">Not active</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="productUsage">Use</label>
+      <select id="productUsage" class="text-select" name="usage" [(ngModel)]="usage">
+        <option value="sale">For sale</option>
+        <option value="ingredient">Ingredient</option>
+        <option value="both">Both</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="productPosStatus">POS status</label>
+      <select id="productPosStatus" class="text-select" name="posStatus" [(ngModel)]="posStatus">
+        <option value="storage">Storage only</option>
+        <option value="pos">Available at POS</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="productUnit">Unit</label>
+      <select id="productUnit" class="text-select" name="unit" [(ngModel)]="unit"
+        [disabled]="unitLocked()">
+        <option value="pcs">pcs</option>
+        <option value="kg">kg</option>
+      </select>
+      @if (unitLocked()) {
+        <span class="field-hint">Fixed while the product has stock.</span>
+      }
+    </div>
+
+    <div class="field">
+      <label for="productCostPrice">Cost price (₾)</label>
+      <input
+        id="productCostPrice"
+        class="text-input"
+        type="number"
+        min="0"
+        step="0.01"
+        name="costPrice"
+        [(ngModel)]="costPrice"
+      />
+    </div>
+
+    <div class="field">
+      <label for="productSalePrice">Sale price (₾)</label>
+      <input
+        id="productSalePrice"
+        class="text-input"
+        type="number"
+        min="0"
+        step="0.01"
+        name="salePrice"
+        [(ngModel)]="salePrice"
+      />
+    </div>
+  </div>
+
+  <p class="field-hint">{{ hint() }}</p>
+
+  @if (formError()) {
+    <p class="field-error">{{ formError() }}</p>
+  }
+
+  <div class="button-row">
+    <button type="submit" class="button button--dark" [disabled]="isSaving()">
+      @if (product()) {
+        {{ isSaving() ? 'Saving…' : 'Save changes' }}
+      } @else {
+        {{ isSaving() ? 'Adding…' : 'Add product' }}
+      }
+    </button>
+    <button type="button" class="button button--secondary" (click)="cancelled.emit()">Cancel</button>
+  </div>
+</form>

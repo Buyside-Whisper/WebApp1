@@ -1,0 +1,118 @@
+<div class="page-stack">
+  <div class="page-header">
+    <div>
+      <p class="page-eyebrow">WMS · Receipts</p>
+      <div class="page-header__title-row">
+        <h1 class="page-title">{{ receipt()?.code ?? 'Receipt' }}</h1>
+        @if (receipt(); as receipt) {
+          <span
+            class="badge"
+            [class.badge--draft]="receipt.status === 'draft'"
+            [class.badge--done]="receipt.status === 'posted'"
+            [class.badge--cancelled]="receipt.status === 'cancelled'"
+          >
+            {{ statusLabels[receipt.status] }}
+          </span>
+        }
+      </div>
+      @if (receipt(); as receipt) {
+        <p class="page-description">
+          {{ receipt.supplier }} → {{ receipt.warehouse.code }} {{ receipt.warehouse.name }}
+        </p>
+      }
+    </div>
+    <div class="button-row page-header__actions">
+      @if (receipt(); as receipt) {
+        @if (canWrite() && receipt.status === 'draft') {
+          <button type="button" class="button button--secondary" [disabled]="isBusy()" (click)="remove()">
+            Delete
+          </button>
+          <a class="button button--outline" [routerLink]="['/wms/receipts', receipt.id, 'edit']">Edit</a>
+          <button type="button" class="button button--dark" [disabled]="isBusy()" (click)="post()">Post</button>
+        }
+        @if (canWrite() && receipt.status === 'posted') {
+          <button type="button" class="button button--secondary" [disabled]="isBusy()" (click)="cancel()">
+            Cancel receipt
+          </button>
+        }
+      }
+      <a class="button button--secondary" routerLink="/wms/receipts">Back to receipts</a>
+    </div>
+  </div>
+
+  @if (errorMessage()) {
+    <p class="field-error">{{ errorMessage() }}</p>
+  }
+
+  @if (receipt(); as receipt) {
+    <div class="page-card">
+      <h2 class="card-title">Details</h2>
+      <dl class="detail-grid">
+        <div>
+          <dt>Warehouse</dt>
+          <dd>
+            <a [routerLink]="['/wms/warehouses', receipt.warehouse.id]">{{ receipt.warehouse.code }}</a>
+            {{ receipt.warehouse.name }}
+          </dd>
+        </div>
+        <div><dt>Supplier</dt><dd>{{ receipt.supplier }}</dd></div>
+        <div><dt>Waybill / invoice</dt><dd>{{ receipt.waybillNumber ?? '–' }}</dd></div>
+        <div><dt>Date</dt><dd>{{ receipt.date | date: 'dd.MM.yyyy' }}</dd></div>
+        <div><dt>Created by</dt><dd>{{ receipt.createdByName }}</dd></div>
+        @if (receipt.postedAt) {
+          <div><dt>Posted</dt><dd>{{ receipt.postedByName }}, {{ receipt.postedAt | date: 'dd.MM.yyyy HH:mm' }}</dd></div>
+        }
+        @if (receipt.cancelledAt) {
+          <div><dt>Cancelled</dt><dd>{{ receipt.cancelledByName }}, {{ receipt.cancelledAt | date: 'dd.MM.yyyy HH:mm' }}</dd></div>
+        }
+        @if (receipt.note) {
+          <div><dt>Note</dt><dd>{{ receipt.note }}</dd></div>
+        }
+      </dl>
+    </div>
+
+    <div class="page-card">
+      <h2 class="card-title">Products</h2>
+      @if (!receipt.lines?.length) {
+        <p class="page-description">No products on this draft yet.</p>
+      } @else {
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th>Barcode</th>
+                <th>Quantity</th>
+                <th>Unit</th>
+                <th>Price per unit</th>
+                <th>Line total</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (line of receipt.lines; track line.id) {
+                <tr>
+                  <td class="cell-strong">
+                    @if (canOpenProducts()) {
+                      <a [routerLink]="['/wms/products', line.productId]">{{ line.product.name }}</a>
+                    } @else {
+                      {{ line.product.name }}
+                    }
+                  </td>
+                  <td><code class="code-tag">{{ line.product.barcode }}</code></td>
+                  <td class="cell-figure">{{ line.quantity | number: '1.0-3' }}</td>
+                  <td>{{ line.product.unit }}</td>
+                  <td class="cell-figure">₾{{ line.unitCost | number: '1.2-2' }}</td>
+                  <td class="cell-figure">₾{{ line.quantity * line.unitCost | number: '1.2-2' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <div class="doc-total">
+          <span>{{ receipt.lineCount }} products</span>
+          <span>Total <strong>₾{{ receipt.total | number: '1.2-2' }}</strong></span>
+        </div>
+      }
+    </div>
+  }
+</div>

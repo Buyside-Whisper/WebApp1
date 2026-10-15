@@ -1,0 +1,50 @@
+<div class="picker">
+  <div class="search-input">
+    <lucide-icon [img]="ScanIcon" [size]="16" class="search-input__icon"></lucide-icon>
+    <input
+      class="text-input"
+      type="search"
+      autocomplete="off"
+      [attr.aria-label]="placeholder()"
+      [placeholder]="placeholder()"
+      [value]="query()"
+      (input)="onInput($any($event.target).value)"
+      (keydown.enter)="onEnter($event)"
+      (keydown.escape)="open.set(false)"
+      (focus)="open.set(true)"
+      (blur)="onBlur()"
+    />
+  </div>
+  @if (open() && query().trim()) {
+    <ul class="picker__results" role="listbox">
+      @for (product of matches(); track product.id) {
+        <li>
+          <button
+            type="button"
+            class="picker__result"
+            [class.picker__result--taken]="isTaken(product)"
+            (mousedown)="$event.preventDefault()"
+            (click)="choose(product)"
+          >
+            <span class="picker__name">{{ product.name }}</span>
+            <code class="code-tag">{{ product.barcode }}</code>
+            <span class="picker__meta">
+              @if (isTaken(product)) {
+                added
+              } @else if (product.available !== undefined) {
+                {{ product.available | number: '1.0-3' }} {{ product.unit }} available
+              } @else {
+                {{ product.unit }}
+              }
+            </span>
+          </button>
+        </li>
+      } @empty {
+        <li class="picker__empty">No product matches.</li>
+      }
+    </ul>
+  }
+  @if (message()) {
+    <p class="field-hint">{{ message() }}</p>
+  }
+</div>

@@ -1,0 +1,154 @@
+<div class="page-stack">
+  <div class="page-header">
+    <div>
+      <p class="page-eyebrow">WMS · Receipts</p>
+      <h1 class="page-title">{{ id() ? 'Edit ' + code() : 'New receipt' }}</h1>
+      <p class="page-description">
+        Goods that arrived from a supplier. Save it as a draft while you check the delivery; post
+        it when everything matches.
+      </p>
+    </div>
+    <a class="button button--secondary" [routerLink]="id() ? ['/wms/receipts', id()] : '/wms/receipts'">
+      Cancel
+    </a>
+  </div>
+
+  <div class="page-card">
+    <h2 class="card-title">Delivery</h2>
+    <div class="form-grid">
+      <div class="field">
+        <label for="receiptWarehouse">Warehouse</label>
+        <select id="receiptWarehouse" class="text-select" [(ngModel)]="warehouseId">
+          <option value="" disabled>Choose a warehouse</option>
+          @for (warehouse of myWarehouses(); track warehouse.id) {
+            <option [value]="warehouse.id">{{ warehouse.code }} · {{ warehouse.name }}</option>
+          }
+        </select>
+      </div>
+      <div class="field">
+        <label for="receiptSupplier">Supplier</label>
+        <input id="receiptSupplier" class="text-input" type="text" [(ngModel)]="supplier" placeholder="e.g. Mars Georgia" />
+      </div>
+      <div class="field">
+        <label for="receiptWaybill">Waybill / invoice no.</label>
+        <input id="receiptWaybill" class="text-input" type="text" [(ngModel)]="waybillNumber" placeholder="Optional" />
+      </div>
+      <div class="field">
+        <label for="receiptDate">Date</label>
+        <input id="receiptDate" class="text-input" type="date" [(ngModel)]="date" />
+      </div>
+      <div class="field">
+        <label for="receiptNote">Note</label>
+        <input id="receiptNote" class="text-input" type="text" [(ngModel)]="note" placeholder="Optional" />
+      </div>
+    </div>
+  </div>
+
+  <div class="page-card">
+    <h2 class="card-title">Products</h2>
+    <div class="picker-row">
+      <app-product-picker [products]="products()" [taken]="takenIds()" (picked)="addProduct($event)" />
+      @if (canCreateProducts()) {
+        <button type="button" class="button button--outline" (click)="productNotice.set(''); isProductFormOpen.set(true)">
+          <lucide-icon [img]="PlusIcon" [size]="16"></lucide-icon>
+          New product
+        </button>
+      }
+    </div>
+    @if (productNotice()) {
+      <p class="field-hint">{{ productNotice() }}</p>
+    }
+
+    @if (lines().length === 0) {
+      <p class="page-description">No products yet. Search above, or scan a barcode and press Enter.</p>
+    } @else {
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th>Barcode</th>
+              <th>Quantity</th>
+              <th>Unit</th>
+              <th>Price per unit (₾)</th>
+              <th>Line total</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (line of lines(); track line.productId; let i = $index) {
+              <tr>
+                <td class="cell-strong">{{ line.name }}</td>
+                <td><code class="code-tag">{{ line.barcode }}</code></td>
+                <td>
+                  <input
+                    class="text-input line-input"
+                    type="number"
+                    min="0"
+                    [step]="line.unit === 'kg' ? 0.001 : 1"
+                    [attr.aria-label]="'Quantity of ' + line.name"
+                    [ngModel]="line.quantity"
+                    (ngModelChange)="updateLine(i, 'quantity', $event)"
+                  />
+                </td>
+                <td>{{ line.unit }}</td>
+                <td>
+                  <input
+                    class="text-input line-input"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    [attr.aria-label]="'Price of ' + line.name"
+                    [ngModel]="line.unitCost"
+                    (ngModelChange)="updateLine(i, 'unitCost', $event)"
+                  />
+                </td>
+                <td class="cell-figure">₾{{ (line.quantity || 0) * (line.unitCost || 0) | number: '1.2-2' }}</td>
+                <td>
+                  <button
+                    type="button"
+                    class="icon-action icon-action--danger"
+                    [attr.aria-label]="'Remove ' + line.name"
+                    title="Remove"
+                    (click)="removeLine(i)"
+                  >
+                    <lucide-icon [img]="DeleteIcon" [size]="18"></lucide-icon>
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <div class="doc-total">
+        <span>{{ lines().length }} products</span>
+        <span>Total <strong>₾{{ total() | number: '1.2-2' }}</strong></span>
+      </div>
+    }
+  </div>
+
+  @if (errorMessage()) {
+    <p class="field-error">{{ errorMessage() }}</p>
+  }
+
+  <div class="button-row">
+    <button type="button" class="button button--secondary" [disabled]="isSaving()" (click)="save(false)">
+      Save draft
+    </button>
+    <button type="button" class="button button--dark" [disabled]="isSaving()" (click)="save(true)">
+      {{ isSaving() ? 'Saving…' : 'Save and post' }}
+    </button>
+  </div>
+</div>
+
+<!-- Not in the catalogue yet: add it without leaving the receipt (WMS admin only). -->
+<app-modal [open]="isProductFormOpen()" title="New product" (closed)="isProductFormOpen.set(false)">
+  @if (isProductFormOpen()) {
+    <app-product-form
+      [known]="products()"
+      hint="It is added to Products and to this receipt. Its stock and cost come from the receipt when you post it."
+      (saved)="onProductCreated($event)"
+      (cancelled)="isProductFormOpen.set(false)"
+    />
+  }
+</app-modal>

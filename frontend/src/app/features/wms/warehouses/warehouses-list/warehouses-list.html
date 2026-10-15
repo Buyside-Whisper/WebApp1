@@ -13,117 +13,21 @@
         }
       </p>
     </div>
-  </div>
-
-  @if (canManage()) {
-  <div class="page-card">
-    <form class="page-stack" (ngSubmit)="saveWarehouse()">
-      <div class="form-grid">
-        <div class="field">
-          <label for="warehouseName">Warehouse</label>
-          <input
-            id="warehouseName"
-            class="text-input"
-            type="text"
-            name="name"
-            [(ngModel)]="name"
-            placeholder="e.g. Vake Sales Warehouse"
-            required
-          />
-        </div>
-
-        <div class="field">
-          <label for="warehouseType">Type</label>
-          <select id="warehouseType" class="text-select" name="type" [(ngModel)]="type">
-            <option value="main">Main</option>
-            <option value="sales">Sales</option>
-          </select>
-        </div>
-
-        <div class="field">
-          <label for="warehouseBranches">Branches</label>
-          <input
-            id="warehouseBranches"
-            class="text-input"
-            type="text"
-            name="branches"
-            [(ngModel)]="branches"
-            placeholder="Comma-separated, e.g. Vake, Saburtalo"
-          />
-        </div>
-
-        <div class="field">
-          <label for="warehouseAddress">Address</label>
-          <input
-            id="warehouseAddress"
-            class="text-input"
-            type="text"
-            name="address"
-            [(ngModel)]="address"
-            placeholder="e.g. 23 Chavchavadze Ave, Tbilisi"
-            required
-          />
-        </div>
-
-        <div class="field">
-          <label for="warehouseStock">Stock (units)</label>
-          <input
-            id="warehouseStock"
-            class="text-input"
-            type="number"
-            min="0"
-            step="1"
-            name="stock"
-            [(ngModel)]="stock"
-          />
-        </div>
-
-        <div class="field">
-          <label for="warehouseStatus">Status</label>
-          <select id="warehouseStatus" class="text-select" name="status" [(ngModel)]="status">
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-          </select>
-        </div>
-
-        <div class="field">
-          <label for="warehouseManager">Manager</label>
-          <select id="warehouseManager" class="text-select" name="managerId" [(ngModel)]="managerId">
-            <option value="">— No manager —</option>
-            @for (manager of managerOptions(); track manager.id) {
-              <option [value]="manager.id">{{ manager.name }}</option>
-            }
-          </select>
-          @if (managerOptions().length === 0) {
-            <span class="field-hint">
-              No managers yet. In HR, add an employee with the Manager role in the WMS module.
-            </span>
-          }
-        </div>
-
-      </div>
-
-      @if (errorMessage()) {
-        <p class="field-error">{{ errorMessage() }}</p>
-      }
-
-      <div class="button-row">
-        <button type="submit" class="button button--primary" [disabled]="isSaving()">
-          @if (editingId()) {
-            {{ isSaving() ? 'Saving…' : 'Save changes' }}
-          } @else {
-            {{ isSaving() ? 'Adding…' : 'Add warehouse' }}
-          }
+    @if (canManage()) {
+      <div class="button-row page-header__actions">
+        <button type="button" class="button button--outline" (click)="isImportOpen.set(true)">
+          <lucide-icon [img]="ImportIcon" [size]="16"></lucide-icon>
+          Import
         </button>
-        @if (editingId()) {
-          <button type="button" class="button button--secondary" (click)="resetForm()">Cancel</button>
-        }
+        <button type="button" class="button button--dark" (click)="openAddForm()">
+          <lucide-icon [img]="PlusIcon" [size]="16"></lucide-icon>
+          Add warehouse
+        </button>
       </div>
-    </form>
+    }
   </div>
-  }
 
-  @if (!canManage() && errorMessage()) {
+  @if (errorMessage()) {
     <p class="field-error">{{ errorMessage() }}</p>
   }
 
@@ -133,7 +37,7 @@
     } @else if (warehouses().length === 0) {
       <p class="page-description">
         @if (canManage()) {
-          No warehouses yet. Add the first one above.
+          No warehouses yet. Use “Add warehouse” to create the first one.
         } @else if (isAdmin()) {
           No warehouses yet. The WMS admin adds them.
         } @else {
@@ -141,89 +45,309 @@
         }
       </p>
     } @else {
+      <div class="table-filters">
+        <div class="search-input table-filters__search">
+          <lucide-icon [img]="SearchIcon" [size]="16" class="search-input__icon"></lucide-icon>
+          <input
+            class="text-input"
+            type="search"
+            aria-label="Search warehouses"
+            [(ngModel)]="search"
+            placeholder="Warehouse, code, branch, address or manager"
+          />
+        </div>
+        <select class="text-select" aria-label="Type" [(ngModel)]="typeFilter">
+          <option value="all">All types</option>
+          <option value="main">Main</option>
+          <option value="sales">Sales</option>
+        </select>
+        <select class="text-select" aria-label="Status" [(ngModel)]="statusFilter">
+          <option value="all">All statuses</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
+        @if (isAdmin()) {
+          <select class="text-select" aria-label="Manager" [(ngModel)]="managerFilter">
+            <option value="all">All managers</option>
+            <option value="none">No manager</option>
+            @for (manager of managersInList(); track manager.id) {
+              <option [value]="manager.id">{{ manager.name }}</option>
+            }
+          </select>
+        }
+        <select class="text-select" aria-label="Stock" [(ngModel)]="stockFilter">
+          <option value="all">Any stock</option>
+          <option value="stocked">Has products</option>
+          <option value="empty">Empty</option>
+        </select>
+        @if (hasFilters()) {
+          <button type="button" class="link-button" (click)="clearFilters()">Clear</button>
+        }
+      </div>
+
+      <div class="table-toolbar">
+        <span>
+          @if (hasFilters()) {
+            {{ filtered().length }} of {{ warehouses().length }} warehouses
+          } @else {
+            {{ warehouses().length }} warehouses
+          }
+        </span>
+        <div class="table-toolbar__hint">
+          <span>Drag a column header to move it.</span>
+          @if (columnOrder.isCustom()) {
+            <button type="button" class="link-button" (click)="columnOrder.reset()">
+              Reset column order
+            </button>
+          }
+        </div>
+      </div>
       <div class="table-scroll">
         <table class="data-table">
           <thead>
             <tr>
-              <th>Warehouse</th>
-              <th>Code</th>
-              <th>Branches</th>
-              <th>Type</th>
-              <th>Address</th>
-              <th>Manager</th>
-              <th class="cell-number">Stock</th>
-              <th>Status</th>
-              @if (canManage()) {
-                <th>Actions</th>
+              @for (column of columnOrder.columns(); track column.key) {
+                <th
+                  class="th-draggable"
+                  draggable="true"
+                  [class.th-dragging]="columnOrder.dragging() === column.key"
+                  [class.th-drop-before]="columnOrder.dropSide(column.key) === 'before'"
+                  [class.th-drop-after]="columnOrder.dropSide(column.key) === 'after'"
+                  (dragstart)="columnOrder.dragStart($event, column.key)"
+                  (dragover)="columnOrder.dragOver($event, column.key)"
+                  (drop)="columnOrder.drop($event, column.key)"
+                  (dragend)="columnOrder.dragEnd()"
+                >
+                  {{ column.label }}
+                </th>
               }
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            @for (warehouse of warehouses(); track warehouse.id) {
+            @for (warehouse of pages.items(); track warehouse.id) {
               <tr [class.row-editing]="editingId() === warehouse.id">
-                <td class="cell-strong">{{ warehouse.name }}</td>
-                <td><code class="code-tag">{{ warehouse.code }}</code></td>
-                <td>
-                  <div class="chip-list">
-                    @for (branch of warehouse.branches; track branch) {
-                      <span class="chip">{{ branch }}</span>
-                    } @empty {
-                      <span class="muted">–</span>
+                @for (column of columnOrder.columns(); track column.key) {
+                  @switch (column.key) {
+                    @case ('name') {
+                      <td class="cell-strong">{{ warehouse.name }}</td>
                     }
-                  </div>
-                </td>
-                <td>
-                  <span
-                    class="badge"
-                    [class.badge--main]="warehouse.type === 'main'"
-                    [class.badge--sales]="warehouse.type === 'sales'"
-                  >
-                    {{ warehouse.type === 'main' ? 'Main' : 'Sales' }}
-                  </span>
-                </td>
-                <td>{{ warehouse.address }}</td>
-                <td>
-                  @if (warehouse.manager) {
-                    {{ warehouse.manager.firstName }} {{ warehouse.manager.lastName }}
-                  } @else {
-                    <span class="muted">–</span>
+                    @case ('code') {
+                      <td><code class="code-tag">{{ warehouse.code }}</code></td>
+                    }
+                    @case ('branch') {
+                      <td>
+                        @if (warehouse.type === 'main') {
+                          <span class="muted">All branches</span>
+                        } @else if (warehouse.branch) {
+                          {{ warehouse.branch }}
+                        } @else {
+                          <span class="muted">–</span>
+                        }
+                      </td>
+                    }
+                    @case ('type') {
+                      <td>
+                        <span
+                          class="badge"
+                          [class.badge--main]="warehouse.type === 'main'"
+                          [class.badge--sales]="warehouse.type === 'sales'"
+                        >
+                          {{ warehouse.type === 'main' ? 'Main' : 'Sales' }}
+                        </span>
+                      </td>
+                    }
+                    @case ('address') {
+                      <td>{{ warehouse.address }}</td>
+                    }
+                    @case ('manager') {
+                      <td>
+                        @if (warehouse.manager) {
+                          {{ warehouse.manager.firstName }} {{ warehouse.manager.lastName }}
+                        } @else {
+                          <span class="muted">–</span>
+                        }
+                      </td>
+                    }
+                    @case ('products') {
+                      <td class="cell-figure">{{ warehouse.productCount }}</td>
+                    }
+                    @case ('stock') {
+                      <td class="cell-figure">
+                        {{ warehouse.stockPcs + warehouse.stockKg | number: '1.0-3' }}
+                      </td>
+                    }
+                    @case ('totalPrice') {
+                      <td class="cell-figure" title="Quantity × cost price">
+                        ₾{{ warehouse.totalCost | number: '1.2-2' }}
+                      </td>
+                    }
+                    @case ('status') {
+                      <td>
+                        <span
+                          class="badge"
+                          [class.badge--active]="warehouse.status === 'active'"
+                          [class.badge--inactive]="warehouse.status === 'inactive'"
+                        >
+                          {{ warehouse.status === 'active' ? 'Active' : 'Inactive' }}
+                        </span>
+                      </td>
+                    }
                   }
-                </td>
-                <td class="cell-number">{{ warehouse.stock | number }}</td>
+                }
                 <td>
-                  <span
-                    class="badge"
-                    [class.badge--active]="warehouse.status === 'active'"
-                    [class.badge--inactive]="warehouse.status === 'inactive'"
-                  >
-                    {{ warehouse.status === 'active' ? 'Active' : 'Inactive' }}
-                  </span>
-                </td>
-                @if (canManage()) {
-                <td>
-                  <div class="button-row button-row--tight">
+                  <div class="icon-actions">
+                    <a
+                      class="icon-action"
+                      [routerLink]="['/wms/warehouses', warehouse.id]"
+                      title="View"
+                      aria-label="View {{ warehouse.name }}"
+                    >
+                      <lucide-icon [img]="ViewIcon" [size]="18"></lucide-icon>
+                    </a>
                     <button
                       type="button"
-                      class="button button--secondary button--sm"
+                      class="icon-action"
+                      [disabled]="!canManage()"
+                      [title]="canManage() ? 'Edit' : 'Only the WMS admin can edit'"
+                      [attr.aria-label]="'Edit ' + warehouse.name"
                       (click)="editWarehouse(warehouse)"
                     >
-                      Edit
+                      <lucide-icon [img]="EditIcon" [size]="18"></lucide-icon>
                     </button>
                     <button
                       type="button"
-                      class="button button--secondary button--sm"
+                      class="icon-action icon-action--danger"
+                      [disabled]="!canManage()"
+                      [title]="canManage() ? 'Delete' : 'Only the WMS admin can delete'"
+                      [attr.aria-label]="'Delete ' + warehouse.name"
                       (click)="deleteWarehouse(warehouse)"
                     >
-                      Delete
+                      <lucide-icon [img]="DeleteIcon" [size]="18"></lucide-icon>
                     </button>
                   </div>
                 </td>
-                }
+              </tr>
+            } @empty {
+              <tr>
+                <td class="muted" [attr.colspan]="columnOrder.columns().length + 1">
+                  No warehouses match the search and filters.
+                </td>
               </tr>
             }
           </tbody>
         </table>
       </div>
+      <app-pager [pagination]="pages" />
     }
   </div>
 </div>
+
+<app-modal
+  [open]="isFormOpen()"
+  [title]="editingId() ? 'Edit warehouse' : 'Add warehouse'"
+  (closed)="closeForm()"
+>
+  <form class="page-stack" (ngSubmit)="saveWarehouse()">
+    <div class="form-grid">
+      <div class="field">
+        <label for="warehouseName">Warehouse</label>
+        <input
+          id="warehouseName"
+          class="text-input"
+          type="text"
+          name="name"
+          [(ngModel)]="name"
+          placeholder="e.g. Vake Sales Warehouse"
+          required
+        />
+      </div>
+
+      <div class="field">
+        <label for="warehouseType">Type</label>
+        <select id="warehouseType" class="text-select" name="type" [(ngModel)]="type">
+          <option value="main">Main</option>
+          <option value="sales">Sales</option>
+        </select>
+      </div>
+
+      <!-- A main warehouse serves all branches, so it has no branch of its own. -->
+      @if (type() === 'sales') {
+        <div class="field">
+          <label for="warehouseBranch">Branch</label>
+          <input
+            id="warehouseBranch"
+            class="text-input"
+            type="text"
+            name="branch"
+            [(ngModel)]="branch"
+            placeholder="e.g. Vake"
+            required
+          />
+        </div>
+      }
+
+      <div class="field">
+        <label for="warehouseAddress">Address</label>
+        <input
+          id="warehouseAddress"
+          class="text-input"
+          type="text"
+          name="address"
+          [(ngModel)]="address"
+          placeholder="e.g. 23 Chavchavadze Ave, Tbilisi"
+          required
+        />
+      </div>
+
+      <div class="field">
+        <label for="warehouseStatus">Status</label>
+        <select id="warehouseStatus" class="text-select" name="status" [(ngModel)]="status">
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="warehouseManager">Manager</label>
+        <select id="warehouseManager" class="text-select" name="managerId" [(ngModel)]="managerId">
+          <option value="">— No manager —</option>
+          @for (manager of managerOptions(); track manager.id) {
+            <option [value]="manager.id">{{ manager.name }}</option>
+          }
+        </select>
+        @if (managerOptions().length === 0) {
+          <span class="field-hint">
+            No managers yet. In HR, add an employee with the Manager role in the WMS module.
+          </span>
+        }
+      </div>
+
+    </div>
+
+    <p class="field-hint">
+      The code (e.g. WH-SALE-03) is assigned automatically from the type. Products, stock and
+      total price come from WMS → Products.
+    </p>
+
+    @if (formError()) {
+      <p class="field-error">{{ formError() }}</p>
+    }
+
+    <div class="button-row">
+      <button type="submit" class="button button--dark" [disabled]="isSaving()">
+        @if (editingId()) {
+          {{ isSaving() ? 'Saving…' : 'Save changes' }}
+        } @else {
+          {{ isSaving() ? 'Adding…' : 'Add warehouse' }}
+        }
+      </button>
+      <button type="button" class="button button--secondary" (click)="closeForm()">Cancel</button>
+    </div>
+  </form>
+</app-modal>
+
+<!-- Import: the user will describe it later. -->
+<app-modal [open]="isImportOpen()" title="Import warehouses" (closed)="isImportOpen.set(false)">
+  <p class="page-description">Coming soon.</p>
+</app-modal>

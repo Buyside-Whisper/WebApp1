@@ -1,0 +1,102 @@
+<div class="page-stack">
+  <div class="page-header">
+    <div>
+      <p class="page-eyebrow">WMS · Products</p>
+      <div class="page-header__title-row">
+        <h1 class="page-title">{{ product()?.name ?? 'Product' }}</h1>
+        @if (product(); as product) {
+          <span
+            class="badge"
+            [class.badge--active]="product.status === 'active'"
+            [class.badge--inactive]="product.status === 'inactive'"
+          >
+            {{ product.status === 'active' ? 'Active' : 'Not active' }}
+          </span>
+        }
+      </div>
+      @if (product(); as product) {
+        <p class="page-description">
+          <code class="code-tag">{{ product.barcode }}</code>
+        </p>
+      }
+    </div>
+    <a class="button button--secondary" routerLink="/wms/products">Back to products</a>
+  </div>
+
+  @if (errorMessage()) {
+    <p class="field-error">{{ errorMessage() }}</p>
+  }
+
+  @if (product(); as product) {
+    <div class="stat-row">
+      <div class="stat">
+        <div class="stat__label">In stock</div>
+        <div class="stat__value">{{ product.quantity | number: '1.0-3' }} {{ product.unit }}</div>
+      </div>
+      <div class="stat">
+        <div class="stat__label">Warehouses</div>
+        <div class="stat__value">{{ product.stocks.length }}</div>
+      </div>
+      <div class="stat">
+        <div class="stat__label">Stock value (at cost)</div>
+        <div class="stat__value">₾{{ stockValue() | number: '1.2-2' }}</div>
+      </div>
+    </div>
+
+    <div class="page-card">
+      <h2 class="card-title">Details</h2>
+      <dl class="detail-grid">
+        <div><dt>Category</dt><dd>{{ product.category }}</dd></div>
+        <div><dt>Group</dt><dd>{{ product.group }}</dd></div>
+        <div><dt>Supplier</dt><dd>{{ product.supplier }}</dd></div>
+        <div><dt>Unit</dt><dd>{{ product.unit }}</dd></div>
+        <div><dt>Use</dt><dd>{{ usageLabels[product.usage] }}</dd></div>
+        <div><dt>POS status</dt><dd>{{ posStatusLabels[product.posStatus] }}</dd></div>
+        <div><dt>Cost price</dt><dd>₾{{ product.costPrice | number: '1.2-2' }}</dd></div>
+        <div><dt>Sale price</dt><dd>₾{{ product.salePrice | number: '1.2-2' }}</dd></div>
+      </dl>
+    </div>
+
+    <div class="page-card">
+      <h2 class="card-title">Stock by warehouse</h2>
+      @if (product.stocks.length === 0) {
+        <p class="page-description">Not in any warehouse yet.</p>
+      } @else {
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Warehouse</th>
+                <th>Code</th>
+                <th>Type</th>
+                <th>Quantity</th>
+                <th>Value (at cost)</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (stock of product.stocks; track stock.warehouseId) {
+                <tr>
+                  <td class="cell-strong">
+                    <a [routerLink]="['/wms/warehouses', stock.warehouseId]">{{ stock.warehouse.name }}</a>
+                  </td>
+                  <td><code class="code-tag">{{ stock.warehouse.code }}</code></td>
+                  <td>{{ stock.warehouse.type === 'main' ? 'Main' : 'Sales' }}</td>
+                  <td class="cell-figure">{{ stock.quantity | number: '1.0-3' }} {{ product.unit }}</td>
+                  <td class="cell-figure">₾{{ stock.quantity * product.costPrice | number: '1.2-2' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+
+    <div class="page-card">
+      <h2 class="card-title">
+        Stock history
+        <span class="card-title__note">every change, newest first</span>
+      </h2>
+      <app-movement-history [movements]="movements()" [showWarehouse]="true" />
+    </div>
+  }
+</div>

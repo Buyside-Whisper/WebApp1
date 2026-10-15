@@ -30,14 +30,20 @@ export class Warehouse extends TenantEntity {
   @Column({ type: 'enum', enum: WarehouseType })
   type!: WarehouseType;
 
-  @Column({ type: 'text', array: true, default: '{}' })
-  branches!: string[];
+  // One branch per warehouse, since a warehouse has one address. Free text for now.
+  @Column({ type: 'varchar', nullable: true })
+  branch!: string | null;
 
   @Column()
   address!: string;
 
-  @Column({ type: 'int', default: 0 })
-  stock!: number;
+  // Not stored: worked out from the products in this warehouse (WarehousesService.withTotals).
+  // Stock is split by unit because kg and pcs can't be added together.
+  productCount?: number;
+  stockPcs?: number;
+  stockKg?: number;
+  // What the goods cost: sum of quantity × cost price.
+  totalCost?: number;
 
   @Column({
     type: 'enum',

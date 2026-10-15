@@ -1,0 +1,91 @@
+@let product = this.product();
+<div class="page-stack">
+  <div class="stat-row">
+    <div class="stat">
+      <div class="stat__label">In stock</div>
+      <div class="stat__value">{{ product.quantity | number: '1.0-3' }} {{ product.unit }}</div>
+    </div>
+    <div class="stat">
+      <div class="stat__label">Warehouses</div>
+      <div class="stat__value">{{ product.stocks.length }}</div>
+    </div>
+    <div class="stat">
+      <div class="stat__label">Value (at cost ₾{{ product.costPrice | number: '1.2-2' }})</div>
+      <div class="stat__value">₾{{ totalValue() | number: '1.2-2' }}</div>
+    </div>
+  </div>
+
+  @if (product.stocks.length === 0) {
+    <p class="page-description">Not in any warehouse yet. Stock comes in through a receipt.</p>
+  } @else {
+    <div class="table-scroll">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Warehouse</th>
+            <th>Type</th>
+            <th>Quantity</th>
+            <th>Share</th>
+            <th>Value</th>
+            <th>Last change</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of rows(); track row.warehouseId) {
+            <tr>
+              <td class="cell-nowrap">
+                <a [routerLink]="['/wms/warehouses', row.warehouseId]">
+                  <code class="code-tag">{{ row.warehouse.code }}</code>
+                </a>
+                {{ row.warehouse.name }}
+                @if (row.warehouse.status === 'inactive') {
+                  <span class="muted">(inactive)</span>
+                }
+              </td>
+              <td>{{ row.warehouse.type === 'main' ? 'Main' : 'Sales' }}</td>
+              <td class="cell-figure">
+                <strong>{{ row.quantity | number: '1.0-3' }}</strong> {{ product.unit }}
+              </td>
+              <td class="cell-figure">
+                <div class="share">
+                  <span class="share__bar"><span [style.width.%]="row.share * 100"></span></span>
+                  {{ row.share * 100 | number: '1.0-0' }}%
+                </div>
+              </td>
+              <td class="cell-figure">₾{{ row.value | number: '1.2-2' }}</td>
+              <td class="cell-figure">
+                @if (movements() === null) {
+                  <span class="muted">…</span>
+                } @else {
+                  {{ row.lastChange | date: 'dd.MM.yyyy' }}
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  @if (inTransit().length) {
+    <div>
+      <h3 class="card-title">In transit</h3>
+      <p class="page-description">Sent but not received yet, so not counted in any warehouse above.</p>
+      <ul class="transit-list">
+        @for (item of inTransit(); track item.documentId) {
+          <li>
+            <a [routerLink]="['/wms/transfers', item.documentId]">{{ item.code }}</a>:
+            <strong>{{ item.quantity | number: '1.0-3' }} {{ product.unit }}</strong>
+            from {{ item.from.code }} {{ item.from.name }}, sent {{ item.sentAt | date: 'dd.MM.yyyy' }}
+          </li>
+        }
+      </ul>
+    </div>
+  }
+
+  <div class="button-row">
+    <a class="button button--outline" [routerLink]="['/wms/products', product.id]">
+      Open product page (full history)
+    </a>
+  </div>
+</div>

@@ -1,5 +1,8 @@
-import { IsArray, IsEnum, IsNotEmpty, IsNumber, IsString, IsUUID, Min } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsNumber, IsString, Min } from 'class-validator';
+import { ProductPosStatus } from '../product-pos-status.enum.js';
+import { ProductStatus } from '../product-status.enum.js';
 import { ProductUnit } from '../product-unit.enum.js';
+import { ProductUsage } from '../product-usage.enum.js';
 
 export class CreateProductDto {
   @IsString()
@@ -8,7 +11,7 @@ export class CreateProductDto {
 
   @IsString()
   @IsNotEmpty()
-  sku!: string;
+  barcode!: string;
 
   @IsString()
   @IsNotEmpty()
@@ -16,16 +19,29 @@ export class CreateProductDto {
 
   @IsString()
   @IsNotEmpty()
+  group!: string;
+
+  @IsString()
+  @IsNotEmpty()
   supplier!: string;
 
-  @IsNumber({ maxDecimalPlaces: 3 })
-  @Min(0)
-  amount!: number;
+  @IsEnum(ProductStatus)
+  status!: ProductStatus;
+
+  @IsEnum(ProductUsage)
+  usage!: ProductUsage;
+
+  @IsEnum(ProductPosStatus)
+  posStatus!: ProductPosStatus;
 
   @IsEnum(ProductUnit)
   unit!: ProductUnit;
 
-  @IsArray()
-  @IsUUID('all', { each: true })
-  warehouseIds!: string[];
+  @IsNumber({ maxDecimalPlaces: 2 }, { message: 'costPrice must be a number with at most 2 decimals' })
+  @Min(0)
+  costPrice!: number;
+
+  @IsNumber({ maxDecimalPlaces: 2 }, { message: 'salePrice must be a number with at most 2 decimals' })
+  @Min(0)
+  salePrice!: number;
 }

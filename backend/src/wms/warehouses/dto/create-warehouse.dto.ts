@@ -1,4 +1,5 @@
-import { IsArray, IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, IsUUID, Min } from 'class-validator';
+import { Transform } from 'class-transformer';
+import { IsEnum, IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
 import { WarehouseStatus } from '../warehouse-status.enum.js';
 import { WarehouseType } from '../warehouse-type.enum.js';
 
@@ -10,18 +11,15 @@ export class CreateWarehouseDto {
   @IsEnum(WarehouseType)
   type!: WarehouseType;
 
-  @IsArray()
-  @IsString({ each: true })
-  @IsNotEmpty({ each: true })
-  branches!: string[];
+  // One branch per warehouse (it has one address). Optional; blank means none.
+  @IsOptional()
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() || null : value))
+  @IsString()
+  branch?: string | null;
 
   @IsString()
   @IsNotEmpty()
   address!: string;
-
-  @IsInt()
-  @Min(0)
-  stock!: number;
 
   @IsOptional()
   @IsEnum(WarehouseStatus)

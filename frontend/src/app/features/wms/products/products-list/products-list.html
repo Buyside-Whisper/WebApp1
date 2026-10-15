@@ -4,148 +4,35 @@
       <p class="page-eyebrow">WMS</p>
       <h1 class="page-title">Products</h1>
       <p class="page-description">
-        Products, their total amount, and the warehouses where they can be found.
+        Products with their barcode, prices, quantity and the warehouses that have them.
         @if (!canManage()) {
           They are added and edited by the WMS admin.
         }
       </p>
     </div>
-  </div>
-
-  @if (canManage()) {
-  <div class="page-card">
-    <form class="page-stack" (ngSubmit)="saveProduct()">
-      <div class="form-grid">
-        <div class="field">
-          <label for="productName">Product</label>
-          <input
-            id="productName"
-            class="text-input"
-            type="text"
-            name="name"
-            [(ngModel)]="name"
-            placeholder="e.g. Sunflower Oil 1L"
-            required
-          />
-        </div>
-
-        <div class="field">
-          <label for="productSku">SKU</label>
-          <input
-            id="productSku"
-            class="text-input"
-            type="text"
-            name="sku"
-            [(ngModel)]="sku"
-            placeholder="e.g. GRC-OIL-001"
-            required
-          />
-        </div>
-
-        <div class="field">
-          <label for="productCategory">Category</label>
-          <input
-            id="productCategory"
-            class="text-input"
-            type="text"
-            name="category"
-            list="productCategories"
-            [(ngModel)]="category"
-            placeholder="e.g. Grocery"
-            required
-          />
-          <datalist id="productCategories">
-            @for (option of categories(); track option) {
-              <option [value]="option"></option>
-            }
-          </datalist>
-        </div>
-
-        <div class="field">
-          <label for="productSupplier">Supplier</label>
-          <input
-            id="productSupplier"
-            class="text-input"
-            type="text"
-            name="supplier"
-            list="productSuppliers"
-            [(ngModel)]="supplier"
-            placeholder="e.g. Kakheti Agro"
-            required
-          />
-          <datalist id="productSuppliers">
-            @for (option of suppliers(); track option) {
-              <option [value]="option"></option>
-            }
-          </datalist>
-        </div>
-
-        <div class="field">
-          <label for="productAmount">Amount</label>
-          <input
-            id="productAmount"
-            class="text-input"
-            type="number"
-            min="0"
-            [step]="unit() === 'kg' ? 0.001 : 1"
-            name="amount"
-            [(ngModel)]="amount"
-          />
-        </div>
-
-        <div class="field">
-          <label for="productUnit">Unit</label>
-          <select id="productUnit" class="text-select" name="unit" [(ngModel)]="unit">
-            <option value="pcs">pcs</option>
-            <option value="kg">kg</option>
-          </select>
-        </div>
-      </div>
-
-      <fieldset class="warehouse-picker">
-        <legend>Warehouses</legend>
-        @for (warehouse of warehouses(); track warehouse.id) {
-          <label
-            class="warehouse-option"
-            [class.warehouse-option--checked]="isWarehouseSelected(warehouse.id)"
-          >
-            <input
-              type="checkbox"
-              [checked]="isWarehouseSelected(warehouse.id)"
-              (change)="toggleWarehouse(warehouse.id)"
-            />
-            <code class="code-tag">{{ warehouse.code }}</code>
-            <span>{{ warehouse.name }}</span>
-            @if (warehouse.status === 'inactive') {
-              <span class="muted">(inactive)</span>
-            }
-          </label>
-        } @empty {
-          <p class="page-description">No warehouses yet. Add them in WMS → Warehouses.</p>
-        }
-      </fieldset>
-
-      @if (errorMessage()) {
-        <p class="field-error">{{ errorMessage() }}</p>
-      }
-
-      <div class="button-row">
-        <button type="submit" class="button button--primary" [disabled]="isSaving()">
-          @if (editingId()) {
-            {{ isSaving() ? 'Saving…' : 'Save changes' }}
-          } @else {
-            {{ isSaving() ? 'Adding…' : 'Add product' }}
-          }
+    @if (canManage()) {
+      <div class="button-row page-header__actions">
+        <button type="button" class="button button--outline" (click)="placeholder.set('import')">
+          <lucide-icon [img]="ImportIcon" [size]="16"></lucide-icon>
+          Import
         </button>
-        @if (editingId()) {
-          <button type="button" class="button button--secondary" (click)="resetForm()">
-            Cancel
-          </button>
-        }
+        <button type="button" class="button button--outline" (click)="placeholder.set('export')">
+          <lucide-icon [img]="ExportIcon" [size]="16"></lucide-icon>
+          Export
+        </button>
+        <button type="button" class="button button--outline" (click)="placeholder.set('scales')">
+          <lucide-icon [img]="ScalesIcon" [size]="16"></lucide-icon>
+          Scales
+        </button>
+        <button type="button" class="button button--dark" (click)="openAddForm()">
+          <lucide-icon [img]="PlusIcon" [size]="16"></lucide-icon>
+          Add product
+        </button>
       </div>
-    </form>
+    }
   </div>
-  } @else if (errorMessage()) {
+
+  @if (errorMessage()) {
     <p class="field-error">{{ errorMessage() }}</p>
   }
 
@@ -155,73 +42,264 @@
     } @else if (products().length === 0) {
       <p class="page-description">
         @if (canManage()) {
-          No products yet. Add the first one above.
+          No products yet. Use “Add product” to create the first one.
         } @else {
           No products yet. The WMS admin adds them.
         }
       </p>
     } @else {
+      <div class="table-filters">
+        <div class="search-input table-filters__search">
+          <lucide-icon [img]="SearchIcon" [size]="16" class="search-input__icon"></lucide-icon>
+          <input
+            class="text-input"
+            type="search"
+            aria-label="Search products"
+            [(ngModel)]="search"
+            placeholder="Product, barcode, category, group or supplier"
+          />
+        </div>
+        <select
+          class="text-select"
+          aria-label="Category"
+          [ngModel]="categoryFilter()"
+          (ngModelChange)="setCategoryFilter($event)"
+        >
+          <option value="all">All categories</option>
+          @for (option of categories(); track option) {
+            <option [value]="option">{{ option }}</option>
+          }
+        </select>
+        <select class="text-select" aria-label="Group" [(ngModel)]="groupFilter">
+          <option value="all">All groups</option>
+          @for (option of filterGroups(); track option) {
+            <option [value]="option">{{ option }}</option>
+          }
+        </select>
+        <select class="text-select" aria-label="Supplier" [(ngModel)]="supplierFilter">
+          <option value="all">All suppliers</option>
+          @for (option of suppliers(); track option) {
+            <option [value]="option">{{ option }}</option>
+          }
+        </select>
+        <select class="text-select" aria-label="Warehouse" [(ngModel)]="warehouseFilter">
+          <option value="all">All warehouses</option>
+          <option value="none">In no warehouse</option>
+          @for (warehouse of warehousesInList(); track warehouse.id) {
+            <option [value]="warehouse.id">{{ warehouse.code }} · {{ warehouse.name }}</option>
+          }
+        </select>
+        <select class="text-select" aria-label="Use" [(ngModel)]="usageFilter">
+          <option value="all">Any use</option>
+          <option value="sale">For sale</option>
+          <option value="ingredient">Ingredient</option>
+          <option value="both">Both</option>
+        </select>
+        <select class="text-select" aria-label="POS status" [(ngModel)]="posStatusFilter">
+          <option value="all">Any POS status</option>
+          <option value="pos">Available at POS</option>
+          <option value="storage">Storage only</option>
+        </select>
+        <select class="text-select" aria-label="Production status" [(ngModel)]="statusFilter">
+          <option value="all">Any production status</option>
+          <option value="active">Active</option>
+          <option value="inactive">Not active</option>
+        </select>
+        <select class="text-select" aria-label="Unit" [(ngModel)]="unitFilter">
+          <option value="all">Any unit</option>
+          <option value="pcs">pcs</option>
+          <option value="kg">kg</option>
+        </select>
+        <select class="text-select" aria-label="Stock" [(ngModel)]="stockFilter">
+          <option value="all">Any stock</option>
+          <option value="in">In stock</option>
+          <option value="out">Out of stock</option>
+        </select>
+        @if (hasFilters()) {
+          <button type="button" class="link-button" (click)="clearFilters()">Clear</button>
+        }
+      </div>
+
+      <div class="table-toolbar">
+        <span>
+          @if (hasFilters()) {
+            {{ filtered().length }} of {{ products().length }} products
+          } @else {
+            {{ products().length }} products
+          }
+        </span>
+        <div class="table-toolbar__hint">
+          <span>Drag a column header to move it.</span>
+          @if (columnOrder.isCustom()) {
+            <button type="button" class="link-button" (click)="columnOrder.reset()">
+              Reset column order
+            </button>
+          }
+        </div>
+      </div>
       <div class="table-scroll">
         <table class="data-table">
           <thead>
             <tr>
-              <th>Product</th>
-              <th>SKU</th>
-              <th>Category</th>
-              <th>Supplier</th>
-              <th class="cell-number">Amount</th>
-              <th>Unit</th>
-              <th>Warehouses</th>
-              @if (canManage()) {
-                <th>Actions</th>
+              @for (column of columnOrder.columns(); track column.key) {
+                <th
+                  class="th-draggable"
+                  draggable="true"
+                  [class.th-dragging]="columnOrder.dragging() === column.key"
+                  [class.th-drop-before]="columnOrder.dropSide(column.key) === 'before'"
+                  [class.th-drop-after]="columnOrder.dropSide(column.key) === 'after'"
+                  (dragstart)="columnOrder.dragStart($event, column.key)"
+                  (dragover)="columnOrder.dragOver($event, column.key)"
+                  (drop)="columnOrder.drop($event, column.key)"
+                  (dragend)="columnOrder.dragEnd()"
+                >
+                  {{ column.label }}
+                </th>
               }
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            @for (product of products(); track product.id) {
-              <tr [class.row-editing]="editingId() === product.id">
-                <td class="cell-strong">{{ product.name }}</td>
-                <td>
-                  <code class="code-tag">{{ product.sku }}</code>
-                </td>
-                <td>{{ product.category }}</td>
-                <td>{{ product.supplier }}</td>
-                <td class="cell-number">{{ product.amount | number: '1.0-3' }}</td>
-                <td>{{ product.unit }}</td>
-                <td>
-                  <div class="chip-list">
-                    @for (warehouse of product.warehouses; track warehouse.id) {
-                      <span class="chip" [title]="warehouse.name">{{ warehouse.code }}</span>
-                    } @empty {
-                      <span class="muted">–</span>
+            @for (product of pages.items(); track product.id) {
+              <tr [class.row-editing]="isFormOpen() && editing()?.id === product.id">
+                @for (column of columnOrder.columns(); track column.key) {
+                  @switch (column.key) {
+                    @case ('name') {
+                      <td class="cell-strong">{{ product.name }}</td>
                     }
-                  </div>
-                </td>
-                @if (canManage()) {
+                    @case ('barcode') {
+                      <td><code class="code-tag">{{ product.barcode }}</code></td>
+                    }
+                    @case ('category') {
+                      <td>{{ product.category }}</td>
+                    }
+                    @case ('group') {
+                      <td>{{ product.group }}</td>
+                    }
+                    @case ('supplier') {
+                      <td>{{ product.supplier }}</td>
+                    }
+                    @case ('status') {
+                      <td>
+                        <span
+                          class="badge"
+                          [class.badge--active]="product.status === 'active'"
+                          [class.badge--inactive]="product.status === 'inactive'"
+                        >
+                          {{ product.status === 'active' ? 'Active' : 'Not active' }}
+                        </span>
+                      </td>
+                    }
+                    @case ('usage') {
+                      <td class="cell-nowrap">{{ usageLabels[product.usage] }}</td>
+                    }
+                    @case ('posStatus') {
+                      <td class="cell-nowrap">{{ posStatusLabels[product.posStatus] }}</td>
+                    }
+                    @case ('quantity') {
+                      <td class="cell-figure">{{ product.quantity | number: '1.0-3' }}</td>
+                    }
+                    @case ('unit') {
+                      <td>{{ product.unit }}</td>
+                    }
+                    @case ('costPrice') {
+                      <td class="cell-figure">₾{{ product.costPrice | number: '1.2-2' }}</td>
+                    }
+                    @case ('salePrice') {
+                      <td class="cell-figure">₾{{ product.salePrice | number: '1.2-2' }}</td>
+                    }
+                    @case ('warehouses') {
+                      <td class="cell-nowrap">
+                        @if (product.stocks.length) {
+                          <button type="button" class="link-button link-button--cell" (click)="stockOf.set(product)">
+                            {{ product.stocks.length }} {{ product.stocks.length === 1 ? 'warehouse' : 'warehouses' }}
+                          </button>
+                        } @else {
+                          <span class="muted">–</span>
+                        }
+                      </td>
+                    }
+                  }
+                }
                 <td>
-                  <div class="button-row button-row--tight">
+                  <div class="icon-actions">
+                    <a
+                      class="icon-action"
+                      [routerLink]="['/wms/products', product.id]"
+                      title="View"
+                      aria-label="View {{ product.name }}"
+                    >
+                      <lucide-icon [img]="ViewIcon" [size]="18"></lucide-icon>
+                    </a>
                     <button
                       type="button"
-                      class="button button--secondary button--sm"
+                      class="icon-action"
+                      [disabled]="!canManage()"
+                      [title]="canManage() ? 'Edit' : 'Only the WMS admin can edit'"
+                      [attr.aria-label]="'Edit ' + product.name"
                       (click)="editProduct(product)"
                     >
-                      Edit
+                      <lucide-icon [img]="EditIcon" [size]="18"></lucide-icon>
                     </button>
                     <button
                       type="button"
-                      class="button button--secondary button--sm"
+                      class="icon-action icon-action--danger"
+                      [disabled]="!canManage()"
+                      [title]="canManage() ? 'Delete' : 'Only the WMS admin can delete'"
+                      [attr.aria-label]="'Delete ' + product.name"
                       (click)="deleteProduct(product)"
                     >
-                      Delete
+                      <lucide-icon [img]="DeleteIcon" [size]="18"></lucide-icon>
                     </button>
                   </div>
                 </td>
-                }
+              </tr>
+            } @empty {
+              <tr>
+                <td class="muted" [attr.colspan]="columnOrder.columns().length + 1">
+                  No products match the search and filters.
+                </td>
               </tr>
             }
           </tbody>
         </table>
       </div>
+      <app-pager [pagination]="pages" />
     }
   </div>
 </div>
+
+<app-modal
+  [open]="isFormOpen()"
+  [title]="editing() ? 'Edit product' : 'Add product'"
+  (closed)="closeForm()"
+>
+  @if (isFormOpen()) {
+    <app-product-form
+      [product]="editing()"
+      [known]="products()"
+      (saved)="onSaved()"
+      (cancelled)="closeForm()"
+    />
+  }
+</app-modal>
+
+<!-- Import, Export and Scales: the user will describe them later. -->
+<app-modal
+  [open]="placeholder() !== null"
+  [title]="placeholderTitles[placeholder() ?? 'import']"
+  (closed)="placeholder.set(null)"
+>
+  <p class="page-description">Coming soon.</p>
+</app-modal>
+
+<!-- Where a product is: opened from the Warehouses column. -->
+<app-modal
+  [open]="stockOf() !== null"
+  [title]="'Stock of ' + (stockOf()?.name ?? '')"
+  (closed)="stockOf.set(null)"
+>
+  @if (stockOf(); as product) {
+    <app-product-stock [product]="product" />
+  }
+</app-modal>

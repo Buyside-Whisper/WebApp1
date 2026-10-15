@@ -1,0 +1,18 @@
+Demo Company sample logins (localhost development only).
+Created by the sample-data fill; passwords are shown once by the app, so they are kept here.
+Existing logins (admin.democompany, Giorgi Kapanadze, Levan Kvaratskhelia) were NOT changed.
+
+Store admin                              Nino Beridze           store-admin.democompany.1455             wnyanzj2d8
+WMS manager                              Ana Japaridze          wms-manager.democompany.8869             k49r2he82k
+WMS manager                              Saba Tsiklauri         wms-manager.democompany.5546             mxkb4j8vnw
+Store manager                            Giorgi Maisuradze      store-manager.democompany.7724           t4qay5r9yu
+Store manager                            Keti Dolidze           store-manager.democompany.6328           jps6zdbgpk
+Store manager                            Levan Tsereteli        store-manager.democompany.4159           kewnw5pzsk
+Cashier (Demo Market Vake)               Natia Kapanadze        cashier.democompany.4874                 phh4ygaabr
+Cashier (Demo Market Vake)               Sopo Kurtanidze        cashier.democompany.7350                 kgmeapb8hu
+Cashier (Demo Market Saburtalo)          Mari Svanidze          cashier.democompany.3931                 3g55frddyb
+Cashier (Demo Market Saburtalo)          Lika Bakradze          cashier.democompany.8978                 2gr4msvgpq
+Cashier (Demo Market Batumi)             Tako Gabunia           cashier.democompany.9605                 3ytfcchtvz
+Cashier (Demo Market Batumi)             Nutsa Jorbenadze       cashier.democompany.2039                 53rwk5t6tb
+Cashier (Demo Market Kutaisi)            Elene Chkheidze        cashier.democompany.4516                 cagnsmk88q
+Cashier (Demo Market Kutaisi)            Ketevan Abuladze       cashier.democompany.4085                 xdyuqur2gc

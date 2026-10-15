@@ -1,0 +1,134 @@
+<div class="page-stack">
+  <div class="page-header">
+    <div>
+      <p class="page-eyebrow">WMS · Transfers</p>
+      <h1 class="page-title">{{ id() ? 'Edit ' + code() : 'New transfer' }}</h1>
+      <p class="page-description">
+        Move goods from one warehouse to another. Save a draft while you prepare it; sending takes the
+        goods out of the source.
+      </p>
+    </div>
+    <a class="button button--secondary" [routerLink]="id() ? ['/wms/transfers', id()] : '/wms/transfers'">
+      Cancel
+    </a>
+  </div>
+
+  <div class="page-card">
+    <h2 class="card-title">Route</h2>
+    <div class="form-grid">
+      <div class="field">
+        <label for="transferFrom">From</label>
+        <select
+          id="transferFrom"
+          class="text-select"
+          [ngModel]="fromWarehouseId()"
+          (ngModelChange)="changeSource($event)"
+        >
+          <option value="" disabled>Choose a warehouse</option>
+          @for (warehouse of sources(); track warehouse.id) {
+            <option [value]="warehouse.id">{{ warehouse.code }} · {{ warehouse.name }}</option>
+          }
+        </select>
+      </div>
+      <div class="field">
+        <label for="transferTo">To</label>
+        <select id="transferTo" class="text-select" [(ngModel)]="toWarehouseId">
+          <option value="" disabled>Choose a warehouse</option>
+          @for (warehouse of destinations(); track warehouse.id) {
+            <option [value]="warehouse.id">{{ warehouse.code }} · {{ warehouse.name }}</option>
+          }
+        </select>
+      </div>
+      <div class="field">
+        <label for="transferDate">Date</label>
+        <input id="transferDate" class="text-input" type="date" [(ngModel)]="date" />
+      </div>
+      <div class="field">
+        <label for="transferNote">Note</label>
+        <input id="transferNote" class="text-input" type="text" [(ngModel)]="note" placeholder="Optional" />
+      </div>
+    </div>
+  </div>
+
+  <div class="page-card">
+    <h2 class="card-title">Products</h2>
+    @if (!fromWarehouseId()) {
+      <p class="page-description">Choose the warehouse to send from first.</p>
+    } @else {
+      <app-product-picker
+        [products]="pickable()"
+        [taken]="takenIds()"
+        placeholder="Add a product from this warehouse: name or barcode, or scan"
+        (picked)="addProduct($event)"
+      />
+      @if (lines().length === 0) {
+        <p class="page-description">No products yet.</p>
+      } @else {
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th>Barcode</th>
+                <th>Available</th>
+                <th>Quantity to send</th>
+                <th>Unit</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (line of lines(); track line.productId; let i = $index) {
+                <tr>
+                  <td class="cell-strong">{{ line.name }}</td>
+                  <td><code class="code-tag">{{ line.barcode }}</code></td>
+                  <td
+                    class="cell-figure"
+                    [class.short]="(line.quantity || 0) > (available().get(line.productId) ?? 0)"
+                  >
+                    {{ available().get(line.productId) ?? 0 | number: '1.0-3' }}
+                  </td>
+                  <td>
+                    <input
+                      class="text-input line-input"
+                      type="number"
+                      min="0"
+                      [step]="line.unit === 'kg' ? 0.001 : 1"
+                      [attr.aria-label]="'Quantity of ' + line.name"
+                      [ngModel]="line.quantity"
+                      (ngModelChange)="updateQuantity(i, $event)"
+                    />
+                  </td>
+                  <td>{{ line.unit }}</td>
+                  <td>
+                    <button
+                      type="button"
+                      class="icon-action icon-action--danger"
+                      [attr.aria-label]="'Remove ' + line.name"
+                      title="Remove"
+                      (click)="removeLine(i)"
+                    >
+                      <lucide-icon [img]="DeleteIcon" [size]="18"></lucide-icon>
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    }
+  </div>
+
+  @if (errorMessage()) {
+    <p class="field-error">{{ errorMessage() }}</p>
+  }
+
+  <div class="button-row">
+    <button type="button" class="button button--secondary" [disabled]="isSaving()" (click)="save(false)">
+      Save draft
+    </button>
+    <button type="button" class="button button--dark" [disabled]="isSaving()" (click)="save(true)">
+      {{ isSaving() ? 'Saving…' : 'Save and send' }}
+    </button>
+  </div>
+</div>

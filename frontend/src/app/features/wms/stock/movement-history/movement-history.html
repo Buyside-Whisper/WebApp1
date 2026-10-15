@@ -1,0 +1,67 @@
+@if (movements().length === 0) {
+  <p class="page-description">No stock movements yet.</p>
+} @else {
+  <div class="table-scroll">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Type</th>
+          @if (showProduct()) {
+            <th>Product</th>
+          }
+          @if (showWarehouse()) {
+            <th>Warehouse</th>
+          }
+          <th>Change</th>
+          <th>Balance after</th>
+          <th>By</th>
+          <th>Document / note</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (movement of pages.items(); track movement.id) {
+          <tr>
+            <td class="cell-figure">{{ movement.createdAt | date: 'dd.MM.yyyy HH:mm' }}</td>
+            <td class="cell-nowrap">{{ labels[movement.kind] }}</td>
+            @if (showProduct()) {
+              <td class="cell-strong">
+                @if (linkProducts()) {
+                  <a [routerLink]="['/wms/products', movement.product.id]">{{ movement.product.name }}</a>
+                } @else {
+                  {{ movement.product.name }}
+                }
+              </td>
+            }
+            @if (showWarehouse()) {
+              <td class="cell-nowrap">
+                <a [routerLink]="['/wms/warehouses', movement.warehouse.id]">
+                  <code class="code-tag">{{ movement.warehouse.code }}</code>
+                </a>
+                {{ movement.warehouse.name }}
+              </td>
+            }
+            <td
+              class="cell-figure"
+              [class.change-in]="movement.quantity > 0"
+              [class.change-out]="movement.quantity < 0"
+            >
+              {{ movement.quantity > 0 ? '+' : '' }}{{ movement.quantity | number: '1.0-3' }}
+              {{ movement.product.unit }}
+            </td>
+            <td class="cell-figure">{{ movement.balanceAfter | number: '1.0-3' }}</td>
+            <td class="cell-nowrap">{{ movement.createdByName }}</td>
+            <td>
+              @if (documentLink(movement); as link) {
+                <a [routerLink]="link">{{ movement.note }}</a>
+              } @else {
+                {{ movement.note ?? '' }}
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  <app-pager [pagination]="pages" />
+}

@@ -2,58 +2,205 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
+import {
+  Download,
+  LucideAngularModule,
+  Package,
+  PenLine,
+  Search,
+  Plus,
+  Scale,
+  Trash2,
+  Upload,
+} from 'lucide-angular';
 import { AuthService } from '../../../../core/auth/auth.service';
+import { ColumnOrder } from '../../../../shared/column-order/column-order';
+import { Modal } from '../../../../shared/modal/modal';
+import { ProductForm } from '../product-form/product-form';
+import { ProductStock } from '../product-stock/product-stock';
+import { Pager } from '../../../../shared/pager/pager';
+import { Pagination } from '../../../../shared/pager/pagination';
 import { Warehouse } from '../../warehouses/warehouse.model';
-import { WarehouseService } from '../../warehouses/warehouse.service';
-import { Product, ProductUnit } from '../product.model';
+import {
+  PRODUCT_POS_STATUS_LABELS,
+  PRODUCT_USAGE_LABELS,
+  Product,
+  ProductPosStatus,
+  ProductStatus,
+  ProductUnit,
+  ProductUsage,
+} from '../product.model';
 import { ProductService } from '../product.service';
 
 @Component({
   selector: 'app-products-list',
-  imports: [DecimalPipe, FormsModule],
+  imports: [DecimalPipe, FormsModule, RouterLink, LucideAngularModule, Modal, Pager, ProductForm, ProductStock],
   templateUrl: './products-list.html',
-  styleUrl: './products-list.css',
 })
 export class ProductsList implements OnInit {
   private readonly productService = inject(ProductService);
-  private readonly warehouseService = inject(WarehouseService);
   private readonly auth = inject(AuthService);
 
   // Only the WMS admin changes products; the system admin sees them read-only.
   protected readonly canManage = computed(() => this.auth.user()?.role === 'module_admin');
+  protected readonly usageLabels = PRODUCT_USAGE_LABELS;
+  protected readonly posStatusLabels = PRODUCT_POS_STATUS_LABELS;
+
+  protected readonly ViewIcon = Package;
+  protected readonly EditIcon = PenLine;
+  protected readonly DeleteIcon = Trash2;
+  protected readonly PlusIcon = Plus;
+  protected readonly SearchIcon = Search;
+  protected readonly ImportIcon = Upload;
+  protected readonly ExportIcon = Download;
+  protected readonly ScalesIcon = Scale;
+
+  protected readonly columnOrder = new ColumnOrder('wms-products', [
+    { key: 'name', label: 'Product' },
+    { key: 'barcode', label: 'Barcode' },
+    { key: 'category', label: 'Category' },
+    { key: 'group', label: 'Group' },
+    { key: 'supplier', label: 'Supplier' },
+    { key: 'status', label: 'Production status' },
+    { key: 'usage', label: 'Use' },
+    { key: 'posStatus', label: 'POS status' },
+    { key: 'quantity', label: 'Quantity' },
+    { key: 'unit', label: 'Unit' },
+    { key: 'costPrice', label: 'Cost price' },
+    { key: 'salePrice', label: 'Sale price' },
+    { key: 'warehouses', label: 'Warehouses' },
+  ]);
 
   protected readonly products = signal<Product[]>([]);
-  protected readonly warehouses = signal<Warehouse[]>([]);
+
+  // Search covers the text columns only (not numbers, statuses or other fixed choices); those
+  // fixed choices are the filters.
+  protected readonly search = signal('');
+  protected readonly categoryFilter = signal('all');
+  protected readonly groupFilter = signal('all');
+  protected readonly supplierFilter = signal('all');
+  protected readonly warehouseFilter = signal('all'); // 'all' | 'none' | warehouse id
+  protected readonly usageFilter = signal<'all' | ProductUsage>('all');
+  protected readonly posStatusFilter = signal<'all' | ProductPosStatus>('all');
+  protected readonly statusFilter = signal<'all' | ProductStatus>('all');
+  protected readonly unitFilter = signal<'all' | ProductUnit>('all');
+  protected readonly stockFilter = signal<'all' | 'in' | 'out'>('all');
+
+  // Groups of the chosen category (all groups when no category is chosen).
+  protected readonly filterGroups = computed(() => {
+    const category = this.categoryFilter();
+    return this.uniqueSorted(
+      this.products()
+        .filter((p) => category === 'all' || p.category === category)
+        .map((p) => p.group),
+    );
+  });
+
+  // The warehouses that hold any product, for the Warehouse filter (also works for read-only users).
+  protected readonly warehousesInList = computed(() => {
+    const byId = new Map<string, Warehouse>();
+    for (const product of this.products()) {
+      for (const stock of product.stocks) {
+        byId.set(stock.warehouseId, stock.warehouse);
+      }
+    }
+    return [...byId.values()].sort((a, b) => a.code.localeCompare(b.code));
+  });
+
+  private readonly filterValues = computed(() => [
+    this.categoryFilter(),
+    this.groupFilter(),
+    this.supplierFilter(),
+    this.warehouseFilter(),
+    this.usageFilter(),
+    this.posStatusFilter(),
+    this.statusFilter(),
+    this.unitFilter(),
+    this.stockFilter(),
+  ]);
+
+  protected readonly hasFilters = computed(
+    () => this.search().trim() !== '' || this.filterValues().some((value) => value !== 'all'),
+  );
+
+  protected readonly filtered = computed(() => {
+    const query = this.search().trim().toLowerCase();
+    const warehouse = this.warehouseFilter();
+    const stock = this.stockFilter();
+    const matches = (filter: string, value: string) => filter === 'all' || filter === value;
+    return this.products().filter(
+      (p) =>
+        matches(this.categoryFilter(), p.category) &&
+        matches(this.groupFilter(), p.group) &&
+        matches(this.supplierFilter(), p.supplier) &&
+        matches(this.usageFilter(), p.usage) &&
+        matches(this.posStatusFilter(), p.posStatus) &&
+        matches(this.statusFilter(), p.status) &&
+        matches(this.unitFilter(), p.unit) &&
+        (warehouse === 'all' ||
+          (warehouse === 'none'
+            ? p.stocks.length === 0
+            : p.stocks.some((s) => s.warehouseId === warehouse))) &&
+        (stock === 'all' || (stock === 'in') === p.quantity > 0) &&
+        (!query ||
+          [p.name, p.barcode, p.category, p.group, p.supplier].some((value) =>
+            value.toLowerCase().includes(query),
+          )),
+    );
+  });
+
+  protected readonly pages = new Pagination(
+    () => this.filtered(),
+    () => [this.search(), this.filterValues()],
+  );
+
+  // A new category may not have the chosen group, so the group filter starts over.
+  setCategoryFilter(category: string): void {
+    this.categoryFilter.set(category);
+    this.groupFilter.set('all');
+  }
+
+  clearFilters(): void {
+    this.search.set('');
+    for (const filter of [
+      this.categoryFilter,
+      this.groupFilter,
+      this.supplierFilter,
+      this.warehouseFilter,
+      this.usageFilter,
+      this.posStatusFilter,
+      this.statusFilter,
+      this.unitFilter,
+      this.stockFilter,
+    ]) {
+      filter.set('all');
+    }
+  }
   protected readonly isLoading = signal(false);
-  protected readonly isSaving = signal(false);
   protected readonly errorMessage = signal('');
 
-  protected readonly editingId = signal<string | null>(null);
+  // The Add / Edit product modal, and the still empty Import / Export / Scales modals.
+  protected readonly isFormOpen = signal(false);
+  protected readonly placeholder = signal<'import' | 'export' | 'scales' | null>(null);
+  protected readonly placeholderTitles = {
+    import: 'Import products',
+    export: 'Export products',
+    scales: 'Scales',
+  };
 
-  protected readonly name = signal('');
-  protected readonly sku = signal('');
-  protected readonly category = signal('');
-  protected readonly supplier = signal('');
-  protected readonly amount = signal(0);
-  protected readonly unit = signal<ProductUnit>('pcs');
-  protected readonly warehouseIds = signal<string[]>([]);
+  // Options for the Category and Supplier filters.
+  protected readonly categories = computed(() => this.uniqueSorted(this.products().map((p) => p.category)));
+  protected readonly suppliers = computed(() => this.uniqueSorted(this.products().map((p) => p.supplier)));
 
-  protected readonly categories = computed(() =>
-    this.uniqueSorted(this.products().map((p) => p.category)),
-  );
-  protected readonly suppliers = computed(() =>
-    this.uniqueSorted(this.products().map((p) => p.supplier)),
-  );
+  // The product whose stock pop-up is open (from the Warehouses column).
+  protected readonly stockOf = signal<Product | null>(null);
+
+  // The product in the Add / Edit modal (null = adding a new one).
+  protected readonly editing = signal<Product | null>(null);
 
   ngOnInit(): void {
     this.loadProducts();
-    if (!this.canManage()) {
-      return; // the warehouse checkboxes are only needed by the form
-    }
-    this.warehouseService.list().subscribe({
-      next: (warehouses) => this.warehouses.set(warehouses),
-      error: () => this.errorMessage.set('Could not load warehouses. Is the backend running?'),
-    });
   }
 
   loadProducts(): void {
@@ -70,104 +217,38 @@ export class ProductsList implements OnInit {
     });
   }
 
-  isWarehouseSelected(id: string): boolean {
-    return this.warehouseIds().includes(id);
-  }
-
-  toggleWarehouse(id: string): void {
-    this.warehouseIds.update((ids) =>
-      ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id],
-    );
-  }
-
-  saveProduct(): void {
-    const fields = [this.name(), this.sku(), this.category(), this.supplier()];
-    if (fields.some((value) => !value.trim())) {
-      this.errorMessage.set('Product, SKU, category and supplier are required.');
-      return;
-    }
-
-    const amount = Number(this.amount()) || 0;
-    if (amount < 0) {
-      this.errorMessage.set('Amount cannot be negative.');
-      return;
-    }
-    if (this.unit() === 'pcs' && !Number.isInteger(amount)) {
-      this.errorMessage.set('Amount must be a whole number when the unit is pcs.');
-      return;
-    }
-
-    const payload = {
-      name: this.name().trim(),
-      sku: this.sku().trim(),
-      category: this.category().trim(),
-      supplier: this.supplier().trim(),
-      amount,
-      unit: this.unit(),
-      warehouseIds: this.warehouseIds(),
-    };
-
-    const id = this.editingId();
-    const request = id
-      ? this.productService.update(id, payload)
-      : this.productService.create(payload);
-
-    this.isSaving.set(true);
-    this.errorMessage.set('');
-    request.subscribe({
-      next: () => {
-        this.isSaving.set(false);
-        this.resetForm();
-        this.loadProducts();
-      },
-      error: (error: HttpErrorResponse) => {
-        this.isSaving.set(false);
-        const message = error.error?.message;
-        this.errorMessage.set(
-          typeof message === 'string' ? message : 'Could not save the product.',
-        );
-      },
-    });
-  }
-
   editProduct(product: Product): void {
-    this.editingId.set(product.id);
-    this.name.set(product.name);
-    this.sku.set(product.sku);
-    this.category.set(product.category);
-    this.supplier.set(product.supplier);
-    this.amount.set(product.amount);
-    this.unit.set(product.unit);
-    this.warehouseIds.set(product.warehouses.map((w) => w.id));
-    this.errorMessage.set('');
+    this.editing.set(product);
+    this.isFormOpen.set(true);
+  }
+
+  openAddForm(): void {
+    this.editing.set(null);
+    this.isFormOpen.set(true);
+  }
+
+  closeForm(): void {
+    this.isFormOpen.set(false);
+  }
+
+  onSaved(): void {
+    this.closeForm();
+    this.loadProducts();
   }
 
   deleteProduct(product: Product): void {
-    if (!confirm(`Delete ${product.sku} ${product.name}?`)) {
+    if (!confirm(`Delete ${product.name} (${product.barcode})?`)) {
       return;
     }
 
     this.productService.remove(product.id).subscribe({
       next: () => {
-        if (this.editingId() === product.id) {
-          this.resetForm();
-        }
         this.loadProducts();
       },
-      error: () => this.errorMessage.set('Could not delete the product.'),
+      // e.g. "… has stock history, so it can't be deleted. Set it to … instead."
+      error: (error: HttpErrorResponse) =>
+        this.errorMessage.set(error.error?.message ?? 'Could not delete the product.'),
     });
-  }
-
-  resetForm(): void {
-    this.editingId.set(null);
-    this.name.set('');
-    this.sku.set('');
-    this.category.set('');
-    this.supplier.set('');
-    this.amount.set(0);
-    this.unit.set('pcs');
-    this.warehouseIds.set([]);
-    this.errorMessage.set('');
   }
 
   private uniqueSorted(values: string[]): string[] {

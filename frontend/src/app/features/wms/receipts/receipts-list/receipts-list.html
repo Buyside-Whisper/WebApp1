@@ -1,0 +1,137 @@
+<div class="page-stack">
+  <div class="page-header">
+    <div>
+      <p class="page-eyebrow">WMS</p>
+      <h1 class="page-title">Receipts</h1>
+      <p class="page-description">
+        Goods that arrived from suppliers. A draft changes nothing; posting it adds the goods to the
+        warehouse.
+      </p>
+    </div>
+    @if (canWrite()) {
+      <div class="button-row page-header__actions">
+        <a class="button button--dark" routerLink="/wms/receipts/new">
+          <lucide-icon [img]="PlusIcon" [size]="16"></lucide-icon>
+          New receipt
+        </a>
+      </div>
+    }
+  </div>
+
+  @if (errorMessage()) {
+    <p class="field-error">{{ errorMessage() }}</p>
+  }
+
+  <div class="page-card">
+    @if (isLoading()) {
+      <p class="page-description">Loading…</p>
+    } @else if (receipts().length === 0) {
+      <p class="page-description">No receipts yet.</p>
+    } @else {
+      <div class="table-filters">
+        <div class="search-input table-filters__search">
+          <lucide-icon [img]="SearchIcon" [size]="16" class="search-input__icon"></lucide-icon>
+          <input
+            class="text-input"
+            type="search"
+            aria-label="Search receipts"
+            [(ngModel)]="search"
+            placeholder="Number, supplier, waybill or warehouse"
+          />
+        </div>
+        <select class="text-select" aria-label="Status" [(ngModel)]="statusFilter">
+          <option value="all">All statuses</option>
+          <option value="draft">Draft</option>
+          <option value="posted">Posted</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+        <select class="text-select" aria-label="Warehouse" [(ngModel)]="warehouseFilter">
+          <option value="all">All warehouses</option>
+          @for (warehouse of warehousesInList(); track warehouse.id) {
+            <option [value]="warehouse.id">{{ warehouse.code }} · {{ warehouse.name }}</option>
+          }
+        </select>
+        @if (hasFilters()) {
+          <button type="button" class="link-button" (click)="clearFilters()">Clear</button>
+        }
+      </div>
+
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Number</th>
+              <th>Date</th>
+              <th>Warehouse</th>
+              <th>Supplier</th>
+              <th>Waybill</th>
+              <th>Lines</th>
+              <th>Total</th>
+              <th>Status</th>
+              <th>Created by</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (receipt of pages.items(); track receipt.id) {
+              <tr>
+                <td class="cell-strong">
+                  <a [routerLink]="['/wms/receipts', receipt.id]">{{ receipt.code }}</a>
+                </td>
+                <td class="cell-figure">{{ receipt.date | date: 'dd.MM.yyyy' }}</td>
+                <td class="cell-nowrap">
+                  <code class="code-tag">{{ receipt.warehouse.code }}</code>
+                  {{ receipt.warehouse.name }}
+                </td>
+                <td>{{ receipt.supplier }}</td>
+                <td>{{ receipt.waybillNumber ?? '–' }}</td>
+                <td class="cell-figure">{{ receipt.lineCount }}</td>
+                <td class="cell-figure">₾{{ receipt.total | number: '1.2-2' }}</td>
+                <td>
+                  <span
+                    class="badge"
+                    [class.badge--draft]="receipt.status === 'draft'"
+                    [class.badge--done]="receipt.status === 'posted'"
+                    [class.badge--cancelled]="receipt.status === 'cancelled'"
+                  >
+                    {{ statusLabels[receipt.status] }}
+                  </span>
+                </td>
+                <td class="cell-nowrap">{{ receipt.createdByName }}</td>
+                <td>
+                  <div class="icon-actions">
+                    <a class="icon-action" [routerLink]="['/wms/receipts', receipt.id]" title="View">
+                      <lucide-icon [img]="ViewIcon" [size]="18"></lucide-icon>
+                    </a>
+                    @if (canWrite() && receipt.status === 'draft') {
+                      <a
+                        class="icon-action"
+                        [routerLink]="['/wms/receipts', receipt.id, 'edit']"
+                        title="Edit draft"
+                      >
+                        <lucide-icon [img]="EditIcon" [size]="18"></lucide-icon>
+                      </a>
+                      <button
+                        type="button"
+                        class="icon-action icon-action--danger"
+                        title="Delete draft"
+                        (click)="deleteDraft(receipt)"
+                      >
+                        <lucide-icon [img]="DeleteIcon" [size]="18"></lucide-icon>
+                      </button>
+                    }
+                  </div>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td class="muted" colspan="10">No receipts match the search and filters.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <app-pager [pagination]="pages" />
+    }
+  </div>
+</div>
