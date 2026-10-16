@@ -175,7 +175,7 @@ export class EmployeesList implements OnInit {
       hireDate: ['', Validators.required],
       endDate: [''],
       role: this.fb.control<EmployeeRole | ''>(''),
-      module: this.fb.control<AppModule | ''>(''),
+      module: this.fb.control<AppModule | null>(null),
     },
     { validators: [hireDateAfterBirth, endDateAfterHire, moduleForRole] },
   );
@@ -234,7 +234,7 @@ export class EmployeesList implements OnInit {
     this.onRoleChange();
     this.placeIds.set(this.places().length === 1 ? [this.places()[0].id] : []);
 
-    this.form.controls.module.setValue(this.ownModule() ?? '');
+    this.form.controls.module.setValue(this.ownModule() ?? null);
     if (QUICK_ADD) {
       this.form.patchValue(randomPersonDetails());
       for (const name of QUICK_ADD_DISABLED) {
@@ -270,7 +270,7 @@ export class EmployeesList implements OnInit {
       this.form.controls.module.setValue('store');
     }
     if (this.isSystemAdmin() && role === '') {
-      this.form.controls.module.setValue('');
+      this.form.controls.module.setValue(null);
       this.form.controls.module.disable();
     } else {
       this.form.controls.module.enable();
@@ -330,7 +330,7 @@ export class EmployeesList implements OnInit {
         birthDate: value.birthDate,
         hireDate: value.hireDate,
         endDate: value.endDate || null,
-        module: value.role || !this.isSystemAdmin() ? value.module || null : null,
+        module: value.module,
         ...(this.isManager() ? { workplaceIds: this.placeIds() } : {}),
       })
       .subscribe({
@@ -342,7 +342,6 @@ export class EmployeesList implements OnInit {
             ...list,
           ]);
           this.showNotice(`Added ${created.firstName} ${created.lastName}`);
-          this.loadEmployees();
           if (created.role && created.status === 'active') {
             this.issueLogin(created);
           }

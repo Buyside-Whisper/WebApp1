@@ -1,22 +1,9 @@
-class XXX {
-  yyy1;
-  yyy2;
-  constructor(yyy1: string, yyy2: string) {
-    this.yyy1 = yyy1;
-    this.yyy2 = yyy2;
-  }
-  var1 = 1;
-  var2 = 2;
-
-  func1() {
-    return this.var1;
-  }
-
-  func2() {
-    return this.var2;
-  }
+function getProperty<T, K extends keyof T>(object: T, key: K): T[K] {
+  return object[key];
 }
 
-let something = new XXX("xxx1", "xxx2");
+const user = { id: 1, nameX: "David", active: true };
 
-console.log(something);
+const nameX = getProperty(user, "nameX");
+const id = getProperty(user, "id");
+const active = getProperty(user, "active");

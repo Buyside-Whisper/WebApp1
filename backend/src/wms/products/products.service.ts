@@ -15,6 +15,9 @@ export type ProductOption = Pick<
   'id' | 'name' | 'barcode' | 'unit' | 'costPrice' | 'category' | 'group' | 'supplier'
 >;
 
+// "  Snickers   50G " and "snickers 50g" are the same name.
+const nameKey = (name: string) => name.trim().replace(/\s+/g, ' ').toLowerCase();
+
 // The product catalogue. Quantities are not edited here: they change only through stock
 // documents (StockService), and come back read-only as `stocks` / `quantity`.
 @Injectable()
@@ -57,6 +60,7 @@ export class ProductsService {
   }
 
   async create(actor: AuthUser, dto: CreateProductDto): Promise<Product> {
+    await this.assertNameFree(actor, dto.name);
     const product = this.productsRepository.create({
       ...this.trimmed(dto),
       companyId: actor.companyId!,
@@ -71,6 +75,11 @@ export class ProductsService {
     // Existing quantities are in the old unit (e.g. 12.5 kg), so the unit is fixed while there is stock.
     if (dto.unit && dto.unit !== product.unit && product.stocks.some((stock) => stock.quantity !== 0)) {
       throw new BadRequestException(`The unit can't change while ${product.name} has stock`);
+    }
+
+    // Only a rename is checked, so products that were duplicates before this rule can still be edited.
+    if (dto.name && nameKey(dto.name) !== nameKey(product.name)) {
+      await this.assertNameFree(actor, dto.name, id);
     }
 
     const { stocks, ...rest } = product;
@@ -90,6 +99,24 @@ export class ProductsService {
     }
     await this.productsRepository.delete({ id, companyId: actor.companyId! });
     await this.audit.record(actor, 'product.delete', `Deleted product ${product.barcode} ${product.name}`);
+  }
+
+  // Two products may not have the same name (ignoring capitals and extra spaces): it is almost
+  // always the same product added twice.
+  private async assertNameFree(actor: AuthUser, name: string, exceptId?: string): Promise<void> {
+    const query = this.productsRepository
+      .createQueryBuilder('product')
+      .where('product.company_id = :companyId', { companyId: actor.companyId })
+      .andWhere(`LOWER(REGEXP_REPLACE(TRIM(product.name), '\\s+', ' ', 'g')) = :key`, { key: nameKey(name) });
+    if (exceptId) {
+      query.andWhere('product.id <> :exceptId', { exceptId });
+    }
+    const existing = await query.getOne();
+    if (existing) {
+      throw new ConflictException(
+        `A product named "${existing.name}" already exists (barcode ${existing.barcode})`,
+      );
+    }
   }
 
   private async save(product: Product): Promise<Product> {

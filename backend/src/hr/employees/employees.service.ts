@@ -141,7 +141,6 @@ export class EmployeesService {
     );
   }
 
-  // Creates the employee's login, or resets its password if it already exists.
   async issueCredentials(actor: AuthUser, id: string): Promise<Credentials> {
     const employee = await this.findOne(actor, id);
     this.assertCanChange(actor, employee);
@@ -175,6 +174,7 @@ export class EmployeesService {
       displayName: this.nameOf(employee),
       employeeId: employee.id,
     });
+
     await this.audit.record(
       actor,
       'credentials.issue',
@@ -333,14 +333,13 @@ export class EmployeesService {
     }
   }
 
-  // Keeps the login in line with the employee after a role / module / name change.
   private async syncLogin(employee: Employee): Promise<void> {
     const user = await this.users.findByEmployeeId(employee.id);
     if (!user) {
       return;
     }
     if (!employee.role || !employee.module) {
-      await this.usersRepository.remove(user); // lost their role: no login any more
+      await this.usersRepository.remove(user);
       return;
     }
     user.role = USER_ROLES[employee.role];

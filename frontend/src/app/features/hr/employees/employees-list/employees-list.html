@@ -107,7 +107,6 @@
                 </td>
                 <td>{{ employee.email ?? '–' }}</td>
                 <td class="nowrap">{{ employee.phone ?? '–' }}</td>
-
                 <td>
                   <span
                     class="badge"
@@ -294,7 +293,7 @@
         <div class="field">
           <label for="module">Module</label>
           <select id="module" class="text-select" formControlName="module">
-            <option value="">— None —</option>
+            <option value="null">— None —</option>
             @for (module of availableModules(); track module) {
               <option [value]="module">{{ moduleLabels[module] }}</option>
             }

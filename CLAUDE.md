@@ -67,7 +67,9 @@ submodules are planned, so keep to the structure below.
   [`active`/`inactive`, shown as Active / Not active], **use** [`sale`/`ingredient`/`both`],
   **POS status** [`storage` = Storage only / `pos` = Available at POS], **unit** [ერთეული:
   `kg`/`pcs`], **cost price** [თვითღირებულება] and **sale price** [გასაყიდი ფასი] (₾ per unit,
-  2 decimals). The product form is the **catalogue only**: no quantities (unit is locked while the
+  2 decimals). **Names are unique per company** too, ignoring capitals and extra spaces (the user
+  chose to block, not warn; checked in `ProductsService.assertNameFree`, only on create / rename).
+  The product form is the **catalogue only**: no quantities (unit is locked while the
   product has stock; a product with stock history can't be deleted, only set Not active). Category,
   group and supplier are plain text for now (the form suggests values already used). Top right (WMS
   admin only): **Import**, **Export**, **Scales** (each opens an empty "Coming soon" modal; the user

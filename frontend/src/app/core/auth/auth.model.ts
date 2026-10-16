@@ -1,6 +1,5 @@
 export type Role = 'superuser' | 'system_admin' | 'module_admin' | 'manager' | 'cashier';
 export type AppModule = 'wms' | 'store' | 'restaurant';
-// HR is not sold separately: every company has it.
 export type AccessModule = 'hr' | AppModule;
 
 export interface SessionUser {
