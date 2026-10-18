@@ -1,9 +1,22 @@
-function getProperty<T, K extends keyof T>(object: T, key: K): T[K] {
-  return object[key];
+function Log(target: object, name: string, descriptor: PropertyDescriptor) {
+  console.log("Target:", target.constructor.name);
+  console.log("Method name:", name);
+  console.log("Original function exists:", descriptor.value);
+
+  const original = descriptor.value;
+
+  descriptor.value = function (...args: unknown[]) {
+    console.log(`Calling ${name} with:`, args);
+    return original.apply(this, args);
+  };
 }
 
-const user = { id: 1, nameX: "David", active: true };
+class Calculator {
+  @Log
+  add(a: number, b: number) {
+    return a + b;
+  }
+}
 
-const nameX = getProperty(user, "nameX");
-const id = getProperty(user, "id");
-const active = getProperty(user, "active");
+const calc = new Calculator();
+console.log("Result:", calc.add(3, 5));

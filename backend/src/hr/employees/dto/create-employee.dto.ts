@@ -56,25 +56,19 @@ export class CreateEmployeeDto {
   @IsNotEmpty()
   position!: string;
 
-  // Optional: only set when the employee leaves (or is about to).
   @IsOptional()
   @IsISO8601({ strict: true })
   @Matches(/^\d{4}-\d{2}-\d{2}$/, { message: 'endDate must be YYYY-MM-DD' })
   endDate?: string | null;
 
-  // Leave out for a person who has no access to the app.
   @IsOptional()
   @IsEnum(EmployeeRole)
   role?: EmployeeRole | null;
 
-  // Required for admin / manager / cashier (checked in the service). A module admin's own
-  // module is used regardless of what is sent.
   @IsOptional()
   @IsEnum(AppModuleName)
   module?: AppModuleName | null;
 
-  // Only used when a manager adds someone: the stores (Store manager) or warehouses (WMS
-  // manager) of his that the person works in.
   @IsOptional()
   @IsArray()
   @IsUUID(undefined, { each: true })

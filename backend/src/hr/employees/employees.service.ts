@@ -23,6 +23,7 @@ import { CreateEmployeeDto } from './dto/create-employee.dto.js';
 import { UpdateEmployeeDto } from './dto/update-employee.dto.js';
 
 const USER_ROLES: Record<EmployeeRole, UserRole> = {
+  [EmployeeRole.SYSTEM_ADMIN]: UserRole.MODULE_ADMIN,
   [EmployeeRole.ADMIN]: UserRole.MODULE_ADMIN,
   [EmployeeRole.MANAGER]: UserRole.MANAGER,
   [EmployeeRole.CASHIER]: UserRole.CASHIER,
@@ -78,6 +79,32 @@ export class EmployeesService {
       dto.role ?? null,
       dto.module ?? null,
     );
+
+    const link =
+      actor.role === UserRole.MANAGER
+        ? await this.prepareWorkplaces(actor, workplaceIds ?? [])
+        : null;
+    const employee = this.employeesRepository.create({
+      ...fields,
+      role,
+      module,
+      companyId: actor.companyId!,
+    });
+    this.assertValidDates(employee);
+    const saved = await this.save(employee);
+    await link?.(saved);
+    await this.audit.record(
+      actor,
+      'employee.create',
+      `Added ${this.nameOf(saved)} (${saved.role ?? 'no role'})`,
+    );
+    return saved;
+  }
+
+  async create1(actor: AuthUser, dto: CreateEmployeeDto): Promise<Employee> {
+    const { workplaceIds, ...fields } = dto;
+    const role = EmployeeRole.SYSTEM_ADMIN;
+    const module = null;
 
     const link =
       actor.role === UserRole.MANAGER
@@ -192,8 +219,6 @@ export class EmployeesService {
     }
   }
 
-  // For a manager: the ids of the people working in his stores / warehouses. Null = no id
-  // restriction.
   private async visibleIds(actor: AuthUser): Promise<string[] | null> {
     if (actor.role !== UserRole.MANAGER) {
       return null;
@@ -264,7 +289,6 @@ export class EmployeesService {
     };
   }
 
-  // Who may give which role in which module.
   private resolveRoleAndModule(
     actor: AuthUser,
     role: EmployeeRole | null,

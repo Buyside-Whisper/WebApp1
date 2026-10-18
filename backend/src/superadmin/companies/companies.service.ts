@@ -71,6 +71,7 @@ export class CompaniesService {
       companyName: company.name,
       displayName: `${dto.adminFirstName} ${dto.adminLastName}`,
     });
+
     await this.setUpModules(company);
     await this.audit.record(
       actor,

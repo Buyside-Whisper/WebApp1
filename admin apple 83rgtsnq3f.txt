@@ -1,9 +1,20 @@
-admin.apple 83rgtsnq3f Apple sys admin. 
-wms-admin.apple.8100 su56u663as wms admin.
-wms-manager.apple.4216 q6fkqp27rx wms manager.
-store-admin.apple.2786 nycxnf2g68 Store admin.
-store-manager.apple.4981 j7xu6cg5jv Store manager
-cashier.apple.5556 c9mkejpg5m Store cashier
-cashier.apple.8361 sdnfmux9pc Store cashier
-cashier.apple.6798 jdthwvzk55 Store cashier
-
+admin.mango 4ugm2feb96 Mango sys admin
+wms-admin.mango.4504 zbpjcxhnes WMS admin - Nino Beridze
+wms-admin.mango.2076 furs9rdz9t WMS admin - Giorgi Maisuradze
+store-admin.mango.6836 ahmtjqnqev Store admin - Ana Japaridze
+store-admin.mango.1143 fzve8qbb64 Store admin - Saba Tsiklauri
+restaurant-admin.mango.4144 e4ay7dukbt Restaurant admin - Keti Dolidze
+wms-manager.mango.9179 qwfd6ve7hf WMS manager - Mari Svanidze
+wms-manager.mango.9004 28gtkees95 WMS manager - Lika Bakradze
+wms-manager.mango.7661 w6jw7urwmv WMS manager - Tako Gabunia
+store-manager.mango.8706 bb3brpb9gv Store manager - Irakli Mchedlishvili
+store-manager.mango.5858 8wf777bta8 Store manager - Salome Ninidze
+store-manager.mango.8636 cpg5yw5qvk Store manager - Zura Okropiridze
+cashier.mango.7124 2ph5mc4jhq Store cashier (Mango Market Vake) - Mariam Papava
+cashier.mango.8187 jk6df5f9y7 Store cashier (Mango Market Vake) - Nika Qavtaradze
+cashier.mango.9401 mb88aanfm9 Store cashier (Mango Market Saburtalo) - Anano Rukhadze
+cashier.mango.3900 swnwpvxe3w Store cashier (Mango Market Saburtalo) - Tornike Sharashidze
+cashier.mango.9632 yh439nzb6h Store cashier (Mango Market Batumi) - Eka Tabatadze
+cashier.mango.9210 kx3v76qfnm Store cashier (Mango Market Batumi) - Beka Ugrekhelidze
+cashier.mango.1484 h2tbecwy44 Store cashier (Mango Market Kutaisi) - Mako Vashakidze
+cashier.mango.6019 zqj2vyskjf Store cashier (Mango Market Kutaisi) - Gela Zedginidze
