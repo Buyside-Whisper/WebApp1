@@ -5,10 +5,11 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Like, Repository } from 'typeorm';
+import { EntityManager, In, Like, Repository } from 'typeorm';
 import { AuditService } from '../../audit/audit.service.js';
 import { AuthUser } from '../../auth/auth-user.js';
 import { UserRole } from '../../auth/user-role.enum.js';
+import { nameKey, nameKeySql } from '../../common/name-key.js';
 import { AppModuleName } from '../../companies/app-module.enum.js';
 import { Employee } from '../../hr/employees/employee.entity.js';
 import { EmployeeRole } from '../../hr/employees/employee-role.enum.js';
@@ -33,6 +34,8 @@ export interface ManagerOption {
   id: string;
   name: string;
 }
+
+export type NewWarehouse = Pick<Warehouse, 'name' | 'type' | 'branch' | 'address' | 'status' | 'managerId'>;
 
 @Injectable()
 export class WarehousesService {
@@ -115,6 +118,7 @@ export class WarehousesService {
   }
 
   async create(actor: AuthUser, dto: CreateWarehouseDto): Promise<Warehouse> {
+    await this.assertNameFree(actor, dto.name);
     const warehouse = this.warehousesRepository.create({
       ...dto,
       managerId: await this.checkedManagerId(actor, dto.managerId),
@@ -138,6 +142,10 @@ export class WarehousesService {
   ): Promise<Warehouse> {
     const warehouse = await this.findEntity(actor, id);
 
+    if (dto.name && nameKey(dto.name) !== nameKey(warehouse.name)) {
+      await this.assertNameFree(actor, dto.name, id);
+    }
+
     if (dto.type && dto.type !== warehouse.type) {
       warehouse.code = await this.nextCode(actor.companyId!, dto.type);
     }
@@ -159,6 +167,28 @@ export class WarehousesService {
       `Updated warehouse ${warehouse.code} ${warehouse.name}`,
     );
     return this.findOne(actor, id);
+  }
+
+  async createMany(actor: AuthUser, rows: NewWarehouse[]): Promise<Warehouse[]> {
+    const saved = await this.warehousesRepository.manager.transaction(async (manager) => {
+      await manager.query('SELECT pg_advisory_xact_lock(hashtext($1))', [
+        `warehouse-code:${actor.companyId}`,
+      ]);
+      const created: Warehouse[] = [];
+      for (const row of rows) {
+        const warehouse = manager.create(Warehouse, { ...row, companyId: actor.companyId! });
+        this.applyBranchRule(warehouse);
+        warehouse.code = await this.nextCode(actor.companyId!, row.type, manager);
+        created.push(await manager.save(warehouse));
+      }
+      return created;
+    });
+    await this.audit.record(
+      actor,
+      'warehouse.import',
+      `Imported ${saved.length} warehouses: ${saved.map((w) => w.code).join(', ')}`,
+    );
+    return saved;
   }
 
   async remove(actor: AuthUser, id: string): Promise<void> {
@@ -186,6 +216,22 @@ export class WarehousesService {
     }
 
     return warehouse;
+  }
+
+  private async assertNameFree(actor: AuthUser, name: string, exceptId?: string): Promise<void> {
+    const query = this.warehousesRepository
+      .createQueryBuilder('warehouse')
+      .where('warehouse.company_id = :companyId', { companyId: actor.companyId })
+      .andWhere(`${nameKeySql('warehouse.name')} = :key`, { key: nameKey(name) });
+    if (exceptId) {
+      query.andWhere('warehouse.id <> :exceptId', { exceptId });
+    }
+    const existing = await query.getOne();
+    if (existing) {
+      throw new ConflictException(
+        `A warehouse named "${existing.name}" already exists (${existing.code})`,
+      );
+    }
   }
 
   private applyBranchRule(warehouse: Warehouse): void {
@@ -268,9 +314,10 @@ export class WarehousesService {
   private async nextCode(
     companyId: string,
     type: WarehouseType,
+    manager: EntityManager = this.warehousesRepository.manager,
   ): Promise<string> {
     const prefix = CODE_PREFIXES[type];
-    const existing = await this.warehousesRepository.find({
+    const existing = await manager.find(Warehouse, {
       select: { code: true },
       where: { companyId, code: Like(`${prefix}-%`) },
     });

@@ -3,23 +3,31 @@ import { DecimalPipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { LucideAngularModule, Package, PenLine, Plus, Search, Trash2, Upload } from 'lucide-angular';
+import { Download, LucideAngularModule, Package, PenLine, Plus, Search, Trash2, Upload } from 'lucide-angular';
 import { AuthService } from '../../../../core/auth/auth.service';
 import { ColumnOrder } from '../../../../shared/column-order/column-order';
 import { Modal } from '../../../../shared/modal/modal';
 import { Pager } from '../../../../shared/pager/pager';
 import { Pagination } from '../../../../shared/pager/pagination';
-import { ManagerOption, Warehouse, WarehouseStatus, WarehouseType } from '../warehouse.model';
+import { XlsxImport } from '../../../../shared/xlsx-import/xlsx-import';
+import { PreviewColumn, saveFile, today } from '../../../../shared/xlsx-import/xlsx-import.model';
+import {
+  ManagerOption,
+  Warehouse,
+  WarehousePreviewRow,
+  WarehouseStatus,
+  WarehouseType,
+} from '../warehouse.model';
 import { WarehouseService } from '../warehouse.service';
 
 @Component({
   selector: 'app-warehouses-list',
-  imports: [DecimalPipe, FormsModule, RouterLink, LucideAngularModule, Modal, Pager],
+  imports: [DecimalPipe, FormsModule, RouterLink, LucideAngularModule, Modal, Pager, XlsxImport],
   templateUrl: './warehouses-list.html',
   styleUrl: './warehouses-list.css',
 })
 export class WarehousesList implements OnInit {
-  private readonly warehouseService = inject(WarehouseService);
+  protected readonly warehouseService = inject(WarehouseService);
   private readonly auth = inject(AuthService);
 
   protected readonly isAdmin = computed(() => {
@@ -35,6 +43,7 @@ export class WarehousesList implements OnInit {
   protected readonly PlusIcon = Plus;
   protected readonly SearchIcon = Search;
   protected readonly ImportIcon = Upload;
+  protected readonly ExportIcon = Download;
 
   protected readonly columnOrder = new ColumnOrder('wms-warehouses', [
     { key: 'name', label: 'Warehouse' },
@@ -112,6 +121,16 @@ export class WarehousesList implements OnInit {
 
   protected readonly isFormOpen = signal(false);
   protected readonly isImportOpen = signal(false);
+  protected readonly isExporting = signal(false);
+
+  protected readonly importColumns: PreviewColumn<WarehousePreviewRow>[] = [
+    { label: 'Warehouse', value: (row) => row.name, strong: true },
+    { label: 'Type', value: (row) => (row.type === 'main' ? 'Main' : 'Sales') },
+    { label: 'Branch', value: (row) => row.branch ?? 'All branches' },
+    { label: 'Address', value: (row) => row.address },
+    { label: 'Manager', value: (row) => row.manager ?? '—' },
+    { label: 'Status', value: (row) => (row.status === 'active' ? 'Active' : 'Inactive') },
+  ];
   protected readonly formError = signal('');
 
   protected readonly editingId = signal<string | null>(null);
@@ -180,6 +199,20 @@ export class WarehousesList implements OnInit {
         this.isSaving.set(false);
         const message = error.error?.message;
         this.formError.set(typeof message === 'string' ? message : 'Could not save the warehouse.');
+      },
+    });
+  }
+
+  exportWarehouses(): void {
+    this.isExporting.set(true);
+    this.warehouseService.export().subscribe({
+      next: (blob) => {
+        this.isExporting.set(false);
+        saveFile(blob, `warehouses-${today()}.xlsx`);
+      },
+      error: () => {
+        this.isExporting.set(false);
+        this.errorMessage.set('Could not export the warehouses. Is the backend running?');
       },
     });
   }

@@ -42,7 +42,7 @@ export class WarehouseView implements OnInit {
       return this.stock();
     }
     return this.stock().filter(({ product }) =>
-      [product.name, product.barcode, product.category, product.group].some((value) =>
+      [product.name, product.barcode, product.category.name, product.group].some((value) =>
         value.toLowerCase().includes(query),
       ),
     );

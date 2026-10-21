@@ -5,6 +5,8 @@ import { ProductsModule } from './products/products.module.js';
 import { StockModule } from './stock/stock.module.js';
 import { ReceiptsModule } from './receipts/receipts.module.js';
 import { TransfersModule } from './transfers/transfers.module.js';
+import { CategoriesModule } from './categories/categories.module.js';
+import { SuppliersModule } from './suppliers/suppliers.module.js';
 
 @Module({
   imports: [
@@ -13,8 +15,21 @@ import { TransfersModule } from './transfers/transfers.module.js';
     StockModule,
     ReceiptsModule,
     TransfersModule,
+    CategoriesModule,
+    SuppliersModule,
     RouterModule.register([
-      { path: 'wms', children: [WarehousesModule, ProductsModule, StockModule, ReceiptsModule, TransfersModule] },
+      {
+        path: 'wms',
+        children: [
+          WarehousesModule,
+          ProductsModule,
+          StockModule,
+          ReceiptsModule,
+          TransfersModule,
+          CategoriesModule,
+          SuppliersModule,
+        ],
+      },
     ]),
   ],
 })

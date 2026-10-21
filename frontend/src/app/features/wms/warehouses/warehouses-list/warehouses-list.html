@@ -13,18 +13,24 @@
         }
       </p>
     </div>
-    @if (canManage()) {
-      <div class="button-row page-header__actions">
+    <div class="button-row page-header__actions">
+      @if (canManage()) {
         <button type="button" class="button button--outline" (click)="isImportOpen.set(true)">
           <lucide-icon [img]="ImportIcon" [size]="16"></lucide-icon>
           Import
         </button>
+      }
+      <button type="button" class="button button--outline" [disabled]="isExporting()" (click)="exportWarehouses()">
+        <lucide-icon [img]="ExportIcon" [size]="16"></lucide-icon>
+        {{ isExporting() ? 'Exporting…' : 'Export' }}
+      </button>
+      @if (canManage()) {
         <button type="button" class="button button--dark" (click)="openAddForm()">
           <lucide-icon [img]="PlusIcon" [size]="16"></lucide-icon>
           Add warehouse
         </button>
-      </div>
-    }
+      }
+    </div>
   </div>
 
   @if (errorMessage()) {
@@ -347,5 +353,15 @@
 </app-modal>
 
 <app-modal [open]="isImportOpen()" title="Import warehouses" (closed)="isImportOpen.set(false)">
-  <p class="page-description">Coming soon.</p>
+  @if (isImportOpen()) {
+    <app-xlsx-import
+      [source]="warehouseService.importSource"
+      [columns]="importColumns"
+      [noun]="{ one: 'warehouse', many: 'warehouses' }"
+      description="Add many warehouses at once from an Excel file (.xlsx), one warehouse per row. Start from the template: it has the right columns, dropdowns for type, status and manager (your active WMS managers). Codes are given automatically."
+      templateName="warehouses-template.xlsx"
+      (imported)="loadWarehouses()"
+      (closed)="isImportOpen.set(false)"
+    />
+  }
 </app-modal>

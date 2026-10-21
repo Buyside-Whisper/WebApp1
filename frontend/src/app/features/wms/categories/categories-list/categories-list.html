@@ -1,0 +1,194 @@
+<div class="page-stack">
+  <div class="page-header">
+    <div>
+      <p class="page-eyebrow">WMS</p>
+      <h1 class="page-title">Categories</h1>
+      <p class="page-description">
+        Product categories (e.g. Sweets, Dairy). Every product belongs to one; its group is the
+        narrower part inside the category.
+        @if (!canManage()) {
+          They are added and edited by the WMS admin.
+        }
+      </p>
+    </div>
+    @if (canManage()) {
+      <div class="button-row page-header__actions">
+        <button type="button" class="button button--dark" (click)="openAddForm()">
+          <lucide-icon [img]="PlusIcon" [size]="16"></lucide-icon>
+          Add category
+        </button>
+      </div>
+    }
+  </div>
+
+  <app-product-tabs />
+
+  @if (errorMessage()) {
+    <p class="field-error">{{ errorMessage() }}</p>
+  }
+
+  <div class="page-card">
+    @if (isLoading()) {
+      <p class="page-description">Loading…</p>
+    } @else if (categories().length === 0) {
+      <p class="page-description">
+        @if (canManage()) {
+          No categories yet. Use “Add category” to create the first one.
+        } @else {
+          No categories yet. The WMS admin adds them.
+        }
+      </p>
+    } @else {
+      <div class="table-filters">
+        <div class="search-input table-filters__search">
+          <lucide-icon [img]="SearchIcon" [size]="16" class="search-input__icon"></lucide-icon>
+          <input
+            class="text-input"
+            type="search"
+            aria-label="Search categories"
+            [(ngModel)]="search"
+            placeholder="Category or description"
+          />
+        </div>
+        <select class="text-select" aria-label="Status" [(ngModel)]="statusFilter">
+          <option value="all">All statuses</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
+        @if (hasFilters()) {
+          <button type="button" class="link-button" (click)="clearFilters()">Clear</button>
+        }
+      </div>
+      <div class="table-toolbar">
+        <span>
+          @if (hasFilters()) {
+            {{ filtered().length }} of {{ categories().length }} categories
+          } @else {
+            {{ categories().length }} categories
+          }
+        </span>
+      </div>
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Category</th>
+              <th>Description</th>
+              <th>Products</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (category of pages.items(); track category.id) {
+              <tr>
+                <td class="cell-strong">{{ category.name }}</td>
+                <td>
+                  @if (category.description) {
+                    {{ category.description }}
+                  } @else {
+                    <span class="muted">—</span>
+                  }
+                </td>
+                <td class="cell-figure">{{ category.productCount }}</td>
+                <td>
+                  <span class="badge" [class]="category.status === 'active' ? 'badge--active' : 'badge--inactive'">
+                    {{ category.status === 'active' ? 'Active' : 'Inactive' }}
+                  </span>
+                </td>
+                <td>
+                  <div class="icon-actions">
+                    <button
+                      type="button"
+                      class="icon-action"
+                      [disabled]="!canManage()"
+                      [title]="canManage() ? 'Edit' : 'Only the WMS admin can edit'"
+                      [attr.aria-label]="'Edit ' + category.name"
+                      (click)="editCategory(category)"
+                    >
+                      <lucide-icon [img]="EditIcon" [size]="18"></lucide-icon>
+                    </button>
+                    <button
+                      type="button"
+                      class="icon-action icon-action--danger"
+                      [disabled]="!canManage() || category.productCount > 0"
+                      [title]="deleteTitle(category)"
+                      [attr.aria-label]="'Delete ' + category.name"
+                      (click)="deleteCategory(category)"
+                    >
+                      <lucide-icon [img]="DeleteIcon" [size]="18"></lucide-icon>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td class="muted" colspan="5">No categories match the search and filters.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <app-pager [pagination]="pages" />
+    }
+  </div>
+</div>
+
+<app-modal
+  [open]="isFormOpen()"
+  [title]="editingId() ? 'Edit category' : 'Add category'"
+  (closed)="isFormOpen.set(false)"
+>
+  <form class="page-stack" (ngSubmit)="saveCategory()">
+    <div class="form-grid">
+      <div class="field">
+        <label for="categoryName">Category</label>
+        <input
+          id="categoryName"
+          class="text-input"
+          type="text"
+          name="name"
+          [(ngModel)]="name"
+          placeholder="e.g. Sweets"
+          required
+        />
+      </div>
+
+      <div class="field">
+        <label for="categoryStatus">Status</label>
+        <select id="categoryStatus" class="text-select" name="status" [(ngModel)]="status">
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
+        <span class="field-hint">Inactive categories can't be chosen for new products.</span>
+      </div>
+
+      <div class="field">
+        <label for="categoryDescription">Description (optional)</label>
+        <input
+          id="categoryDescription"
+          class="text-input"
+          type="text"
+          name="description"
+          [(ngModel)]="description"
+          placeholder="e.g. Chocolate, candy and biscuits"
+        />
+      </div>
+    </div>
+
+    @if (formError()) {
+      <p class="field-error">{{ formError() }}</p>
+    }
+
+    <div class="button-row">
+      <button type="submit" class="button button--dark" [disabled]="isSaving()">
+        @if (editingId()) {
+          {{ isSaving() ? 'Saving…' : 'Save changes' }}
+        } @else {
+          {{ isSaving() ? 'Adding…' : 'Add category' }}
+        }
+      </button>
+      <button type="button" class="button button--secondary" (click)="isFormOpen.set(false)">Cancel</button>
+    </div>
+  </form>
+</app-modal>

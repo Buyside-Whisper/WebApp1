@@ -20,6 +20,18 @@ export default [
       import('./products/products-list/products-list').then((m) => m.ProductsList),
   },
   {
+    path: 'products/categories',
+    canActivate: [accessGuard('wms', ['system_admin', 'module_admin'])],
+    loadComponent: () =>
+      import('./categories/categories-list/categories-list').then((m) => m.CategoriesList),
+  },
+  {
+    path: 'products/suppliers',
+    canActivate: [accessGuard('wms', ['system_admin', 'module_admin'])],
+    loadComponent: () =>
+      import('./suppliers/suppliers-list/suppliers-list').then((m) => m.SuppliersList),
+  },
+  {
     path: 'products/:id',
     canActivate: [accessGuard('wms', ['system_admin', 'module_admin'])],
     loadComponent: () =>

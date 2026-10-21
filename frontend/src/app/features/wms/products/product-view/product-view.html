@@ -46,9 +46,9 @@
     <div class="page-card">
       <h2 class="card-title">Details</h2>
       <dl class="detail-grid">
-        <div><dt>Category</dt><dd>{{ product.category }}</dd></div>
+        <div><dt>Category</dt><dd>{{ product.category.name }}</dd></div>
         <div><dt>Group</dt><dd>{{ product.group }}</dd></div>
-        <div><dt>Supplier</dt><dd>{{ product.supplier }}</dd></div>
+        <div><dt>Supplier</dt><dd>{{ product.supplier.name }}</dd></div>
         <div><dt>Unit</dt><dd>{{ product.unit }}</dd></div>
         <div><dt>Use</dt><dd>{{ usageLabels[product.usage] }}</dd></div>
         <div><dt>POS status</dt><dd>{{ posStatusLabels[product.posStatus] }}</dd></div>

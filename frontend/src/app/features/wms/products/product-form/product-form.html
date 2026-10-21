@@ -28,21 +28,15 @@
 
     <div class="field">
       <label for="productCategory">Category</label>
-      <input
-        id="productCategory"
-        class="text-input"
-        type="text"
-        name="category"
-        list="productCategories"
-        [(ngModel)]="category"
-        placeholder="e.g. Sweets"
-        required
-      />
-      <datalist id="productCategories">
-        @for (option of categories(); track option) {
-          <option [value]="option"></option>
+      <select id="productCategory" class="text-select" name="categoryId" [(ngModel)]="categoryId" required>
+        <option value="" disabled>{{ allCategories() === null ? 'Loading…' : '— Choose a category —' }}</option>
+        @for (option of categories(); track option.id) {
+          <option [value]="option.id">{{ option.label }}</option>
         }
-      </datalist>
+      </select>
+      @if (allCategories() !== null && categories().length === 0) {
+        <span class="field-hint">No active categories yet. Add one in Products → Categories.</span>
+      }
     </div>
 
     <div class="field">
@@ -66,21 +60,15 @@
 
     <div class="field">
       <label for="productSupplier">Supplier</label>
-      <input
-        id="productSupplier"
-        class="text-input"
-        type="text"
-        name="supplier"
-        list="productSuppliers"
-        [(ngModel)]="supplier"
-        placeholder="e.g. Mars Georgia"
-        required
-      />
-      <datalist id="productSuppliers">
-        @for (option of suppliers(); track option) {
-          <option [value]="option"></option>
+      <select id="productSupplier" class="text-select" name="supplierId" [(ngModel)]="supplierId" required>
+        <option value="" disabled>{{ allSuppliers() === null ? 'Loading…' : '— Choose a supplier —' }}</option>
+        @for (option of suppliers(); track option.id) {
+          <option [value]="option.id">{{ option.label }}</option>
         }
-      </datalist>
+      </select>
+      @if (allSuppliers() !== null && suppliers().length === 0) {
+        <span class="field-hint">No active suppliers yet. Add one in Products → Suppliers.</span>
+      }
     </div>
 
     <div class="field">

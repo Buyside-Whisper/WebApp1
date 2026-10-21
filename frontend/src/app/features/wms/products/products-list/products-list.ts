@@ -10,7 +10,6 @@ import {
   PenLine,
   Search,
   Plus,
-  Scale,
   Trash2,
   Upload,
 } from 'lucide-angular';
@@ -19,14 +18,18 @@ import { ColumnOrder } from '../../../../shared/column-order/column-order';
 import { Modal } from '../../../../shared/modal/modal';
 import { ProductForm } from '../product-form/product-form';
 import { ProductStock } from '../product-stock/product-stock';
+import { ProductTabs } from '../product-tabs/product-tabs';
 import { Pager } from '../../../../shared/pager/pager';
 import { Pagination } from '../../../../shared/pager/pagination';
+import { XlsxImport } from '../../../../shared/xlsx-import/xlsx-import';
+import { PreviewColumn, saveFile, today } from '../../../../shared/xlsx-import/xlsx-import.model';
 import { Warehouse } from '../../warehouses/warehouse.model';
 import {
   PRODUCT_POS_STATUS_LABELS,
   PRODUCT_USAGE_LABELS,
   Product,
   ProductPosStatus,
+  ProductPreviewRow,
   ProductStatus,
   ProductUnit,
   ProductUsage,
@@ -35,11 +38,22 @@ import { ProductService } from '../product.service';
 
 @Component({
   selector: 'app-products-list',
-  imports: [DecimalPipe, FormsModule, RouterLink, LucideAngularModule, Modal, Pager, ProductForm, ProductStock],
+  imports: [
+    DecimalPipe,
+    FormsModule,
+    RouterLink,
+    LucideAngularModule,
+    Modal,
+    Pager,
+    ProductForm,
+    ProductStock,
+    ProductTabs,
+    XlsxImport,
+  ],
   templateUrl: './products-list.html',
 })
 export class ProductsList implements OnInit {
-  private readonly productService = inject(ProductService);
+  protected readonly productService = inject(ProductService);
   private readonly auth = inject(AuthService);
 
   protected readonly canManage = computed(() => this.auth.user()?.role === 'module_admin');
@@ -53,7 +67,6 @@ export class ProductsList implements OnInit {
   protected readonly SearchIcon = Search;
   protected readonly ImportIcon = Upload;
   protected readonly ExportIcon = Download;
-  protected readonly ScalesIcon = Scale;
 
   protected readonly columnOrder = new ColumnOrder('wms-products', [
     { key: 'name', label: 'Product' },
@@ -88,7 +101,7 @@ export class ProductsList implements OnInit {
     const category = this.categoryFilter();
     return this.uniqueSorted(
       this.products()
-        .filter((p) => category === 'all' || p.category === category)
+        .filter((p) => category === 'all' || p.categoryId === category)
         .map((p) => p.group),
     );
   });
@@ -126,9 +139,9 @@ export class ProductsList implements OnInit {
     const matches = (filter: string, value: string) => filter === 'all' || filter === value;
     return this.products().filter(
       (p) =>
-        matches(this.categoryFilter(), p.category) &&
+        matches(this.categoryFilter(), p.categoryId) &&
         matches(this.groupFilter(), p.group) &&
-        matches(this.supplierFilter(), p.supplier) &&
+        matches(this.supplierFilter(), p.supplierId) &&
         matches(this.usageFilter(), p.usage) &&
         matches(this.posStatusFilter(), p.posStatus) &&
         matches(this.statusFilter(), p.status) &&
@@ -139,7 +152,7 @@ export class ProductsList implements OnInit {
             : p.stocks.some((s) => s.warehouseId === warehouse))) &&
         (stock === 'all' || (stock === 'in') === p.quantity > 0) &&
         (!query ||
-          [p.name, p.barcode, p.category, p.group, p.supplier].some((value) =>
+          [p.name, p.barcode, p.category.name, p.group, p.supplier.name].some((value) =>
             value.toLowerCase().includes(query),
           )),
     );
@@ -175,15 +188,24 @@ export class ProductsList implements OnInit {
   protected readonly errorMessage = signal('');
 
   protected readonly isFormOpen = signal(false);
-  protected readonly placeholder = signal<'import' | 'export' | 'scales' | null>(null);
-  protected readonly placeholderTitles = {
-    import: 'Import products',
-    export: 'Export products',
-    scales: 'Scales',
-  };
+  protected readonly isImportOpen = signal(false);
+  protected readonly isExporting = signal(false);
 
-  protected readonly categories = computed(() => this.uniqueSorted(this.products().map((p) => p.category)));
-  protected readonly suppliers = computed(() => this.uniqueSorted(this.products().map((p) => p.supplier)));
+  protected readonly importColumns: PreviewColumn<ProductPreviewRow>[] = [
+    { label: 'Product', value: (row) => row.name, strong: true },
+    { label: 'Barcode', value: (row) => row.barcode },
+    { label: 'Category', value: (row) => `${row.category} / ${row.group}` },
+    { label: 'Supplier', value: (row) => row.supplier },
+    { label: 'Unit', value: (row) => row.unit },
+    { label: 'Use', value: (row) => PRODUCT_USAGE_LABELS[row.usage] },
+    { label: 'POS', value: (row) => PRODUCT_POS_STATUS_LABELS[row.posStatus] },
+    { label: 'Status', value: (row) => (row.status === 'active' ? 'Active' : 'Not active') },
+    { label: 'Cost', value: (row) => `₾${row.costPrice.toFixed(2)}`, figure: true },
+    { label: 'Sale', value: (row) => `₾${row.salePrice.toFixed(2)}`, figure: true },
+  ];
+
+  protected readonly categories = computed(() => this.uniqueById(this.products().map((p) => p.category)));
+  protected readonly suppliers = computed(() => this.uniqueById(this.products().map((p) => p.supplier)));
 
   protected readonly stockOf = signal<Product | null>(null);
 
@@ -191,6 +213,20 @@ export class ProductsList implements OnInit {
 
   ngOnInit(): void {
     this.loadProducts();
+  }
+
+  exportProducts(): void {
+    this.isExporting.set(true);
+    this.productService.export().subscribe({
+      next: (blob) => {
+        this.isExporting.set(false);
+        saveFile(blob, `products-${today()}.xlsx`);
+      },
+      error: () => {
+        this.isExporting.set(false);
+        this.errorMessage.set('Could not export the products. Is the backend running?');
+      },
+    });
   }
 
   loadProducts(): void {
@@ -238,6 +274,12 @@ export class ProductsList implements OnInit {
       error: (error: HttpErrorResponse) =>
         this.errorMessage.set(error.error?.message ?? 'Could not delete the product.'),
     });
+  }
+
+  private uniqueById<T extends { id: string; name: string }>(items: T[]): T[] {
+    return [...new Map(items.map((item) => [item.id, item])).values()].sort((a, b) =>
+      a.name.localeCompare(b.name),
+    );
   }
 
   private uniqueSorted(values: string[]): string[] {

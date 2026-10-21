@@ -1,0 +1,216 @@
+@let report = this.report();
+<div class="page-stack">
+  @if (report?.imported; as imported) {
+    <div class="import-callout import-callout--done">
+      <lucide-icon [img]="DoneIcon" [size]="20"></lucide-icon>
+      <div>
+        <strong>Imported {{ count(imported.length) }}</strong> from {{ report!.fileName }}.
+      </div>
+    </div>
+    <div class="table-scroll">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>{{ codeLabel() }}</th>
+            <th>Name</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of imported; track item.code) {
+            <tr>
+              <td><code class="code-tag">{{ item.code }}</code></td>
+              <td>{{ item.name }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <div class="button-row import-actions">
+      <button type="button" class="button button--dark" (click)="closed.emit()">Done</button>
+    </div>
+  } @else {
+    <p class="page-description">{{ description() }}</p>
+
+    <div class="button-row">
+      <button
+        type="button"
+        class="button button--outline"
+        [disabled]="busy() === 'template'"
+        (click)="downloadTemplate()"
+      >
+        <lucide-icon [img]="DownloadIcon" [size]="16"></lucide-icon>
+        {{ busy() === 'template' ? 'Downloading…' : 'Download template' }}
+      </button>
+    </div>
+
+    <label class="import-drop" [class.import-drop--busy]="busy() !== ''">
+      <input
+        type="file"
+        accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        [disabled]="busy() !== ''"
+        (change)="chooseFile($event)"
+      />
+      <lucide-icon [img]="FileIcon" [size]="28"></lucide-icon>
+      @if (busy() === 'checking') {
+        <span><strong>Checking {{ file()?.name }}…</strong></span>
+      } @else if (file()) {
+        <span><strong>{{ file()!.name }}</strong></span>
+        <span class="muted">Click to choose another file</span>
+      } @else {
+        <span><strong>Choose an .xlsx file</strong></span>
+        <span class="muted">Nothing is saved until you confirm the import</span>
+      }
+    </label>
+
+    @if (errorMessage()) {
+      <div class="import-callout import-callout--error">
+        <lucide-icon [img]="ErrorIcon" [size]="20"></lucide-icon>
+        <div>{{ errorMessage() }}</div>
+      </div>
+    }
+
+    @if (report) {
+      <div class="stat-row">
+        <div class="stat">
+          <div class="stat__label">Rows in file</div>
+          <div class="stat__value">{{ report.totalRows }}</div>
+        </div>
+        <div class="stat">
+          <div class="stat__label">Ready to import</div>
+          <div class="stat__value">{{ report.validRows }}</div>
+        </div>
+        <div class="stat">
+          <div class="stat__label">Errors</div>
+          <div class="stat__value" [class.import-count--error]="errors().length">{{ errors().length }}</div>
+        </div>
+        <div class="stat">
+          <div class="stat__label">Warnings</div>
+          <div class="stat__value" [class.import-count--warning]="warnings().length">
+            {{ warnings().length }}
+          </div>
+        </div>
+      </div>
+
+      @if (errors().length) {
+        <div class="import-callout import-callout--error">
+          <lucide-icon [img]="ErrorIcon" [size]="20"></lucide-icon>
+          <div>
+            <strong>Nothing can be imported yet.</strong>
+            @if (badRows()) {
+              {{ badRows() }} {{ badRows() === 1 ? 'row has' : 'rows have' }} problems.
+            }
+            Fix them in Excel and choose the file again. Row numbers are the row numbers in Excel.
+          </div>
+        </div>
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Row</th>
+                <th>Column</th>
+                <th>Value</th>
+                <th>Problem</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (issue of errors(); track $index) {
+                <tr>
+                  <td class="cell-figure">{{ issue.row ?? '—' }}</td>
+                  <td class="cell-nowrap">{{ issue.column ?? '—' }}</td>
+                  <td>
+                    @if (issue.value) {
+                      <code class="code-tag">{{ issue.value }}</code>
+                    } @else {
+                      <span class="muted">empty</span>
+                    }
+                  </td>
+                  <td class="import-problem">{{ issue.message }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+
+      @if (warnings().length) {
+        <div class="import-callout import-callout--warning">
+          <lucide-icon [img]="WarningIcon" [size]="20"></lucide-icon>
+          <div>
+            <strong>{{ warnings().length }} {{ warnings().length === 1 ? 'warning' : 'warnings' }}.</strong>
+            These don't stop the import, but check them.
+          </div>
+        </div>
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Row</th>
+                <th>Column</th>
+                <th>Value</th>
+                <th>Note</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (issue of warnings(); track $index) {
+                <tr>
+                  <td class="cell-figure">{{ issue.row ?? '—' }}</td>
+                  <td class="cell-nowrap">{{ issue.column ?? '—' }}</td>
+                  <td>
+                    @if (issue.value) {
+                      <code class="code-tag">{{ issue.value }}</code>
+                    } @else {
+                      <span class="muted">empty</span>
+                    }
+                  </td>
+                  <td>{{ issue.message }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+
+      @if (canImport()) {
+        <h3 class="card-title">Will be added</h3>
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Row</th>
+                @for (column of columns(); track column.label) {
+                  <th>{{ column.label }}</th>
+                }
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of report.rows; track row.row) {
+                <tr>
+                  <td class="cell-figure">{{ row.row }}</td>
+                  @for (column of columns(); track column.label) {
+                    <td [class.cell-strong]="column.strong" [class.cell-figure]="column.figure">
+                      {{ column.value(row) }}
+                    </td>
+                  }
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    }
+
+    <div class="button-row import-actions">
+      <button type="button" class="button button--outline" (click)="closed.emit()">Cancel</button>
+      @if (canImport()) {
+        <button
+          type="button"
+          class="button button--dark"
+          [disabled]="busy() === 'importing'"
+          (click)="runImport()"
+        >
+          {{ busy() === 'importing' ? 'Importing…' : 'Import ' + count(report!.validRows) }}
+        </button>
+      }
+    </div>
+  }
+</div>

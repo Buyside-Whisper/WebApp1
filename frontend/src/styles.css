@@ -336,6 +336,7 @@ textarea {
 
 .field {
   display: grid;
+  align-content: start;
   gap: 6px;
 }
 
@@ -1035,4 +1036,44 @@ lucide-icon.search-input__icon {
 
 .link-button--cell:hover {
   text-decoration: underline;
+}
+
+.page-tabs {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  width: fit-content;
+  max-width: 100%;
+  padding: 5px;
+  border: 1px solid #dbe4f0;
+  border-radius: 16px;
+  background: #ffffff;
+}
+
+.page-tabs__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  color: #64748b;
+  font-size: 0.86rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    background-color 160ms ease,
+    color 160ms ease;
+}
+
+.page-tabs__link:hover,
+.page-tabs__link:focus-visible {
+  background: #f1f5f9;
+  color: #334155;
+}
+
+.page-tabs__link--active,
+.page-tabs__link--active:hover {
+  background: #eef2ff;
+  color: #4338ca;
 }

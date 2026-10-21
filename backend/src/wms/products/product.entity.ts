@@ -3,6 +3,8 @@ import {
   CreateDateColumn,
   AfterLoad,
   Entity,
+  JoinColumn,
+  ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
   type Relation,
@@ -11,7 +13,9 @@ import {
 } from 'typeorm';
 import { TenantEntity } from '../../companies/tenant.entity.js';
 import { decimalTransformer } from '../../common/decimal.transformer.js';
+import { Category } from '../categories/category.entity.js';
 import { ProductWarehouse } from '../stock/product-warehouse.entity.js';
+import { Supplier } from '../suppliers/supplier.entity.js';
 import { ProductPosStatus } from './product-pos-status.enum.js';
 import { ProductStatus } from './product-status.enum.js';
 import { ProductUnit } from './product-unit.enum.js';
@@ -29,14 +33,22 @@ export class Product extends TenantEntity {
   @Column()
   barcode!: string;
 
-  @Column()
-  category!: string;
+  @Column({ name: 'category_id', type: 'uuid' })
+  categoryId!: string;
+
+  @ManyToOne(() => Category, { onDelete: 'RESTRICT' })
+  @JoinColumn({ name: 'category_id' })
+  category?: Pick<Category, 'id' | 'name' | 'status'>;
 
   @Column({ name: 'product_group' })
   group!: string;
 
-  @Column()
-  supplier!: string;
+  @Column({ name: 'supplier_id', type: 'uuid' })
+  supplierId!: string;
+
+  @ManyToOne(() => Supplier, { onDelete: 'RESTRICT' })
+  @JoinColumn({ name: 'supplier_id' })
+  supplier?: Pick<Supplier, 'id' | 'name' | 'status'>;
 
   @Column({ type: 'enum', enum: ProductStatus, default: ProductStatus.ACTIVE })
   status!: ProductStatus;

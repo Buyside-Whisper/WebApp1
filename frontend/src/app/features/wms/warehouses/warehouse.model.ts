@@ -1,3 +1,5 @@
+import { ImportReport } from '../../../shared/xlsx-import/xlsx-import.model';
+
 export type WarehouseType = 'main' | 'sales';
 export type WarehouseStatus = 'active' | 'inactive';
 
@@ -36,3 +38,15 @@ export interface ManagerOption {
   id: string;
   name: string;
 }
+
+export interface WarehousePreviewRow {
+  row: number;
+  name: string;
+  type: WarehouseType;
+  branch: string | null;
+  address: string;
+  manager: string | null;
+  status: WarehouseStatus;
+}
+
+export type WarehouseImportReport = ImportReport<WarehousePreviewRow>;

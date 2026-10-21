@@ -10,27 +10,32 @@
         }
       </p>
     </div>
-    @if (canManage()) {
-      <div class="button-row page-header__actions">
-        <button type="button" class="button button--outline" (click)="placeholder.set('import')">
+    <div class="button-row page-header__actions">
+      @if (canManage()) {
+        <button type="button" class="button button--outline" (click)="isImportOpen.set(true)">
           <lucide-icon [img]="ImportIcon" [size]="16"></lucide-icon>
           Import
         </button>
-        <button type="button" class="button button--outline" (click)="placeholder.set('export')">
-          <lucide-icon [img]="ExportIcon" [size]="16"></lucide-icon>
-          Export
-        </button>
-        <button type="button" class="button button--outline" (click)="placeholder.set('scales')">
-          <lucide-icon [img]="ScalesIcon" [size]="16"></lucide-icon>
-          Scales
-        </button>
+      }
+      <button
+        type="button"
+        class="button button--outline"
+        [disabled]="isExporting()"
+        (click)="exportProducts()"
+      >
+        <lucide-icon [img]="ExportIcon" [size]="16"></lucide-icon>
+        {{ isExporting() ? 'Exporting…' : 'Export' }}
+      </button>
+      @if (canManage()) {
         <button type="button" class="button button--dark" (click)="openAddForm()">
           <lucide-icon [img]="PlusIcon" [size]="16"></lucide-icon>
           Add product
         </button>
-      </div>
-    }
+      }
+    </div>
   </div>
+
+  <app-product-tabs />
 
   @if (errorMessage()) {
     <p class="field-error">{{ errorMessage() }}</p>
@@ -66,8 +71,8 @@
           (ngModelChange)="setCategoryFilter($event)"
         >
           <option value="all">All categories</option>
-          @for (option of categories(); track option) {
-            <option [value]="option">{{ option }}</option>
+          @for (option of categories(); track option.id) {
+            <option [value]="option.id">{{ option.name }}</option>
           }
         </select>
         <select class="text-select" aria-label="Group" [(ngModel)]="groupFilter">
@@ -78,8 +83,8 @@
         </select>
         <select class="text-select" aria-label="Supplier" [(ngModel)]="supplierFilter">
           <option value="all">All suppliers</option>
-          @for (option of suppliers(); track option) {
-            <option [value]="option">{{ option }}</option>
+          @for (option of suppliers(); track option.id) {
+            <option [value]="option.id">{{ option.name }}</option>
           }
         </select>
         <select class="text-select" aria-label="Warehouse" [(ngModel)]="warehouseFilter">
@@ -168,16 +173,18 @@
                       <td class="cell-strong">{{ product.name }}</td>
                     }
                     @case ('barcode') {
-                      <td><code class="code-tag">{{ product.barcode }}</code></td>
+                      <td>
+                        <code class="code-tag">{{ product.barcode }}</code>
+                      </td>
                     }
                     @case ('category') {
-                      <td>{{ product.category }}</td>
+                      <td>{{ product.category.name }}</td>
                     }
                     @case ('group') {
                       <td>{{ product.group }}</td>
                     }
                     @case ('supplier') {
-                      <td>{{ product.supplier }}</td>
+                      <td>{{ product.supplier.name }}</td>
                     }
                     @case ('status') {
                       <td>
@@ -211,8 +218,13 @@
                     @case ('warehouses') {
                       <td class="cell-nowrap">
                         @if (product.stocks.length) {
-                          <button type="button" class="link-button link-button--cell" (click)="stockOf.set(product)">
-                            {{ product.stocks.length }} {{ product.stocks.length === 1 ? 'warehouse' : 'warehouses' }}
+                          <button
+                            type="button"
+                            class="link-button link-button--cell"
+                            (click)="stockOf.set(product)"
+                          >
+                            {{ product.stocks.length }}
+                            {{ product.stocks.length === 1 ? 'warehouse' : 'warehouses' }}
                           </button>
                         } @else {
                           <span class="muted">–</span>
@@ -284,12 +296,19 @@
   }
 </app-modal>
 
-<app-modal
-  [open]="placeholder() !== null"
-  [title]="placeholderTitles[placeholder() ?? 'import']"
-  (closed)="placeholder.set(null)"
->
-  <p class="page-description">Coming soon.</p>
+<app-modal [open]="isImportOpen()" title="Import products" (closed)="isImportOpen.set(false)">
+  @if (isImportOpen()) {
+    <app-xlsx-import
+      [source]="productService.importSource"
+      [columns]="importColumns"
+      [noun]="{ one: 'product', many: 'products' }"
+      description="Add many products to the catalogue at once from an Excel file (.xlsx), one product per row. Start from the template: it has the right columns and dropdowns for unit, use and statuses. Quantities are not imported: stock comes in through a receipt."
+      templateName="products-template.xlsx"
+      codeLabel="Barcode"
+      (imported)="loadProducts()"
+      (closed)="isImportOpen.set(false)"
+    />
+  }
 </app-modal>
 
 <app-modal

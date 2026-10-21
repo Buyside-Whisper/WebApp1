@@ -1,0 +1,294 @@
+<div class="page-stack">
+  <div class="page-header">
+    <div>
+      <p class="page-eyebrow">WMS</p>
+      <h1 class="page-title">Suppliers</h1>
+      <p class="page-description">
+        Companies and people the products come from. Every product has one supplier.
+        @if (!canManage()) {
+          They are added and edited by the WMS admin.
+        }
+      </p>
+    </div>
+    @if (canManage()) {
+      <div class="button-row page-header__actions">
+        <button type="button" class="button button--dark" (click)="openAddForm()">
+          <lucide-icon [img]="PlusIcon" [size]="16"></lucide-icon>
+          Add supplier
+        </button>
+      </div>
+    }
+  </div>
+
+  <app-product-tabs />
+
+  @if (errorMessage()) {
+    <p class="field-error">{{ errorMessage() }}</p>
+  }
+
+  <div class="page-card">
+    @if (isLoading()) {
+      <p class="page-description">Loading…</p>
+    } @else if (suppliers().length === 0) {
+      <p class="page-description">
+        @if (canManage()) {
+          No suppliers yet. Use “Add supplier” to create the first one.
+        } @else {
+          No suppliers yet. The WMS admin adds them.
+        }
+      </p>
+    } @else {
+      <div class="table-filters">
+        <div class="search-input table-filters__search">
+          <lucide-icon [img]="SearchIcon" [size]="16" class="search-input__icon"></lucide-icon>
+          <input
+            class="text-input"
+            type="search"
+            aria-label="Search suppliers"
+            [(ngModel)]="search"
+            placeholder="Name, ID code, contact, phone, email or address"
+          />
+        </div>
+        <select class="text-select" aria-label="Type" [(ngModel)]="typeFilter">
+          <option value="all">All types</option>
+          <option value="company">Company</option>
+          <option value="individual">Individual</option>
+        </select>
+        <select class="text-select" aria-label="VAT" [(ngModel)]="vatFilter">
+          <option value="all">VAT: any</option>
+          <option value="yes">VAT payer</option>
+          <option value="no">Not a VAT payer</option>
+        </select>
+        <select class="text-select" aria-label="Status" [(ngModel)]="statusFilter">
+          <option value="all">All statuses</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
+        @if (hasFilters()) {
+          <button type="button" class="link-button" (click)="clearFilters()">Clear</button>
+        }
+      </div>
+      <div class="table-toolbar">
+        <span>
+          @if (hasFilters()) {
+            {{ filtered().length }} of {{ suppliers().length }} suppliers
+          } @else {
+            {{ suppliers().length }} suppliers
+          }
+        </span>
+      </div>
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Supplier</th>
+              <th>Type</th>
+              <th>ID code</th>
+              <th>VAT</th>
+              <th>Contact</th>
+              <th>Email</th>
+              <th>Products</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (supplier of pages.items(); track supplier.id) {
+              <tr>
+                <td>
+                  <div class="cell-strong">{{ supplier.name }}</div>
+                  @if (supplier.address) {
+                    <div class="muted">{{ supplier.address }}</div>
+                  }
+                </td>
+                <td>{{ typeLabels[supplier.type] }}</td>
+                <td>
+                  @if (supplier.identificationCode) {
+                    <code class="code-tag">{{ supplier.identificationCode }}</code>
+                  } @else {
+                    <span class="muted">—</span>
+                  }
+                </td>
+                <td>{{ supplier.vatPayer ? 'VAT payer' : 'No' }}</td>
+                <td>
+                  @if (supplier.contactPerson || supplier.phone) {
+                    <div>{{ supplier.contactPerson }}</div>
+                    <div class="muted">{{ supplier.phone }}</div>
+                  } @else {
+                    <span class="muted">—</span>
+                  }
+                </td>
+                <td>
+                  @if (supplier.email) {
+                    {{ supplier.email }}
+                  } @else {
+                    <span class="muted">—</span>
+                  }
+                </td>
+                <td class="cell-figure">{{ supplier.productCount }}</td>
+                <td>
+                  <span class="badge" [class]="supplier.status === 'active' ? 'badge--active' : 'badge--inactive'">
+                    {{ supplier.status === 'active' ? 'Active' : 'Inactive' }}
+                  </span>
+                </td>
+                <td>
+                  <div class="icon-actions">
+                    <button
+                      type="button"
+                      class="icon-action"
+                      [disabled]="!canManage()"
+                      [title]="canManage() ? 'Edit' : 'Only the WMS admin can edit'"
+                      [attr.aria-label]="'Edit ' + supplier.name"
+                      (click)="editSupplier(supplier)"
+                    >
+                      <lucide-icon [img]="EditIcon" [size]="18"></lucide-icon>
+                    </button>
+                    <button
+                      type="button"
+                      class="icon-action icon-action--danger"
+                      [disabled]="!canManage() || supplier.productCount > 0"
+                      [title]="deleteTitle(supplier)"
+                      [attr.aria-label]="'Delete ' + supplier.name"
+                      (click)="deleteSupplier(supplier)"
+                    >
+                      <lucide-icon [img]="DeleteIcon" [size]="18"></lucide-icon>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td class="muted" colspan="9">No suppliers match the search and filters.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <app-pager [pagination]="pages" />
+    }
+  </div>
+</div>
+
+<app-modal
+  [open]="isFormOpen()"
+  [title]="editingId() ? 'Edit supplier' : 'Add supplier'"
+  (closed)="isFormOpen.set(false)"
+>
+  <form class="page-stack" (ngSubmit)="saveSupplier()">
+    <div class="form-grid">
+      <div class="field">
+        <label for="supplierName">Supplier</label>
+        <input
+          id="supplierName"
+          class="text-input"
+          type="text"
+          name="name"
+          [(ngModel)]="name"
+          placeholder="e.g. Mars Georgia"
+          required
+        />
+      </div>
+
+      <div class="field">
+        <label for="supplierType">Type</label>
+        <select id="supplierType" class="text-select" name="type" [(ngModel)]="type">
+          <option value="company">Company</option>
+          <option value="individual">Individual</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="supplierCode">Identification code (optional)</label>
+        <input
+          id="supplierCode"
+          class="text-input"
+          type="text"
+          inputmode="numeric"
+          name="identificationCode"
+          [(ngModel)]="identificationCode"
+          [placeholder]="type() === 'company' ? '9 digits, e.g. 405123456' : 'Personal ID, 11 digits'"
+        />
+      </div>
+
+      <div class="field">
+        <label for="supplierVat">VAT</label>
+        <select id="supplierVat" class="text-select" name="vatPayer" [(ngModel)]="vatPayer">
+          <option [ngValue]="true">VAT payer</option>
+          <option [ngValue]="false">Not a VAT payer</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="supplierContact">Contact person (optional)</label>
+        <input
+          id="supplierContact"
+          class="text-input"
+          type="text"
+          name="contactPerson"
+          [(ngModel)]="contactPerson"
+          placeholder="e.g. Nino Beridze"
+        />
+      </div>
+
+      <div class="field">
+        <label for="supplierPhone">Phone (optional)</label>
+        <input
+          id="supplierPhone"
+          class="text-input"
+          type="tel"
+          name="phone"
+          [(ngModel)]="phone"
+          placeholder="e.g. +995 555 12 34 56"
+        />
+      </div>
+
+      <div class="field">
+        <label for="supplierEmail">Email (optional)</label>
+        <input
+          id="supplierEmail"
+          class="text-input"
+          type="email"
+          name="email"
+          [(ngModel)]="email"
+          placeholder="e.g. orders@supplier.ge"
+        />
+      </div>
+
+      <div class="field">
+        <label for="supplierAddress">Address (optional)</label>
+        <input
+          id="supplierAddress"
+          class="text-input"
+          type="text"
+          name="address"
+          [(ngModel)]="address"
+          placeholder="e.g. 12 Tsereteli Ave, Tbilisi"
+        />
+      </div>
+
+      <div class="field">
+        <label for="supplierStatus">Status</label>
+        <select id="supplierStatus" class="text-select" name="status" [(ngModel)]="status">
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
+        <span class="field-hint">Inactive suppliers can't be chosen for new products.</span>
+      </div>
+    </div>
+
+    @if (formError()) {
+      <p class="field-error">{{ formError() }}</p>
+    }
+
+    <div class="button-row">
+      <button type="submit" class="button button--dark" [disabled]="isSaving()">
+        @if (editingId()) {
+          {{ isSaving() ? 'Saving…' : 'Save changes' }}
+        } @else {
+          {{ isSaving() ? 'Adding…' : 'Add supplier' }}
+        }
+      </button>
+      <button type="button" class="button button--secondary" (click)="isFormOpen.set(false)">Cancel</button>
+    </div>
+  </form>
+</app-modal>
