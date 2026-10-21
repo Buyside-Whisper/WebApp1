@@ -44,7 +44,6 @@ export class AuthService {
         localStorage.removeItem(STORAGE_KEY);
       }
     } catch {
-      // storage unavailable (private mode): the session just lasts until the page reloads
     }
   }
 }

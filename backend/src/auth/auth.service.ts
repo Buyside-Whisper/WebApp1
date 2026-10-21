@@ -79,8 +79,6 @@ export class AuthService implements OnModuleInit {
     return { token: signToken(user.id), user: toSessionUser(authUser) };
   }
 
-  // Resolves a token to the current user, or null. Reloaded on every request so that role,
-  // module and company changes take effect immediately.
   async authenticate(token: string): Promise<AuthUser | null> {
     const userId = verifyToken(token);
     if (!userId) {
@@ -93,7 +91,6 @@ export class AuthService implements OnModuleInit {
     return user ? this.toAuthUser(user) : null;
   }
 
-  // Null when the login must not work: the employee has left the company.
   private toAuthUser(user: User): AuthUser | null {
     const today = new Date().toISOString().slice(0, 10);
     if (user.employee?.endDate && user.employee.endDate <= today) {

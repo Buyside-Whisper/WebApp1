@@ -2,12 +2,6 @@ import { AccessModule, Role, SessionUser } from './auth.model';
 
 export const ADMIN_ROLES: Role[] = ['system_admin', 'module_admin'];
 
-// Who may use a module. The backend enforces the same rules; this only decides what to show.
-//  - system admin: HR and every module the company bought
-//  - module admin: their own module, plus HR (limited to their module's people)
-//  - manager: their own module; a Store or WMS manager also gets HR, limited to the people of his
-//    stores / warehouses
-//  - cashier: only their own module, never HR
 export function canAccessModule(user: SessionUser | null, module: AccessModule): boolean {
   if (!user || user.role === 'superuser') {
     return false;
@@ -27,7 +21,6 @@ export function canAccessModule(user: SessionUser | null, module: AccessModule):
   }
 }
 
-// The first page each kind of user should land on.
 export function landingUrl(user: SessionUser): string {
   switch (user.role) {
     case 'superuser':

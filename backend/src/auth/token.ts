@@ -2,8 +2,6 @@ import { createHmac, timingSafeEqual } from 'node:crypto';
 
 const TOKEN_LIFETIME_MS = 12 * 60 * 60 * 1000;
 
-// Local-development stand-in for a real JWT library: `payload.signature`, signed with
-// AUTH_SECRET. Read at call time because .env is loaded after this module is imported.
 function sign(payload: string): string {
   const secret = process.env.AUTH_SECRET ?? 'dev-only-secret-change-me';
   return createHmac('sha256', secret).update(payload).digest('base64url');
@@ -14,7 +12,6 @@ export function signToken(userId: string): string {
   return `${payload}.${sign(payload)}`;
 }
 
-// Returns the user id, or null when the token is malformed, tampered with, or expired.
 export function verifyToken(token: string): string | null {
   const [payload, signature] = token.split('.');
   if (!payload || !signature) {

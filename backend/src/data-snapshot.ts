@@ -1,12 +1,3 @@
-// Moves the database contents between machines through a file in the repo.
-//
-//   npm run data:export          writes the whole database to backend/data/snapshot.json
-//   npm run data:import          shows what it would do (nothing is changed)
-//   npm run data:import -- --yes DELETES ALL DATA in the database from .env, then loads the snapshot
-//
-// Rows keep their ids, timestamps and password hashes, so logins and links match on every machine.
-// The audit log is not exported (it is history, not data). The superuser of the target database
-// is kept (it comes from that machine's .env), and the snapshot never contains one.
 import { NestFactory } from '@nestjs/core';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { DataSource } from 'typeorm';
@@ -17,10 +8,9 @@ const NOT_EXPORTED = new Set(['audit_log']);
 
 interface Snapshot {
   exportedAt: string;
-  tables: { name: string; rows: Record<string, unknown>[] }[]; // parents before children
+  tables: { name: string; rows: Record<string, unknown>[] }[];
 }
 
-// Every table of the app, parents first (so rows can be inserted without breaking foreign keys).
 async function tablesInInsertOrder(dataSource: DataSource): Promise<string[]> {
   const names: string[] = (
     await dataSource.query<{ tablename: string }[]>(`SELECT tablename FROM pg_tables WHERE schemaname = 'public'`)
@@ -62,7 +52,6 @@ async function exportSnapshot(dataSource: DataSource): Promise<void> {
     tables.push({ name, rows: result.map((r) => r.row) });
   }
 
-  // One row per line, so changes show up cleanly in git.
   const text =
     `{\n  "exportedAt": ${JSON.stringify(new Date().toISOString())},\n  "tables": [\n` +
     tables
@@ -102,7 +91,6 @@ async function importSnapshot(dataSource: DataSource, confirmed: boolean): Promi
   for (const name of existing) {
     rowsToDelete += Number((await dataSource.query<{ n: string }[]>(`SELECT count(*) AS n FROM "${name}"`))[0].n);
   }
-  // The superuser is kept, so it is not counted as deleted.
   rowsToDelete -= Number((await dataSource.query<{ n: string }[]>(`SELECT count(*) AS n FROM users WHERE role = 'superuser'`))[0].n);
   const rowsToLoad = snapshot.tables.reduce((sum, table) => sum + table.rows.length, 0);
 
@@ -120,7 +108,6 @@ async function importSnapshot(dataSource: DataSource, confirmed: boolean): Promi
     );
     await manager.query(`TRUNCATE ${existing.map((name) => `"${name}"`).join(', ')} RESTART IDENTITY CASCADE`);
 
-    // jsonb_populate_recordset turns the JSON back into typed rows (enums, arrays, dates, numbers).
     const insert = (name: string, rows: unknown[]) =>
       manager.query(`INSERT INTO "${name}" SELECT r.* FROM jsonb_populate_recordset(NULL::"${name}", $1::jsonb) r`, [
         JSON.stringify(rows),
@@ -147,7 +134,6 @@ async function main() {
     console.log('Usage: node dist/data-snapshot.js export | import [--yes]');
     return;
   }
-  // The app context boots the database connection (and creates any missing tables).
   const app = await NestFactory.createApplicationContext(AppModule, { logger: ['error', 'warn'] });
   try {
     const dataSource = app.get(DataSource);

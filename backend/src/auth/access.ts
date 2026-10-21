@@ -3,12 +3,6 @@ import { AuthUser } from './auth-user.js';
 import { AccessModule } from './decorators.js';
 import { UserRole } from './user-role.enum.js';
 
-// Who may use a module:
-//  - system admin: HR and every module the company bought
-//  - module admin: their own module, plus HR (limited to their module's people)
-//  - manager: their own module; a Store or WMS manager also gets HR, limited to the people of his
-//    stores / warehouses
-//  - cashier: only their own module, never HR
 export function canAccessModule(user: AuthUser, module: AccessModule): boolean {
   if (user.role === UserRole.SUPERUSER) {
     return false;

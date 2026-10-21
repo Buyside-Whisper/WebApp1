@@ -15,16 +15,12 @@ import { Warehouse } from '../warehouses/warehouse.entity.js';
 import { TransferLine } from './transfer-line.entity.js';
 import { TransferStatus } from './transfer-status.enum.js';
 
-// Transfer (გადაადგილება): goods moving from one warehouse to another, in two steps. Draft → Sent
-// (stock leaves the source; In transit) → Received (the destination confirms what arrived; that
-// goes into its stock). A transfer in transit can be cancelled (the goods go back to the source).
 @Entity({ name: 'transfers' })
 @Unique(['companyId', 'number'])
 export class Transfer extends TenantEntity {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  // 1, 2, 3, … per company; shown as TR-000001.
   @Column({ type: 'int' })
   number!: number;
 
@@ -45,7 +41,6 @@ export class Transfer extends TenantEntity {
   @JoinColumn({ name: 'to_warehouse_id' })
   toWarehouse?: Relation<Warehouse>;
 
-  // The planned day (YYYY-MM-DD).
   @Column({ type: 'date' })
   date!: string;
 

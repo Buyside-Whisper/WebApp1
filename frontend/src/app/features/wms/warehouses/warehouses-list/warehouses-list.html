@@ -271,7 +271,6 @@
         </select>
       </div>
 
-      <!-- A main warehouse serves all branches, so it has no branch of its own. -->
       @if (type() === 'sales') {
         <div class="field">
           <label for="warehouseBranch">Branch</label>
@@ -347,7 +346,6 @@
   </form>
 </app-modal>
 
-<!-- Import: the user will describe it later. -->
 <app-modal [open]="isImportOpen()" title="Import warehouses" (closed)="isImportOpen.set(false)">
   <p class="page-description">Coming soon.</p>
 </app-modal>

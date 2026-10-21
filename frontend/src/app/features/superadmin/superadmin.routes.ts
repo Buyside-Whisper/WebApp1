@@ -1,6 +1,5 @@
 import { Routes } from '@angular/router';
 
-// The superuser's pages, served under /superadmin (see app.routes.ts).
 export default [
   { path: '', pathMatch: 'full', redirectTo: 'companies' },
   {

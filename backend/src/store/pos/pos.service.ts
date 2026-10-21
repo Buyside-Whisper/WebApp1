@@ -50,7 +50,6 @@ export class PosService {
     );
   }
 
-  // Rings up a sale on the user's open register. Prices come from the catalog, never the client.
   async createSale(actor: AuthUser, dto: CreateSaleDto): Promise<Sale> {
     const session = await this.cashRegister.findOpenSession(actor);
     if (!session) {

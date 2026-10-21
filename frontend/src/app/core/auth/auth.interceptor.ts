@@ -4,8 +4,6 @@ import { catchError, throwError } from 'rxjs';
 import { API_BASE_URL } from '../api';
 import { AuthService } from './auth.service';
 
-// Sends the login token with every API call, and logs the user out when the server says the
-// token is no longer valid.
 export const authInterceptor: HttpInterceptorFn = (request, next) => {
   const auth = inject(AuthService);
   const token = auth.token();

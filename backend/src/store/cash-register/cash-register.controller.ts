@@ -6,13 +6,11 @@ import { AppModuleName } from '../../companies/app-module.enum.js';
 import { CashRegisterService, SessionDetail, SessionView } from './cash-register.service.js';
 import { CloseRegisterDto, OpenRegisterDto } from './dto/register.dto.js';
 
-// Everyone in Store can look (each sees their own slice); only managers and cashiers operate.
 @Controller('cash-register')
 @Access(AppModuleName.STORE)
 export class CashRegisterController {
   constructor(private readonly cashRegisterService: CashRegisterService) {}
 
-  // The registers of one of my stores, and who has each one open. Feeds the "open register" form.
   @Get('registers')
   @Roles(UserRole.MANAGER, UserRole.CASHIER)
   registers(@CurrentUser() user: AuthUser, @Query('storeId') storeId: string): Promise<{ no: number; inUseBy: string | null }[]> {

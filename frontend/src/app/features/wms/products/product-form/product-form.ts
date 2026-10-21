@@ -4,8 +4,6 @@ import { FormsModule } from '@angular/forms';
 import { Product, ProductPosStatus, ProductStatus, ProductUnit, ProductUsage } from '../product.model';
 import { ProductService } from '../product.service';
 
-// The Add / Edit product form (catalogue fields only). Used in a modal on the Products page and in
-// the receipt editor's "New product". Put it inside an @if so it starts fresh each time it opens.
 @Component({
   selector: 'app-product-form',
   imports: [FormsModule],
@@ -14,9 +12,7 @@ import { ProductService } from '../product.service';
 export class ProductForm implements OnInit {
   private readonly productService = inject(ProductService);
 
-  // The product to edit; null = a new one.
   readonly product = input<Product | null>(null);
-  // Existing products, for the category / group / supplier suggestions.
   readonly known = input<Pick<Product, 'category' | 'group' | 'supplier'>[]>([]);
   readonly hint = input(
     "Quantities aren't typed in here: stock comes in and goes out through stock documents " +
@@ -39,11 +35,9 @@ export class ProductForm implements OnInit {
   protected readonly unit = signal<ProductUnit>('pcs');
   protected readonly costPrice = signal(0);
   protected readonly salePrice = signal(0);
-  // The product being edited has stock, so its unit is fixed (the backend says the same).
   protected readonly unitLocked = signal(false);
 
   protected readonly categories = computed(() => this.uniqueSorted(this.known().map((p) => p.category)));
-  // Suggest only the groups already used in the chosen category (all of them if it's new).
   protected readonly groups = computed(() => {
     const category = this.category().trim();
     const inCategory = this.known().filter((p) => p.category === category);

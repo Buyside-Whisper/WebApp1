@@ -18,7 +18,6 @@ export interface StorePayload {
   managerId: string | null;
 }
 
-// HR employees who can be picked as a store's manager (Store managers).
 export interface StoreOptions {
   managers: PersonRef[];
 }

@@ -20,7 +20,6 @@ export interface SaleLine {
   lineTotal: number;
 }
 
-// One transaction.
 export interface Sale {
   id: string;
   number: number;
@@ -33,7 +32,6 @@ export interface RegisterSessionDetail extends RegisterSession {
   sales: Sale[];
 }
 
-// One register of a store, and who has it open right now (null = free).
 export interface RegisterAvailability {
   no: number;
   inUseBy: string | null;

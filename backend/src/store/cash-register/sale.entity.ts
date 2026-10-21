@@ -12,7 +12,6 @@ import { decimalTransformer } from '../../common/decimal.transformer.js';
 import { RegisterSession } from './register-session.entity.js';
 import { SaleLine } from './sale-line.entity.js';
 
-// One transaction rung up at a register.
 @Entity({ name: 'sales' })
 export class Sale {
   @PrimaryGeneratedColumn('uuid')
@@ -25,7 +24,6 @@ export class Sale {
   @JoinColumn({ name: 'session_id' })
   session!: Relation<RegisterSession>;
 
-  // Receipt number within the session: 1, 2, 3...
   @Column({ type: 'int' })
   number!: number;
 

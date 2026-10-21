@@ -42,7 +42,6 @@ export class Shell {
   protected readonly auth = inject(AuthService);
   private readonly router = inject(Router);
 
-  // What this user may see. The backend enforces the same rules.
   protected readonly user = this.auth.user;
   protected readonly showHr = computed(() => canAccessModule(this.user(), 'hr'));
   protected readonly showWms = computed(() => canAccessModule(this.user(), 'wms'));
@@ -82,7 +81,6 @@ export class Shell {
 
   toggleSidebar(): void {
     this.isSidebarOpen.update((value) => !value);
-    console.log(this.currentUrl());
   }
 
   toggleHrMenu(): void {

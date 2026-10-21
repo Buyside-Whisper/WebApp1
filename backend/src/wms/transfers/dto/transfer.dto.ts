@@ -43,7 +43,6 @@ export class ReceivedLineDto {
   receivedQuantity!: number;
 }
 
-// What arrived, per line. Lines left out count as fully received.
 export class ReceiveTransferDto {
   @IsArray()
   @ValidateNested({ each: true })

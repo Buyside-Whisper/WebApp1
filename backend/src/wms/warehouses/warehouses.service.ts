@@ -26,7 +26,6 @@ const CODE_PREFIXES: Record<WarehouseType, string> = {
 };
 
 export type WarehouseOption = Pick<Warehouse, 'id' | 'code' | 'name' | 'type' | 'status' | 'branch'> & {
-  // True when the current user may work with it (admins: all; a manager: the ones he runs).
   mine: boolean;
 };
 
@@ -69,7 +68,6 @@ export class WarehousesService {
       relations: { manager: true },
     });
 
-    // A manager may only open the warehouses he runs.
     if (
       !warehouse ||
       (actor.role === UserRole.MANAGER && warehouse.managerId !== actor.employeeId)
@@ -99,7 +97,6 @@ export class WarehousesService {
     }));
   }
 
-  // Employees who can be picked as a warehouse manager: active managers of the WMS module.
   async managerOptions(actor: AuthUser): Promise<ManagerOption[]> {
     const managers = await this.employeesRepository.find({
       where: {
@@ -141,13 +138,11 @@ export class WarehousesService {
   ): Promise<Warehouse> {
     const warehouse = await this.findEntity(actor, id);
 
-    // The code encodes the type, so a type change gets a new code.
     if (dto.type && dto.type !== warehouse.type) {
       warehouse.code = await this.nextCode(actor.companyId!, dto.type);
     }
 
     const { managerId, ...fields } = dto;
-    // Only the fields that were sent (a DTO instance also carries the missing ones as undefined).
     Object.assign(
       warehouse,
       Object.fromEntries(Object.entries(fields).filter(([, value]) => value !== undefined)),
@@ -156,7 +151,7 @@ export class WarehousesService {
     if (managerId !== undefined) {
       warehouse.managerId = await this.checkedManagerId(actor, managerId);
     }
-    delete (warehouse as Partial<Warehouse>).manager; // the id column is the source of truth
+    delete (warehouse as Partial<Warehouse>).manager;
     await this.warehousesRepository.save(warehouse);
     await this.audit.record(
       actor,
@@ -168,7 +163,6 @@ export class WarehousesService {
 
   async remove(actor: AuthUser, id: string): Promise<void> {
     const warehouse = await this.findEntity(actor, id);
-    // Its stock history would point at nothing; an unused warehouse can be set to Inactive instead.
     if (await this.stockService.hasHistory(actor, { warehouseId: id })) {
       throw new ConflictException(
         `${warehouse.code} has stock history, so it can't be deleted. Set it to Inactive instead.`,
@@ -194,7 +188,6 @@ export class WarehousesService {
     return warehouse;
   }
 
-  // A sales warehouse belongs to one branch; a main warehouse serves all of them, so it has none.
   private applyBranchRule(warehouse: Warehouse): void {
     if (warehouse.type === WarehouseType.MAIN) {
       warehouse.branch = null;
@@ -203,7 +196,6 @@ export class WarehousesService {
     }
   }
 
-  // The picked manager must be a WMS manager of the same company.
   private async checkedManagerId(
     actor: AuthUser,
     managerId: string | null | undefined,
@@ -227,7 +219,6 @@ export class WarehousesService {
     return manager.id;
   }
 
-  // The manager comes back as just his id and name, not the whole HR record.
   private withoutPersonalData(warehouse: Warehouse): Warehouse {
     if (warehouse.manager) {
       const { id, firstName, lastName } = warehouse.manager;
@@ -236,7 +227,6 @@ export class WarehousesService {
     return warehouse;
   }
 
-  // Adds the product count, stock and total cost, summed from the products in each warehouse.
   private async withTotals(
     actor: AuthUser,
     warehouses: Warehouse[],
@@ -270,13 +260,11 @@ export class WarehousesService {
       warehouse.productCount = Number(row?.productCount ?? 0);
       warehouse.stockPcs = Number(row?.stockPcs ?? 0);
       warehouse.stockKg = Number(row?.stockKg ?? 0);
-      // Quantity has 3 decimals and price 2, so round the product to whole tetri.
       warehouse.totalCost = Math.round(Number(row?.totalCost ?? 0) * 100) / 100;
       return warehouse;
     });
   }
 
-  // Highest existing number for the type's prefix + 1, e.g. WH-SALE-02 -> WH-SALE-03.
   private async nextCode(
     companyId: string,
     type: WarehouseType,

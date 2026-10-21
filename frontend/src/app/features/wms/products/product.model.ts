@@ -20,14 +20,12 @@ export interface Product {
   id: string;
   name: string;
   barcode: string;
-  // Broad category (Sweets) and the narrower group inside it (Chocolate).
   category: string;
   group: string;
   supplier: string;
   status: ProductStatus;
   usage: ProductUsage;
   posStatus: ProductPosStatus;
-  // Sum of the warehouse quantities (computed by the backend).
   quantity: number;
   unit: ProductUnit;
   costPrice: number;
@@ -37,15 +35,12 @@ export interface Product {
   updatedAt: string;
 }
 
-// How much of the product one warehouse has (the current balance).
 export interface ProductStock {
   warehouseId: string;
   quantity: number;
   warehouse: Warehouse;
 }
 
-// Stock (quantity / stocks) is read-only here: it changes only through stock documents.
-// An active product as offered on receipt / transfer lines (GET /wms/products/options).
 export type ProductOption = Pick<
   Product,
   'id' | 'name' | 'barcode' | 'unit' | 'costPrice' | 'category' | 'group' | 'supplier'

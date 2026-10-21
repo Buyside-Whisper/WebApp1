@@ -26,8 +26,6 @@ export class WarehousesController {
     return this.warehousesService.findAll(user);
   }
 
-  // All of the company's warehouses, minimal (no manager / HR data), for the pickers on receipts
-  // and transfers. Managers need it too: they send goods to warehouses they don't run.
   @Get('options')
   options(@CurrentUser() user: AuthUser): Promise<WarehouseOption[]> {
     return this.warehousesService.options(user);

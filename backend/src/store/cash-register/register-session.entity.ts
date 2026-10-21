@@ -14,8 +14,6 @@ import { TenantEntity } from '../../companies/tenant.entity.js';
 import { Store } from '../stores/store.entity.js';
 import { Sale } from './sale.entity.js';
 
-// One opening of a register, from "open" to "close". Each opening is a new row.
-// The database itself refuses two open sessions on the same register of a store.
 @Index('UQ_open_register_session', ['storeId', 'registerNo'], { unique: true, where: '"closed_at" IS NULL' })
 @Entity({ name: 'register_sessions' })
 export class RegisterSession extends TenantEntity {
@@ -29,14 +27,12 @@ export class RegisterSession extends TenantEntity {
   @JoinColumn({ name: 'store_id' })
   store!: Relation<Store>;
 
-  // The employee who opened it. The name is copied so the history survives the employee leaving.
   @Column({ name: 'cashier_id', type: 'uuid', nullable: true })
   cashierId!: string | null;
 
   @Column({ name: 'cashier_name' })
   cashierName!: string;
 
-  // Which register of the store: 1..store.registers. Chosen by the cashier when opening.
   @Column({ name: 'register_no', type: 'int' })
   registerNo!: number;
 

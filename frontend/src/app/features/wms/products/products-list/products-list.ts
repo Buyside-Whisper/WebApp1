@@ -42,7 +42,6 @@ export class ProductsList implements OnInit {
   private readonly productService = inject(ProductService);
   private readonly auth = inject(AuthService);
 
-  // Only the WMS admin changes products; the system admin sees them read-only.
   protected readonly canManage = computed(() => this.auth.user()?.role === 'module_admin');
   protected readonly usageLabels = PRODUCT_USAGE_LABELS;
   protected readonly posStatusLabels = PRODUCT_POS_STATUS_LABELS;
@@ -74,20 +73,17 @@ export class ProductsList implements OnInit {
 
   protected readonly products = signal<Product[]>([]);
 
-  // Search covers the text columns only (not numbers, statuses or other fixed choices); those
-  // fixed choices are the filters.
   protected readonly search = signal('');
   protected readonly categoryFilter = signal('all');
   protected readonly groupFilter = signal('all');
   protected readonly supplierFilter = signal('all');
-  protected readonly warehouseFilter = signal('all'); // 'all' | 'none' | warehouse id
+  protected readonly warehouseFilter = signal('all');
   protected readonly usageFilter = signal<'all' | ProductUsage>('all');
   protected readonly posStatusFilter = signal<'all' | ProductPosStatus>('all');
   protected readonly statusFilter = signal<'all' | ProductStatus>('all');
   protected readonly unitFilter = signal<'all' | ProductUnit>('all');
   protected readonly stockFilter = signal<'all' | 'in' | 'out'>('all');
 
-  // Groups of the chosen category (all groups when no category is chosen).
   protected readonly filterGroups = computed(() => {
     const category = this.categoryFilter();
     return this.uniqueSorted(
@@ -97,7 +93,6 @@ export class ProductsList implements OnInit {
     );
   });
 
-  // The warehouses that hold any product, for the Warehouse filter (also works for read-only users).
   protected readonly warehousesInList = computed(() => {
     const byId = new Map<string, Warehouse>();
     for (const product of this.products()) {
@@ -155,7 +150,6 @@ export class ProductsList implements OnInit {
     () => [this.search(), this.filterValues()],
   );
 
-  // A new category may not have the chosen group, so the group filter starts over.
   setCategoryFilter(category: string): void {
     this.categoryFilter.set(category);
     this.groupFilter.set('all');
@@ -180,7 +174,6 @@ export class ProductsList implements OnInit {
   protected readonly isLoading = signal(false);
   protected readonly errorMessage = signal('');
 
-  // The Add / Edit product modal, and the still empty Import / Export / Scales modals.
   protected readonly isFormOpen = signal(false);
   protected readonly placeholder = signal<'import' | 'export' | 'scales' | null>(null);
   protected readonly placeholderTitles = {
@@ -189,14 +182,11 @@ export class ProductsList implements OnInit {
     scales: 'Scales',
   };
 
-  // Options for the Category and Supplier filters.
   protected readonly categories = computed(() => this.uniqueSorted(this.products().map((p) => p.category)));
   protected readonly suppliers = computed(() => this.uniqueSorted(this.products().map((p) => p.supplier)));
 
-  // The product whose stock pop-up is open (from the Warehouses column).
   protected readonly stockOf = signal<Product | null>(null);
 
-  // The product in the Add / Edit modal (null = adding a new one).
   protected readonly editing = signal<Product | null>(null);
 
   ngOnInit(): void {
@@ -245,7 +235,6 @@ export class ProductsList implements OnInit {
       next: () => {
         this.loadProducts();
       },
-      // e.g. "… has stock history, so it can't be deleted. Set it to … instead."
       error: (error: HttpErrorResponse) =>
         this.errorMessage.set(error.error?.message ?? 'Could not delete the product.'),
     });

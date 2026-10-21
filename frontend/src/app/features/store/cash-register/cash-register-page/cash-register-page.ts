@@ -20,7 +20,6 @@ export class CashRegisterPage implements OnInit {
   private readonly storeService = inject(StoreService);
   private readonly auth = inject(AuthService);
 
-  // Managers and cashiers work a register; admins only watch.
   protected readonly canOperate = computed(() => {
     const role = this.auth.user()?.role;
     return role === 'manager' || role === 'cashier';
@@ -43,14 +42,12 @@ export class CashRegisterPage implements OnInit {
   protected readonly isBusy = signal(false);
   protected readonly errorMessage = signal('');
 
-  // Open form / close form
   protected readonly storeId = signal('');
-  protected readonly registerNo = signal(0); // 0 = not chosen yet
+  protected readonly registerNo = signal(0);
   protected readonly availability = signal<RegisterAvailability[]>([]);
   protected readonly openingCash = signal(100);
   protected readonly closingCash = signal(0);
 
-  // Expanded rows show their transactions; loaded on first expand.
   protected readonly expandedId = signal<string | null>(null);
   protected readonly details = signal<Record<string, RegisterSessionDetail>>({});
 
@@ -83,7 +80,6 @@ export class CashRegisterPage implements OnInit {
     }
   }
 
-  // Picking a store loads its registers (and who has each one open).
   chooseStore(storeId: string): void {
     this.storeId.set(storeId);
     this.registerNo.set(0);
@@ -108,14 +104,14 @@ export class CashRegisterPage implements OnInit {
     this.run(
       this.cashRegisterService.open(this.storeId(), this.registerNo(), Number(this.openingCash()) || 0),
       () => this.closingCash.set(0),
-      () => this.chooseStore(this.storeId()), // someone may have taken it: refresh who has what
+      () => this.chooseStore(this.storeId()),
     );
   }
 
   close(session: RegisterSession): void {
     this.run(this.cashRegisterService.close(session.id, Number(this.closingCash()) || 0), () => {
       this.details.update((all) => {
-        const { [session.id]: _removed, ...rest } = all; // reload the transactions on next expand
+        const { [session.id]: _removed, ...rest } = all;
         return rest;
       });
     });

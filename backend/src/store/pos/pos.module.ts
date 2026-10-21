@@ -7,7 +7,6 @@ import { PosController } from './pos.controller.js';
 import { PosService } from './pos.service.js';
 import { StoreProduct } from './store-product.entity.js';
 
-// POS rings up sales on the register that Cash register opened (same module, so it may use it).
 @Module({
   imports: [TypeOrmModule.forFeature([StoreProduct, Sale, SaleLine]), CashRegisterModule],
   controllers: [PosController],

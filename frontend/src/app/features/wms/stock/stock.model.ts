@@ -18,7 +18,6 @@ export const STOCK_MOVEMENT_LABELS: Record<StockMovementKind, string> = {
   transfer_cancel: 'Transfer cancelled',
 };
 
-// The page of the document a movement came from (null for opening balances).
 export function movementDocumentLink(movement: StockMovement): string[] | null {
   if (!movement.documentId) {
     return null;
@@ -28,7 +27,6 @@ export function movementDocumentLink(movement: StockMovement): string[] | null {
     : ['/wms/transfers', movement.documentId];
 }
 
-// One line of stock history: + came in, − went out.
 export interface StockMovement {
   id: string;
   kind: StockMovementKind;
@@ -42,7 +40,6 @@ export interface StockMovement {
   warehouse: Pick<Warehouse, 'id' | 'code' | 'name'>;
 }
 
-// A product in a warehouse (the warehouse's View page).
 export interface WarehouseStockRow {
   productId: string;
   quantity: number;

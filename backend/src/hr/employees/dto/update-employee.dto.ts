@@ -14,7 +14,6 @@ import { EmployeeRole } from '../employee-role.enum.js';
 const trim = ({ value }: { value: unknown }) =>
   typeof value === 'string' ? value.trim() : value;
 
-// Same fields and rules as CreateEmployeeDto, but every field is optional.
 export class UpdateEmployeeDto {
   @IsOptional()
   @Transform(trim)
@@ -63,7 +62,6 @@ export class UpdateEmployeeDto {
   @IsNotEmpty()
   position?: string;
 
-  // null clears it (the employee is active again).
   @IsOptional()
   @IsISO8601({ strict: true })
   @Matches(/^\d{4}-\d{2}-\d{2}$/, { message: 'endDate must be YYYY-MM-DD' })

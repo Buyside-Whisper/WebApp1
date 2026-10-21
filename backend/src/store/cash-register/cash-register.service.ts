@@ -44,7 +44,6 @@ export class CashRegisterService {
     private readonly audit: AuditService,
   ) {}
 
-  // Admins see all sessions of the company; a manager those of his stores; a cashier his own.
   async findAll(actor: AuthUser): Promise<SessionView[]> {
     const sessions = await this.sessionsRepository.find({
       where: await this.visibleWhere(actor),
@@ -74,7 +73,6 @@ export class CashRegisterService {
     return { ...view, sales };
   }
 
-  // The register the current user has open right now, if any.
   async current(actor: AuthUser): Promise<SessionView | null> {
     const session = await this.findOpenSession(actor);
     if (!session) {
@@ -84,7 +82,6 @@ export class CashRegisterService {
     return (await this.withTotals([session]))[0];
   }
 
-  // The registers of a store and who has each one open right now, for the open-register form.
   async registers(actor: AuthUser, storeId: string): Promise<{ no: number; inUseBy: string | null }[]> {
     const store = await this.storeIWorkIn(actor, storeId);
     const open = await this.sessionsRepository.find({ where: { storeId: store.id, closedAt: IsNull() } });
@@ -123,7 +120,6 @@ export class CashRegisterService {
         }),
       );
     } catch (error) {
-      // Someone else opened it a moment ago: the database allows only one open session per register.
       if (isUniqueViolation(error)) {
         throw new ConflictException(`Register ${dto.registerNo} was just opened by someone else`);
       }
@@ -134,7 +130,6 @@ export class CashRegisterService {
     return (await this.withTotals([session]))[0];
   }
 
-  // A store the current user works in: his store (manager) or one he is a member of (cashier).
   private async storeIWorkIn(actor: AuthUser, storeId: string): Promise<Store> {
     const store = await this.storesRepository.findOne({
       where: { id: storeId, companyId: actor.companyId! },
@@ -162,7 +157,6 @@ export class CashRegisterService {
     if (session.closedAt) {
       throw new BadRequestException('This register is already closed');
     }
-    // The cashier who opened it, or the manager of the store.
     if (session.cashierId !== actor.employeeId && session.store.managerId !== actor.employeeId) {
       throw new ForbiddenException('Only the cashier who opened this register or the store manager can close it');
     }
@@ -174,7 +168,6 @@ export class CashRegisterService {
     return (await this.withTotals([session]))[0];
   }
 
-  // The open register of the current user. Shared with the POS submodule.
   findOpenSession(actor: AuthUser): Promise<RegisterSession | null> {
     if (!actor.employeeId) {
       return Promise.resolve(null);

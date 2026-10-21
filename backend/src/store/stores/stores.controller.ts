@@ -6,9 +6,6 @@ import { AppModuleName } from '../../companies/app-module.enum.js';
 import { CreateStoreDto, UpdateStoreDto } from './dto/store.dto.js';
 import { PersonRef, StoresService, StoreView } from './stores.service.js';
 
-// Only the Store admin creates, edits and deletes stores (@Access(STORE) makes sure a module admin
-// here is the Store one). The system admin sees all of them read-only; managers and cashiers only
-// the ones they belong to.
 @Controller('stores')
 @Access(AppModuleName.STORE)
 export class StoresController {

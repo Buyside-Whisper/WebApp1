@@ -15,15 +15,12 @@ import { Warehouse } from '../warehouses/warehouse.entity.js';
 import { ReceiptLine } from './receipt-line.entity.js';
 import { ReceiptStatus } from './receipt-status.enum.js';
 
-// Goods receipt (მიღება): goods that arrived from a supplier into one warehouse. Draft → Posted
-// (stock goes in) → optionally Cancelled (stock goes back out).
 @Entity({ name: 'receipts' })
 @Unique(['companyId', 'number'])
 export class Receipt extends TenantEntity {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  // 1, 2, 3, … per company; shown as REC-000001.
   @Column({ type: 'int' })
   number!: number;
 
@@ -37,15 +34,12 @@ export class Receipt extends TenantEntity {
   @JoinColumn({ name: 'warehouse_id' })
   warehouse?: Relation<Warehouse>;
 
-  // Free text for now, like the product's supplier.
   @Column()
   supplier!: string;
 
-  // The supplier's waybill (ზედნადები) / invoice number.
   @Column({ name: 'waybill_number', type: 'varchar', nullable: true })
   waybillNumber!: string | null;
 
-  // The day the goods arrived (YYYY-MM-DD).
   @Column({ type: 'date' })
   date!: string;
 

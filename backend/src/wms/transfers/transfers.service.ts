@@ -31,13 +31,8 @@ export type TransferView = Omit<Transfer, 'fromWarehouse' | 'toWarehouse' | 'lin
   })[];
 };
 
-// Which side of a transfer the current user may act for.
 type Side = 'from' | 'to';
 
-// Transfers (გადაადგილება) between two of the company's warehouses. The WMS admin works with all
-// of them. A WMS manager sees the transfers that touch his warehouses; he prepares, sends and
-// cancels the ones leaving his warehouse, and receives the ones coming into it. The system admin
-// only reads.
 @Injectable()
 export class TransfersService {
   constructor(
@@ -114,7 +109,6 @@ export class TransfersService {
     await this.audit.record(actor, 'transfer.delete', `Deleted draft transfer ${this.code(transfer)}`);
   }
 
-  // Step 1: the goods leave the source warehouse (fails if it doesn't have enough).
   async send(actor: AuthUser, id: string): Promise<TransferView> {
     await this.dataSource.transaction(async (manager) => {
       const transfer = await this.lockForChange(manager, actor, id);
@@ -145,8 +139,6 @@ export class TransfersService {
     return view;
   }
 
-  // Step 2: the destination confirms what arrived (at most what was sent); that goes into its
-  // stock. A shortfall stays visible on the transfer.
   async receive(actor: AuthUser, id: string, dto: ReceiveTransferDto): Promise<TransferView> {
     await this.dataSource.transaction(async (manager) => {
       const transfer = await this.lockForChange(manager, actor, id);
@@ -202,8 +194,6 @@ export class TransfersService {
     return view;
   }
 
-  // Calls off a transfer in transit: the goods go back into the source warehouse. A received
-  // transfer is final; send the goods back with a new transfer instead.
   async cancel(actor: AuthUser, id: string): Promise<TransferView> {
     await this.dataSource.transaction(async (manager) => {
       const transfer = await this.lockForChange(manager, actor, id);
@@ -230,9 +220,6 @@ export class TransfersService {
     return view;
   }
 
-  // ---------- helpers ----------
-
-  // Two different warehouses of the company; a manager must run the source one.
   private async checkWarehouses(
     actor: AuthUser,
     source: { fromWarehouseId: string; toWarehouseId: string },
@@ -260,7 +247,6 @@ export class TransfersService {
     }
   }
 
-  // Products must be the company's; pcs quantities whole. (Not-active products may still be moved.)
   private async checkProducts(
     manager: EntityManager,
     actor: AuthUser,
@@ -282,7 +268,6 @@ export class TransfersService {
     }
   }
 
-  // The system admin only reads; a manager acts for the side(s) he runs.
   private async assertSide(actor: AuthUser, transfer: Transfer, side: Side): Promise<void> {
     if (actor.role !== UserRole.MODULE_ADMIN && actor.role !== UserRole.MANAGER) {
       throw new NotFoundException('Transfer not found');
@@ -298,7 +283,6 @@ export class TransfersService {
     }
   }
 
-  // null = every warehouse (admins); otherwise the ones a manager runs.
   private async scope(actor: AuthUser): Promise<Set<string> | null> {
     return actor.role === UserRole.MANAGER ? this.stockService.managedWarehouseIds(actor) : null;
   }

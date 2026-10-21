@@ -1,7 +1,6 @@
 import { Routes } from '@angular/router';
 import { accessGuard } from '../../core/auth/auth.guards';
 
-// HR submodules, served under /hr (see app.routes.ts).
 export default [
   { path: '', pathMatch: 'full', redirectTo: 'employees' },
   {

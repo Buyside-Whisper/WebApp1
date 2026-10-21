@@ -10,8 +10,6 @@ import { Pagination } from '../../../../shared/pager/pagination';
 import { RECEIPT_STATUS_LABELS, Receipt, ReceiptStatus } from '../receipt.model';
 import { ReceiptService } from '../receipt.service';
 
-// Goods receipts (მიღება). The WMS admin and managers (their own warehouses) create them; the
-// system admin only looks.
 @Component({
   selector: 'app-receipts-list',
   imports: [DatePipe, DecimalPipe, FormsModule, RouterLink, LucideAngularModule, Pager],
@@ -50,7 +48,6 @@ export class ReceiptsList implements OnInit {
     () => this.search().trim() !== '' || this.statusFilter() !== 'all' || this.warehouseFilter() !== 'all',
   );
 
-  // Search: number, supplier, waybill, warehouse code / name.
   protected readonly filtered = computed(() => {
     const query = this.search().trim().toLowerCase();
     return this.receipts().filter(

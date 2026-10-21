@@ -38,8 +38,6 @@ textarea {
   font: inherit;
 }
 
-/* ---------- App shell / sidebar ---------- */
-
 .shell-layout {
   display: flex;
   height: 100vh;
@@ -268,12 +266,8 @@ textarea {
   padding: 28px 32px;
 }
 
-/* ---------- Page layout ---------- */
-
 .page-stack {
   display: grid;
-  /* minmax(0, …) lets the column shrink, so wide tables scroll inside .table-scroll
-     instead of stretching the whole page. */
   grid-template-columns: minmax(0, 1fr);
   gap: 24px;
 }
@@ -314,8 +308,6 @@ textarea {
   border-radius: 24px;
   padding: 24px;
 }
-
-/* ---------- Forms ---------- */
 
 .text-input,
 .text-select {
@@ -358,8 +350,6 @@ textarea {
   font-size: 0.84rem;
   font-weight: 600;
 }
-
-/* ---------- Buttons ---------- */
 
 .button-row {
   display: flex;
@@ -441,7 +431,6 @@ textarea {
   box-shadow: inset 0 0 0 1px #cbd5e1;
 }
 
-/* Buttons in the top right corner of a page (e.g. Import + Add warehouse). */
 .page-header__actions {
   flex-shrink: 0;
 }
@@ -451,8 +440,6 @@ textarea {
   padding: 7px 12px;
   font-size: 0.82rem;
 }
-
-/* ---------- Table ---------- */
 
 .data-table {
   width: 100%;
@@ -499,8 +486,6 @@ textarea {
   background: rgba(15, 118, 110, 0.1);
   color: #0f766e;
 }
-
-/* ---------- Shared page pieces (used by several modules) ---------- */
 
 .form-grid {
   display: grid;
@@ -613,8 +598,6 @@ textarea {
   color: #4338ca;
 }
 
-/* ---------- Signed-in user, at the bottom of the sidebar ---------- */
-
 .shell-user {
   flex-shrink: 0;
   display: flex;
@@ -650,8 +633,6 @@ textarea {
   font-size: 0.76rem;
   color: #64748b;
 }
-
-/* ---------- Superuser area: dark top bar, no sidebar ---------- */
 
 .sa-layout {
   min-height: 100vh;
@@ -750,8 +731,6 @@ textarea {
   cursor: not-allowed;
 }
 
-/* ---------- Draggable column headers (shared/column-order) ---------- */
-
 .data-table th.th-draggable {
   cursor: grab;
   user-select: none;
@@ -773,12 +752,10 @@ textarea {
   box-shadow: inset -3px 0 0 #4f46e5;
 }
 
-/* Text box with a search icon inside (HR Employees, WMS Warehouses / Products). */
 .search-input {
   position: relative;
 }
 
-/* Only the lucide-icon element: Lucide copies the class onto its inner <svg> too. */
 lucide-icon.search-input__icon {
   display: flex;
   position: absolute;
@@ -833,13 +810,10 @@ lucide-icon.search-input__icon {
   white-space: nowrap;
 }
 
-/* Numbers that sit left-aligned like the rest of the table, but keep their digits lined up. */
 .cell-figure {
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
-
-/* ---------- Icon actions in table rows (View / Edit / Delete) ---------- */
 
 .icon-actions {
   display: flex;
@@ -886,8 +860,6 @@ lucide-icon.search-input__icon {
   outline-offset: 1px;
 }
 
-/* ---------- Detail pages (WMS product / warehouse View) ---------- */
-
 .card-title {
   margin: 0 0 16px;
   font-size: 1.05rem;
@@ -902,7 +874,6 @@ lucide-icon.search-input__icon {
   color: #94a3b8;
 }
 
-/* Label / value pairs in a responsive grid. */
 .detail-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
@@ -924,7 +895,6 @@ lucide-icon.search-input__icon {
   color: #0f172a;
 }
 
-/* A row of big numbers (Products / Stock / Total price). */
 .stat-row {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
@@ -970,8 +940,6 @@ lucide-icon.search-input__icon {
   gap: 10px;
 }
 
-/* ---------- Document statuses (receipts, transfers) ---------- */
-
 .badge--draft {
   background: #f1f5f9;
   color: #475569;
@@ -992,7 +960,6 @@ lucide-icon.search-input__icon {
   color: #b91c1c;
 }
 
-/* Editable cells on document lines. */
 .line-input {
   width: 120px;
   padding: 6px 10px;
@@ -1021,7 +988,6 @@ lucide-icon.search-input__icon {
   margin-top: 16px;
 }
 
-/* Product search with a button next to it (receipt editor). */
 .picker-row {
   display: flex;
   flex-wrap: wrap;
@@ -1034,7 +1000,6 @@ lucide-icon.search-input__icon {
   max-width: 520px;
 }
 
-/* A small percentage bar (product stock pop-up). */
 .share {
   display: flex;
   align-items: center;
@@ -1064,7 +1029,6 @@ lucide-icon.search-input__icon {
   line-height: 1.8;
 }
 
-/* A link-style button inside a table cell, at the cell's text size. */
 .link-button--cell {
   font-size: inherit;
 }

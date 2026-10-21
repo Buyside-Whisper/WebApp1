@@ -22,8 +22,6 @@ export class WarehousesList implements OnInit {
   private readonly warehouseService = inject(WarehouseService);
   private readonly auth = inject(AuthService);
 
-  // Admins see every warehouse; only the WMS admin may change them. The system admin sees all of
-  // them read-only, a manager only the ones assigned to him (read-only).
   protected readonly isAdmin = computed(() => {
     const role = this.auth.user()?.role;
     return role === 'system_admin' || role === 'module_admin';
@@ -53,15 +51,12 @@ export class WarehousesList implements OnInit {
 
   protected readonly warehouses = signal<Warehouse[]>([]);
 
-  // Search covers the text columns only (not numbers, statuses or other fixed choices); those
-  // fixed choices are the filters.
   protected readonly search = signal('');
   protected readonly typeFilter = signal<'all' | WarehouseType>('all');
   protected readonly statusFilter = signal<'all' | WarehouseStatus>('all');
-  protected readonly managerFilter = signal('all'); // 'all' | 'none' | employee id
+  protected readonly managerFilter = signal('all');
   protected readonly stockFilter = signal<'all' | 'stocked' | 'empty'>('all');
 
-  // The managers that appear in the list, for the Manager filter.
   protected readonly managersInList = computed(() => {
     const byId = new Map<string, string>();
     for (const { manager } of this.warehouses()) {
@@ -115,20 +110,18 @@ export class WarehousesList implements OnInit {
   protected readonly isSaving = signal(false);
   protected readonly errorMessage = signal('');
 
-  // The Add / Edit warehouse modal, and the (still empty) Import modal.
   protected readonly isFormOpen = signal(false);
   protected readonly isImportOpen = signal(false);
   protected readonly formError = signal('');
 
-  // null = adding a new warehouse, otherwise the id of the one being edited
   protected readonly editingId = signal<string | null>(null);
 
   protected readonly name = signal('');
   protected readonly type = signal<WarehouseType>('sales');
-  protected readonly branch = signal(''); // sales warehouses only
+  protected readonly branch = signal('');
   protected readonly address = signal('');
   protected readonly status = signal<WarehouseStatus>('active');
-  protected readonly managerId = signal(''); // '' = no manager
+  protected readonly managerId = signal('');
 
   ngOnInit(): void {
     this.loadWarehouses();
@@ -222,7 +215,6 @@ export class WarehousesList implements OnInit {
       next: () => {
         this.loadWarehouses();
       },
-      // e.g. "… has stock history, so it can't be deleted. Set it to … instead."
       error: (error: HttpErrorResponse) =>
         this.errorMessage.set(error.error?.message ?? 'Could not delete the warehouse.'),
     });

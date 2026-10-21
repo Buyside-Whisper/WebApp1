@@ -3,7 +3,6 @@ import { DecimalPipe } from '@angular/common';
 import { LucideAngularModule, ScanBarcode } from 'lucide-angular';
 import { ProductUnit } from '../../products/product.model';
 
-// What the picker can offer: a product, plus how much is available when that matters (transfers).
 export interface PickableProduct {
   id: string;
   name: string;
@@ -12,8 +11,6 @@ export interface PickableProduct {
   available?: number;
 }
 
-// Search box that adds products to a document: type a name or barcode and click a result, or scan /
-// type a full barcode and press Enter (a barcode scanner types the code and presses Enter).
 @Component({
   selector: 'app-product-picker',
   imports: [DecimalPipe, LucideAngularModule],
@@ -22,7 +19,6 @@ export interface PickableProduct {
 })
 export class ProductPicker {
   readonly products = input.required<PickableProduct[]>();
-  // Already on the document (shown as "added", not offered again).
   readonly taken = input<string[]>([]);
   readonly placeholder = input('Add a product: name or barcode, or scan');
   readonly picked = output<PickableProduct>();
@@ -52,9 +48,8 @@ export class ProductPicker {
     this.message.set('');
   }
 
-  // Enter: an exact barcode wins (scanner), otherwise the only / first match.
   protected onEnter(event: Event): void {
-    event.preventDefault(); // don't submit the surrounding form
+    event.preventDefault();
     const query = this.query().trim();
     const exact = this.products().find((p) => p.barcode === query);
     const choice = exact ?? (this.matches().length ? this.matches()[0] : undefined);
@@ -76,7 +71,6 @@ export class ProductPicker {
     this.open.set(false);
   }
 
-  // Delay so a click on a result lands before the list closes.
   protected onBlur(): void {
     setTimeout(() => this.open.set(false), 150);
   }

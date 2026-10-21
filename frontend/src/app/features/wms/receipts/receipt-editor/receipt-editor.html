@@ -141,7 +141,6 @@
   </div>
 </div>
 
-<!-- Not in the catalogue yet: add it without leaving the receipt (WMS admin only). -->
 <app-modal [open]="isProductFormOpen()" title="New product" (closed)="isProductFormOpen.set(false)">
   @if (isProductFormOpen()) {
     <app-product-form

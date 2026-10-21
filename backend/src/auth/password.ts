@@ -15,7 +15,6 @@ export function verifyPassword(password: string, stored: string): boolean {
   return actual.length === expected.length && timingSafeEqual(actual, expected);
 }
 
-// No look-alike characters (0/o, 1/l/i), because these get read off a screen and typed.
 const ALPHABET = 'abcdefghjkmnpqrstuvwxyz23456789';
 
 export function generatePassword(length = 10): string {

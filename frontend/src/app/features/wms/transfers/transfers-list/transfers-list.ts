@@ -10,7 +10,6 @@ import { Pagination } from '../../../../shared/pager/pagination';
 import { TRANSFER_STATUS_LABELS, Transfer, TransferStatus } from '../transfer.model';
 import { TransferService } from '../transfer.service';
 
-// Transfers (გადაადგილება) between warehouses. A manager sees the ones touching his warehouses.
 @Component({
   selector: 'app-transfers-list',
   imports: [DatePipe, FormsModule, RouterLink, LucideAngularModule, Pager],
@@ -39,7 +38,6 @@ export class TransfersList implements OnInit {
 
   protected readonly search = signal('');
   protected readonly statusFilter = signal<'all' | TransferStatus>('all');
-  // Either side of the transfer.
   protected readonly warehouseFilter = signal('all');
 
   protected readonly warehousesInList = computed(() => {
@@ -51,7 +49,6 @@ export class TransfersList implements OnInit {
     () => this.search().trim() !== '' || this.statusFilter() !== 'all' || this.warehouseFilter() !== 'all',
   );
 
-  // Search: number and both warehouses' code / name.
   protected readonly filtered = computed(() => {
     const query = this.search().trim().toLowerCase();
     const warehouse = this.warehouseFilter();

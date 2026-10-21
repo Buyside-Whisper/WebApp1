@@ -7,8 +7,6 @@ import { AuthService } from '../../../../core/auth/auth.service';
 import { RECEIPT_STATUS_LABELS, Receipt } from '../receipt.model';
 import { ReceiptService } from '../receipt.service';
 
-// One receipt with its lines, and the actions its status allows: a draft can be edited, deleted or
-// posted; a posted one can be cancelled.
 @Component({
   selector: 'app-receipt-view',
   imports: [DatePipe, DecimalPipe, RouterLink],
@@ -26,7 +24,6 @@ export class ReceiptView implements OnInit {
   protected readonly errorMessage = signal('');
   protected readonly isBusy = signal(false);
 
-  // The backend also checks the warehouse (a manager only sees his own receipts anyway).
   protected readonly canWrite = computed(() => {
     const role = this.auth.user()?.role;
     return role === 'module_admin' || role === 'manager';

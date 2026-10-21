@@ -21,10 +21,8 @@ interface EditableLine {
   quantity: number;
 }
 
-const today = () => new Date().toLocaleDateString('sv-SE'); // YYYY-MM-DD, local time
+const today = () => new Date().toLocaleDateString('sv-SE');
 
-// New transfer (/wms/transfers/new) or editing a draft (/wms/transfers/:id/edit). Products come from
-// what the source warehouse has; quantities can't be more than that.
 @Component({
   selector: 'app-transfer-editor',
   imports: [DecimalPipe, FormsModule, RouterLink, LucideAngularModule, ProductPicker],
@@ -36,7 +34,6 @@ export class TransferEditor implements OnInit {
   private readonly warehouseService = inject(WarehouseService);
   private readonly router = inject(Router);
 
-  // Route param; missing for a new transfer.
   readonly id = input<string>();
 
   protected readonly DeleteIcon = Trash2;
@@ -53,13 +50,11 @@ export class TransferEditor implements OnInit {
   protected readonly note = signal('');
   protected readonly lines = signal<EditableLine[]>([]);
 
-  // Send from: active warehouses the user runs. Send to: any other active warehouse.
   protected readonly sources = computed(() => this.warehouses().filter((w) => w.mine && w.status === 'active'));
   protected readonly destinations = computed(() =>
     this.warehouses().filter((w) => w.status === 'active' && w.id !== this.fromWarehouseId()),
   );
 
-  // What the source has (more than 0), for the picker.
   protected readonly pickable = computed<PickableProduct[]>(() =>
     this.sourceStock()
       .filter((row) => row.quantity > 0)
@@ -99,7 +94,6 @@ export class TransferEditor implements OnInit {
     }
   }
 
-  // A different source has different stock, so the lines start over.
   changeSource(warehouseId: string): void {
     if (this.lines().length && !confirm('Changing the source warehouse removes the products added so far.')) {
       return;
@@ -147,7 +141,6 @@ export class TransferEditor implements OnInit {
     });
   }
 
-  // The draft is saved by now; if sending fails, keep editing that draft (no second copy).
   private send(saved: Transfer): void {
     this.transferService.send(saved.id).subscribe({
       next: () => void this.router.navigate(['/wms/transfers', saved.id]),
@@ -216,7 +209,7 @@ export class TransferEditor implements OnInit {
 
   private fill(transfer: Transfer): void {
     if (transfer.status !== 'draft') {
-      void this.router.navigate(['/wms/transfers', transfer.id]); // only drafts are editable
+      void this.router.navigate(['/wms/transfers', transfer.id]);
       return;
     }
     this.code.set(transfer.code);

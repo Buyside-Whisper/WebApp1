@@ -14,7 +14,6 @@ export class CreateStoreDto {
   @IsNotEmpty()
   address!: string;
 
-  // Number of cash registers (default 1).
   @IsOptional()
   @IsInt()
   @Min(1)
@@ -40,7 +39,6 @@ export class UpdateStoreDto {
   @IsNotEmpty()
   address?: string;
 
-  // Number of cash registers (default 1).
   @IsOptional()
   @IsInt()
   @Min(1)

@@ -36,7 +36,6 @@ export class TransferService {
     return this.http.post<Transfer>(`${API_URL}/${id}/send`, {});
   }
 
-  // Lines left out count as fully received.
   receive(id: string, lines: { lineId: string; receivedQuantity: number }[]): Observable<Transfer> {
     return this.http.post<Transfer>(`${API_URL}/${id}/receive`, { lines });
   }

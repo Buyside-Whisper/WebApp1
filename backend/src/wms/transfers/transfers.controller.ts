@@ -6,8 +6,6 @@ import { AppModuleName } from '../../companies/app-module.enum.js';
 import { ReceiveTransferDto, SaveTransferDto } from './dto/transfer.dto.js';
 import { TransfersService, TransferView } from './transfers.service.js';
 
-// Admins and WMS managers read; the WMS admin and managers (for their side of the transfer,
-// checked in the service) change them. The system admin only reads.
 const WRITERS = [UserRole.MODULE_ADMIN, UserRole.MANAGER];
 
 @Controller('transfers')

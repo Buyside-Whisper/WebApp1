@@ -2,8 +2,6 @@ import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, type Rel
 import { decimalTransformer } from '../../common/decimal.transformer.js';
 import { Sale } from './sale.entity.js';
 
-// A line on a receipt. Name and price are copied from the catalog, so later price changes
-// don't rewrite old receipts.
 @Entity({ name: 'sale_lines' })
 export class SaleLine {
   @PrimaryGeneratedColumn('uuid')

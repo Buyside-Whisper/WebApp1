@@ -23,7 +23,6 @@ export class PosPage implements OnInit {
   private readonly cashRegisterService = inject(CashRegisterService);
 
   protected readonly products = signal<StoreProduct[]>([]);
-  // The register this user has open. Sales can only be rung up while there is one.
   protected readonly session = signal<RegisterSession | null>(null);
   protected readonly isLoading = signal(true);
   protected readonly isCharging = signal(false);

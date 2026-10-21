@@ -14,8 +14,6 @@ export class StoresList implements OnInit {
   private readonly storeService = inject(StoreService);
   private readonly auth = inject(AuthService);
 
-  // Admins see every store; only the Store admin may change them. The system admin sees all of them
-  // read-only, a manager only the ones he runs (read-only).
   protected readonly isAdmin = computed(() => {
     const role = this.auth.user()?.role;
     return role === 'system_admin' || role === 'module_admin';
@@ -28,13 +26,12 @@ export class StoresList implements OnInit {
   protected readonly isSaving = signal(false);
   protected readonly errorMessage = signal('');
 
-  // null = adding a new store, otherwise the id of the one being edited
   protected readonly editingId = signal<string | null>(null);
 
   protected readonly name = signal('');
   protected readonly address = signal('');
   protected readonly registers = signal(1);
-  protected readonly managerId = signal(''); // '' = no manager
+  protected readonly managerId = signal('');
 
   ngOnInit(): void {
     this.load();

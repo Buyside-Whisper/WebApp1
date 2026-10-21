@@ -25,7 +25,6 @@ export default [
     loadComponent: () =>
       import('./products/product-view/product-view').then((m) => m.ProductView),
   },
-  // Stock documents: admins and WMS managers (the sidebar section is already WMS-only).
   {
     path: 'receipts',
     loadComponent: () => import('./receipts/receipts-list/receipts-list').then((m) => m.ReceiptsList),

@@ -13,7 +13,6 @@ import { StockMovementKind } from './stock-movement-kind.enum.js';
 export interface StockLine {
   productId: string;
   warehouseId: string;
-  // Signed: positive adds stock, negative takes it away.
   quantity: number;
 }
 
@@ -23,7 +22,6 @@ export interface PostOptions {
   note?: string | null;
 }
 
-// A product in a warehouse, for the warehouse's View page.
 export interface WarehouseStockRow {
   productId: string;
   quantity: number;
@@ -32,8 +30,6 @@ export interface WarehouseStockRow {
 
 const round3 = (value: number) => Math.round(value * 1000) / 1000;
 
-// The only place where stock quantities change. Every change is a movement (history) plus an
-// update of the balance, in the caller's transaction, so the two can never disagree.
 @Injectable()
 export class StockService {
   constructor(
@@ -45,9 +41,6 @@ export class StockService {
     private readonly warehousesRepository: Repository<Warehouse>,
   ) {}
 
-  // Applies the lines inside `manager`'s transaction. Throws (so the whole document is rolled
-  // back) when a product or warehouse isn't the company's, a pcs quantity isn't whole, or a
-  // warehouse would go below zero.
   async post(
     manager: EntityManager,
     actor: AuthUser,
@@ -76,7 +69,6 @@ export class StockService {
         throw new BadRequestException(`${product.name} is counted in pcs, so its quantity must be whole`);
       }
 
-      // Make sure the balance row exists, then lock it so two documents can't race.
       await manager
         .createQueryBuilder()
         .insert()
@@ -116,7 +108,6 @@ export class StockService {
     return manager.save(StockMovement, movements);
   }
 
-  // The warehouses a manager runs (documents: a manager works only with his own warehouses).
   async managedWarehouseIds(actor: AuthUser): Promise<Set<string>> {
     if (actor.role !== UserRole.MANAGER) {
       return new Set();
@@ -132,7 +123,6 @@ export class StockService {
     return this.movementsRepository.exists({ where: { ...where, companyId: actor.companyId! } });
   }
 
-  // History of one product (admins) or one warehouse (admins, and the manager who runs it).
   async movements(
     actor: AuthUser,
     filter: { productId?: string; warehouseId?: string },
@@ -143,7 +133,7 @@ export class StockService {
     if (filter.warehouseId) {
       await this.checkWarehouse(actor, filter.warehouseId);
     } else if (actor.role === UserRole.MANAGER) {
-      throw new NotFoundException('Product not found'); // managers don't see the product catalogue
+      throw new NotFoundException('Product not found');
     }
 
     const movements = await this.movementsRepository.find({
@@ -154,7 +144,6 @@ export class StockService {
       order: { createdAt: 'DESC' },
       take: 1000,
     });
-    // Only what the history table needs, not the whole product / warehouse records.
     return movements.map((movement) => ({
       ...movement,
       product: { id: movement.product!.id, name: movement.product!.name, barcode: movement.product!.barcode, unit: movement.product!.unit },
@@ -162,7 +151,6 @@ export class StockService {
     })) as StockMovement[];
   }
 
-  // The products in one warehouse and how much of each.
   async warehouseStock(actor: AuthUser, warehouseId: string): Promise<WarehouseStockRow[]> {
     await this.checkWarehouse(actor, warehouseId);
     const rows = await this.balancesRepository.find({
@@ -186,7 +174,6 @@ export class StockService {
     }));
   }
 
-  // The warehouse must be the company's; a manager may only look at the ones he runs.
   private async checkWarehouse(actor: AuthUser, warehouseId: string): Promise<void> {
     const warehouse = await this.warehousesRepository.findOneBy({ id: warehouseId, companyId: actor.companyId! });
     if (!warehouse || (actor.role === UserRole.MANAGER && warehouse.managerId !== actor.employeeId)) {

@@ -1,4 +1,3 @@
-// The sellable modules. HR is not listed: every company always has it.
 export enum AppModuleName {
   WMS = 'wms',
   STORE = 'store',

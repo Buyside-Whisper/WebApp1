@@ -115,7 +115,6 @@
                   >
                     {{ employee.role ? roleLabels[employee.role] : 'No role' }}
                   </span>
-                  <!-- Only the system admin sees several modules; for everyone else it would repeat. -->
                   @if (employee.module && isSystemAdmin()) {
                     <div class="cell-sub">{{ moduleLabels[employee.module] }}</div>
                   }

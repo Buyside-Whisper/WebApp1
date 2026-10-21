@@ -24,9 +24,8 @@ interface EditableLine {
   unitCost: number;
 }
 
-const today = () => new Date().toLocaleDateString('sv-SE'); // YYYY-MM-DD, local time
+const today = () => new Date().toLocaleDateString('sv-SE');
 
-// New receipt (/wms/receipts/new) or editing a draft (/wms/receipts/:id/edit).
 @Component({
   selector: 'app-receipt-editor',
   imports: [DecimalPipe, FormsModule, RouterLink, LucideAngularModule, ProductPicker, Modal, ProductForm],
@@ -39,13 +38,11 @@ export class ReceiptEditor implements OnInit {
   private readonly router = inject(Router);
   private readonly auth = inject(AuthService);
 
-  // Route param; missing for a new receipt.
   readonly id = input<string>();
 
   protected readonly DeleteIcon = Trash2;
   protected readonly PlusIcon = Plus;
 
-  // "New product" without leaving the receipt: only the WMS admin manages the catalogue.
   protected readonly canCreateProducts = computed(() => this.auth.user()?.role === 'module_admin');
   protected readonly isProductFormOpen = signal(false);
   protected readonly productNotice = signal('');
@@ -63,7 +60,6 @@ export class ReceiptEditor implements OnInit {
   protected readonly note = signal('');
   protected readonly lines = signal<EditableLine[]>([]);
 
-  // Only active warehouses the user works with.
   protected readonly myWarehouses = computed(() =>
     this.warehouses().filter((w) => w.mine && w.status === 'active'),
   );
@@ -86,7 +82,6 @@ export class ReceiptEditor implements OnInit {
       next: (products) => this.products.set(products),
       error: () => this.errorMessage.set('Could not load products.'),
     });
-    // Set when a new receipt was saved but could not be posted (see post()).
     const carried = (history.state as { error?: string } | null)?.error;
     if (carried) {
       this.errorMessage.set(carried);
@@ -110,12 +105,11 @@ export class ReceiptEditor implements OnInit {
         barcode: product.barcode,
         unit: product.unit,
         quantity: 1,
-        unitCost: product.costPrice, // the current cost as a starting point
+        unitCost: product.costPrice,
       },
     ]);
   }
 
-  // A product created from the receipt goes straight onto it (if it is active, so it can be received).
   onProductCreated(product: Product): void {
     this.isProductFormOpen.set(false);
     if (product.status !== 'active') {
@@ -156,8 +150,6 @@ export class ReceiptEditor implements OnInit {
     });
   }
 
-  // The draft is saved by now. If posting fails (e.g. a warehouse just became inactive), keep
-  // editing that draft instead of creating another one.
   private post(saved: Receipt): void {
     this.receiptService.post(saved.id).subscribe({
       next: () => void this.router.navigate(['/wms/receipts', saved.id]),
@@ -222,7 +214,7 @@ export class ReceiptEditor implements OnInit {
 
   private fill(receipt: Receipt): void {
     if (receipt.status !== 'draft') {
-      void this.router.navigate(['/wms/receipts', receipt.id]); // only drafts are editable
+      void this.router.navigate(['/wms/receipts', receipt.id]);
       return;
     }
     this.code.set(receipt.code);

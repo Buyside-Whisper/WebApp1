@@ -284,7 +284,6 @@
   }
 </app-modal>
 
-<!-- Import, Export and Scales: the user will describe them later. -->
 <app-modal
   [open]="placeholder() !== null"
   [title]="placeholderTitles[placeholder() ?? 'import']"
@@ -293,7 +292,6 @@
   <p class="page-description">Coming soon.</p>
 </app-modal>
 
-<!-- Where a product is: opened from the Warehouses column. -->
 <app-modal
   [open]="stockOf() !== null"
   [title]="'Stock of ' + (stockOf()?.name ?? '')"

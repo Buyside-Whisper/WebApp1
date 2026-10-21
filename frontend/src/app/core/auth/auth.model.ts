@@ -16,7 +16,6 @@ export interface Session {
   user: SessionUser;
 }
 
-// A login handed out once (new employee login, new company, password reset).
 export interface Credentials {
   displayName: string;
   username: string;

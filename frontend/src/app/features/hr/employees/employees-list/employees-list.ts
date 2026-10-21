@@ -412,8 +412,8 @@ function randomPersonDetails() {
     'Gvelesiani',
     'Kvaratskhelia',
   ]);
-  const birthYear = 1975 + Math.floor(Math.random() * 28); // 1975-2002
-  const hireYear = birthYear + 20 + Math.floor(Math.random() * 6); // always after birth, 20-25 years on
+  const birthYear = 1975 + Math.floor(Math.random() * 28);
+  const hireYear = birthYear + 20 + Math.floor(Math.random() * 6);
   const date = (year: number) =>
     `${Math.min(year, new Date().getFullYear() - 1)}-${String(1 + Math.floor(Math.random() * 12)).padStart(2, '0')}-${String(1 + Math.floor(Math.random() * 28)).padStart(2, '0')}`;
 
@@ -433,7 +433,6 @@ function uniqueSorted(values: (string | null)[]): string[] {
   return [...new Set(values.filter((v): v is string => !!v))].sort((a, b) => a.localeCompare(b));
 }
 
-// Anyone with a role must belong to a module (people without a role needn't).
 function moduleForRole(group: AbstractControl): ValidationErrors | null {
   const role = group.get('role')?.value as string;
   const module = group.get('module')?.value as string;
@@ -444,7 +443,6 @@ function notBlank(control: AbstractControl<string>): ValidationErrors | null {
   return control.value?.trim() ? null : { blank: true };
 }
 
-// A regex check that reports its own error key, so each field gets a specific message.
 function pattern(regex: RegExp, errorKey: string) {
   return (control: AbstractControl<string>): ValidationErrors | null =>
     !control.value || regex.test(control.value.trim()) ? null : { [errorKey]: true };
@@ -466,7 +464,6 @@ function endDateAfterHire(group: AbstractControl): ValidationErrors | null {
   return hire && end && end < hire ? { endBeforeHire: true } : null;
 }
 
-// Today as 'YYYY-MM-DD' in the user's own time zone (what a date input uses).
 function localToday(): string {
   const now = new Date();
   const pad = (n: number) => String(n).padStart(2, '0');

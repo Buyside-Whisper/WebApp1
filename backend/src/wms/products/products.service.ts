@@ -15,11 +15,8 @@ export type ProductOption = Pick<
   'id' | 'name' | 'barcode' | 'unit' | 'costPrice' | 'category' | 'group' | 'supplier'
 >;
 
-// "  Snickers   50G " and "snickers 50g" are the same name.
 const nameKey = (name: string) => name.trim().replace(/\s+/g, ' ').toLowerCase();
 
-// The product catalogue. Quantities are not edited here: they change only through stock
-// documents (StockService), and come back read-only as `stocks` / `quantity`.
 @Injectable()
 export class ProductsService {
   constructor(
@@ -72,12 +69,10 @@ export class ProductsService {
 
   async update(actor: AuthUser, id: string, dto: UpdateProductDto): Promise<Product> {
     const product = await this.findOne(actor, id);
-    // Existing quantities are in the old unit (e.g. 12.5 kg), so the unit is fixed while there is stock.
     if (dto.unit && dto.unit !== product.unit && product.stocks.some((stock) => stock.quantity !== 0)) {
       throw new BadRequestException(`The unit can't change while ${product.name} has stock`);
     }
 
-    // Only a rename is checked, so products that were duplicates before this rule can still be edited.
     if (dto.name && nameKey(dto.name) !== nameKey(product.name)) {
       await this.assertNameFree(actor, dto.name, id);
     }
@@ -88,8 +83,6 @@ export class ProductsService {
     return this.findOne(actor, id);
   }
 
-  // A product with stock history can't be deleted (the history would point at nothing); it can be
-  // set to Not active instead.
   async remove(actor: AuthUser, id: string): Promise<void> {
     const product = await this.findOne(actor, id);
     if (await this.stockService.hasHistory(actor, { productId: id })) {
@@ -101,8 +94,6 @@ export class ProductsService {
     await this.audit.record(actor, 'product.delete', `Deleted product ${product.barcode} ${product.name}`);
   }
 
-  // Two products may not have the same name (ignoring capitals and extra spaces): it is almost
-  // always the same product added twice.
   private async assertNameFree(actor: AuthUser, name: string, exceptId?: string): Promise<void> {
     const query = this.productsRepository
       .createQueryBuilder('product')
@@ -130,8 +121,6 @@ export class ProductsService {
     }
   }
 
-  // Trims the text fields so " 123" and "123" count as the same barcode, and leaves out the fields
-  // that were not sent (they would overwrite the loaded product with undefined).
   private trimmed<T extends object>(dto: T): T {
     const result: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(dto)) {

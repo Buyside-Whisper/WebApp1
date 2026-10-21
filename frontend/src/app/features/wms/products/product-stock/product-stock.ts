@@ -5,7 +5,6 @@ import { StockMovement } from '../../stock/stock.model';
 import { StockService } from '../../stock/stock.service';
 import { Product } from '../product.model';
 
-// Goods that left a warehouse on a transfer and haven't been received yet.
 interface InTransit {
   documentId: string;
   code: string;
@@ -14,8 +13,6 @@ interface InTransit {
   sentAt: string;
 }
 
-// Where one product is: quantity per warehouse, its share and value, when each last changed, and
-// what is on the way. Shown in a pop-up from the Products table (put it inside an @if).
 @Component({
   selector: 'app-product-stock',
   imports: [DatePipe, DecimalPipe, RouterLink],
@@ -33,7 +30,6 @@ export class ProductStock implements OnInit {
     const total = product.quantity;
     const lastChange = new Map<string, string>();
     for (const movement of this.movements() ?? []) {
-      // Newest first, so the first one seen per warehouse is the latest.
       if (!lastChange.has(movement.warehouse.id)) {
         lastChange.set(movement.warehouse.id, movement.createdAt);
       }
@@ -50,7 +46,6 @@ export class ProductStock implements OnInit {
 
   protected readonly totalValue = computed(() => this.product().quantity * this.product().costPrice);
 
-  // A transfer is in transit while it has a "sent" movement but no "received" / "cancelled" one.
   protected readonly inTransit = computed<InTransit[]>(() => {
     const movements = this.movements() ?? [];
     const finished = new Set(

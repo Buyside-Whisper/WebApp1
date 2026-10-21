@@ -15,7 +15,6 @@ export class PosService {
     return this.http.get<StoreProduct[]>(`${API_URL}/products`);
   }
 
-  // Rings up a sale on the user's open register. The server prices it from the catalog.
   createSale(items: { productId: string; quantity: number }[]): Observable<Sale> {
     return this.http.post<Sale>(`${API_URL}/sales`, { items });
   }

@@ -4,7 +4,6 @@ import { AuditLog } from './audit-log.entity.js';
 import { AuditController } from './audit.controller.js';
 import { AuditService } from './audit.service.js';
 
-// Global: any module can inject AuditService to record what happened.
 @Global()
 @Module({
   imports: [TypeOrmModule.forFeature([AuditLog])],

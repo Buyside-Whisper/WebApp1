@@ -8,8 +8,6 @@ import { CreateProductDto } from './dto/create-product.dto.js';
 import { UpdateProductDto } from './dto/update-product.dto.js';
 import { Product } from './product.entity.js';
 
-// Both admins may read products (managers do not see them). Only the WMS admin creates,
-// edits and deletes them: the method-level @Roles below overrides the class-level one.
 @Controller('products')
 @Access(AppModuleName.WMS)
 @Roles(...ADMIN_ROLES)
@@ -21,8 +19,6 @@ export class ProductsController {
     return this.productsService.findAll(user);
   }
 
-  // Active products, just what a document line needs. Managers use it too (they don't get the
-  // Products page, but they receive and move goods).
   @Get('options')
   @Roles(...ADMIN_ROLES, UserRole.MANAGER)
   options(@CurrentUser() user: AuthUser): Promise<ProductOption[]> {

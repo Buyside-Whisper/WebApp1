@@ -49,10 +49,12 @@ export class EmployeesService {
     if (ids && ids.length === 0) {
       return [];
     }
+
     const employees = await this.employeesRepository.find({
       where: { ...this.scope(actor), ...(ids ? { id: In(ids) } : {}) },
       order: { createdAt: 'DESC' },
     });
+
     return this.withUsernames(employees);
   }
 
@@ -91,39 +93,15 @@ export class EmployeesService {
       companyId: actor.companyId!,
     });
     this.assertValidDates(employee);
-    const saved = await this.save(employee);
+
+    const saved: any = await this.save(employee);
     await link?.(saved);
     await this.audit.record(
       actor,
       'employee.create',
       `Added ${this.nameOf(saved)} (${saved.role ?? 'no role'})`,
     );
-    return saved;
-  }
 
-  async create1(actor: AuthUser, dto: CreateEmployeeDto): Promise<Employee> {
-    const { workplaceIds, ...fields } = dto;
-    const role = EmployeeRole.SYSTEM_ADMIN;
-    const module = null;
-
-    const link =
-      actor.role === UserRole.MANAGER
-        ? await this.prepareWorkplaces(actor, workplaceIds ?? [])
-        : null;
-    const employee = this.employeesRepository.create({
-      ...fields,
-      role,
-      module,
-      companyId: actor.companyId!,
-    });
-    this.assertValidDates(employee);
-    const saved = await this.save(employee);
-    await link?.(saved);
-    await this.audit.record(
-      actor,
-      'employee.create',
-      `Added ${this.nameOf(saved)} (${saved.role ?? 'no role'})`,
-    );
     return saved;
   }
 
@@ -160,7 +138,7 @@ export class EmployeesService {
   async remove(actor: AuthUser, id: string): Promise<void> {
     const employee = await this.findOne(actor, id);
     this.assertCanChange(actor, employee);
-    await this.employeesRepository.remove(employee); // the login goes with it
+    await this.employeesRepository.remove(employee);
     await this.audit.record(
       actor,
       'employee.delete',
@@ -404,7 +382,6 @@ export class EmployeesService {
     }
   }
 
-  // Dates are 'YYYY-MM-DD' strings, so comparing them as strings compares them as dates.
   private assertValidDates(employee: Employee): void {
     const today = new Date().toISOString().slice(0, 10);
 

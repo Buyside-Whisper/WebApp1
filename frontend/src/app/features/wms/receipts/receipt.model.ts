@@ -17,11 +17,10 @@ export interface ReceiptLine {
   product: { id: string; name: string; barcode: string; unit: ProductUnit };
 }
 
-// Goods receipt (მიღება): goods from a supplier into one warehouse.
 export interface Receipt {
   id: string;
   number: number;
-  code: string; // REC-000001
+  code: string;
   status: ReceiptStatus;
   warehouseId: string;
   warehouse: { id: string; code: string; name: string };
@@ -31,7 +30,7 @@ export interface Receipt {
   note: string | null;
   lineCount: number;
   total: number;
-  lines?: ReceiptLine[]; // only on GET /:id
+  lines?: ReceiptLine[];
   createdByName: string;
   createdAt: string;
   postedByName: string | null;

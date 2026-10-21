@@ -2,8 +2,6 @@ import { Component, computed, input } from '@angular/core';
 import { LucideAngularModule, ChevronLeft, ChevronRight } from 'lucide-angular';
 import { PAGE_SIZES, Pagination } from './pagination';
 
-// Page controls under a table: "21–40 of 312", rows per page, previous / page numbers / next.
-//   <app-pager [pagination]="pages" />
 @Component({
   selector: 'app-pager',
   imports: [LucideAngularModule],
@@ -17,7 +15,6 @@ export class Pager {
   protected readonly PrevIcon = ChevronLeft;
   protected readonly NextIcon = ChevronRight;
 
-  // First, last, and two pages around the current one; null marks a gap ("…").
   protected readonly pageNumbers = computed(() => {
     const current = this.pagination().current();
     const count = this.pagination().pageCount();

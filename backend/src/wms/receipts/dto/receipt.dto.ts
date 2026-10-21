@@ -28,7 +28,6 @@ export class ReceiptLineDto {
   unitCost!: number;
 }
 
-// Saving a draft: everything may still be incomplete except the warehouse, supplier and date.
 export class SaveReceiptDto {
   @IsUUID()
   warehouseId!: string;

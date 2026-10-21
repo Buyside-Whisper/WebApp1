@@ -4,8 +4,6 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
 
-// Login for the person who sells the app. Company users can't sign in here, and he can't sign in
-// on the normal page.
 @Component({
   selector: 'app-superadmin-login-page',
   imports: [FormsModule, RouterLink],

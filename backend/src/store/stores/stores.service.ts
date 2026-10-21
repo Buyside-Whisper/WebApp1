@@ -17,7 +17,6 @@ export interface PersonRef {
   name: string;
 }
 
-// What the API returns: people as just an id and a name, never the whole HR record.
 export interface StoreView {
   id: string;
   name: string;
@@ -38,13 +37,11 @@ export class StoresService {
     private readonly audit: AuditService,
   ) {}
 
-  // Admins see every store; a manager the stores he runs; a cashier the stores he works in.
   async findAll(actor: AuthUser): Promise<StoreView[]> {
     const stores = await this.visibleStores(actor).orderBy('store.name', 'ASC').getMany();
     return stores.map(toView);
   }
 
-  // People who can be picked as a store's manager: active managers of the Store module.
   async options(actor: AuthUser): Promise<{ managers: PersonRef[] }> {
     const people = await this.employeesRepository.find({
       where: { companyId: actor.companyId!, module: AppModuleName.STORE },
@@ -74,7 +71,6 @@ export class StoresService {
     const { managerId, ...fields } = dto;
 
     if (fields.registers !== undefined) {
-      // Lowering the count must not strand a register that is open right now.
       const open = await this.sessionsRepository.find({ where: { storeId: id, closedAt: IsNull() } });
       const highest = Math.max(0, ...open.map((session) => session.registerNo));
       if (fields.registers < highest) {

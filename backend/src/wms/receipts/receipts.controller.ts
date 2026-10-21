@@ -6,8 +6,6 @@ import { AppModuleName } from '../../companies/app-module.enum.js';
 import { SaveReceiptDto } from './dto/receipt.dto.js';
 import { ReceiptsService, ReceiptView } from './receipts.service.js';
 
-// Admins and WMS managers read; the WMS admin and managers (their own warehouses, checked in the
-// service) create, post and cancel. The system admin only reads.
 const WRITERS = [UserRole.MODULE_ADMIN, UserRole.MANAGER];
 
 @Controller('receipts')

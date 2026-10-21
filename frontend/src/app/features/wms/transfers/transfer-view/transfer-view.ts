@@ -10,8 +10,6 @@ import { WarehouseService } from '../../warehouses/warehouse.service';
 import { TRANSFER_STATUS_LABELS, Transfer } from '../transfer.model';
 import { TransferService } from '../transfer.service';
 
-// One transfer and the actions its status allows. The sending side edits, sends or cancels it; the
-// receiving side confirms what arrived (and can report less than was sent).
 @Component({
   selector: 'app-transfer-view',
   imports: [DatePipe, DecimalPipe, FormsModule, RouterLink],
@@ -31,7 +29,6 @@ export class TransferView implements OnInit {
   protected readonly errorMessage = signal('');
   protected readonly isBusy = signal(false);
 
-  // Receiving: what the destination counted, per line (starts at what was sent).
   protected readonly receiving = signal(false);
   protected readonly received = signal<Record<string, number>>({});
 
@@ -43,7 +40,6 @@ export class TransferView implements OnInit {
     const role = this.auth.user()?.role;
     return role === 'system_admin' || role === 'module_admin';
   });
-  // Which side the user may act for (the backend checks the same).
   private readonly mine = computed(() => new Set(this.warehouses().filter((w) => w.mine).map((w) => w.id)));
   protected readonly actsForSource = computed(
     () => this.canWrite() && this.mine().has(this.transfer()?.fromWarehouseId ?? ''),

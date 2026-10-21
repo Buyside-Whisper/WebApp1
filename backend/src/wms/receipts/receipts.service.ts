@@ -21,8 +21,6 @@ import { ReceiptStatus } from './receipt-status.enum.js';
 const PREFIX = 'REC';
 const round2 = (value: number) => Math.round(value * 100) / 100;
 
-// What the API returns: the receipt plus its display number and totals; warehouse and products
-// reduced to what the pages show.
 export type ReceiptView = Omit<Receipt, 'warehouse' | 'lines'> & {
   code: string;
   lineCount: number;
@@ -33,9 +31,6 @@ export type ReceiptView = Omit<Receipt, 'warehouse' | 'lines'> & {
   })[];
 };
 
-// Goods receipts (მიღება). A WMS admin works with every warehouse, a WMS manager only with the
-// ones he runs; the system admin only looks. Posting adds the stock (through StockService) and
-// updates each product's cost price to the weighted average.
 @Injectable()
 export class ReceiptsService {
   constructor(
@@ -79,7 +74,6 @@ export class ReceiptsService {
     return view;
   }
 
-  // Only a draft can be changed; the lines are replaced as a whole.
   async update(actor: AuthUser, id: string, dto: SaveReceiptDto): Promise<ReceiptView> {
     const receipt = await this.load(actor, id);
     this.assertDraft(receipt);
@@ -98,7 +92,6 @@ export class ReceiptsService {
     return view;
   }
 
-  // A draft can be thrown away; a posted receipt is cancelled instead (its history stays).
   async remove(actor: AuthUser, id: string): Promise<void> {
     const receipt = await this.load(actor, id);
     this.assertDraft(receipt);
@@ -138,8 +131,6 @@ export class ReceiptsService {
     return view;
   }
 
-  // Takes the received goods back out. Fails (and changes nothing) when some of them have
-  // already left the warehouse. Cost prices are left as they are.
   async cancel(actor: AuthUser, id: string): Promise<ReceiptView> {
     await this.dataSource.transaction(async (manager) => {
       const receipt = await this.lockForChange(manager, actor, id);
@@ -168,10 +159,6 @@ export class ReceiptsService {
     return view;
   }
 
-  // ---------- helpers ----------
-
-  // New cost = (stock on hand × current cost + received × purchase price) / (on hand + received),
-  // over all warehouses. With nothing on hand, the purchase price itself.
   private async updateAverageCosts(
     manager: EntityManager,
     actor: AuthUser,
@@ -201,7 +188,6 @@ export class ReceiptsService {
     }
   }
 
-  // Products must be the company's and active; pcs quantities whole.
   private async checkProducts(
     manager: EntityManager,
     actor: AuthUser,
@@ -227,7 +213,6 @@ export class ReceiptsService {
     return byId;
   }
 
-  // Only the WMS admin and the manager of the warehouse may change its receipts.
   private async checkWarehouse(actor: AuthUser, warehouseId: string, mustBeActive = false): Promise<void> {
     if (actor.role !== UserRole.MODULE_ADMIN && actor.role !== UserRole.MANAGER) {
       throw new NotFoundException('Receipt not found');
@@ -242,7 +227,6 @@ export class ReceiptsService {
     }
   }
 
-  // null = every warehouse (admins); otherwise the ones a manager runs.
   private async warehouseScope(actor: AuthUser): Promise<Set<string> | null> {
     return actor.role === UserRole.MANAGER ? this.stockService.managedWarehouseIds(actor) : null;
   }
@@ -260,7 +244,6 @@ export class ReceiptsService {
     return receipt;
   }
 
-  // Locks the receipt row so it can't be posted / cancelled twice at the same moment.
   private async lockForChange(manager: EntityManager, actor: AuthUser, id: string): Promise<Receipt> {
     const locked = await manager.findOne(Receipt, {
       where: { id, companyId: actor.companyId! },

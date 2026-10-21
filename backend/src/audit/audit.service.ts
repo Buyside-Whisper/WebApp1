@@ -12,7 +12,6 @@ export class AuditService {
     private readonly auditRepository: Repository<AuditLog>,
   ) {}
 
-  // `companyId` overrides the actor's own company (the superuser acts on other companies).
   async record(actor: AuthUser, action: string, summary: string, companyId?: string | null): Promise<void> {
     await this.auditRepository.save(
       this.auditRepository.create({
@@ -25,7 +24,6 @@ export class AuditService {
     );
   }
 
-  // The superuser sees everything; a system admin sees only their own company.
   find(actor: AuthUser, limit = 200): Promise<AuditLog[]> {
     return this.auditRepository.find({
       where: actor.role === UserRole.SUPERUSER ? {} : { companyId: actor.companyId! },

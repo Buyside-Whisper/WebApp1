@@ -12,8 +12,6 @@ import { StockService } from '../../stock/stock.service';
 import { Warehouse } from '../warehouse.model';
 import { WarehouseService } from '../warehouse.service';
 
-// One warehouse: its details, the products in it and its stock history. Managers can open the
-// warehouses they run (the backend checks it).
 @Component({
   selector: 'app-warehouse-view',
   imports: [DecimalPipe, FormsModule, RouterLink, LucideAngularModule, Pager, MovementHistory],
@@ -24,11 +22,9 @@ export class WarehouseView implements OnInit {
   private readonly stockService = inject(StockService);
   private readonly auth = inject(AuthService);
 
-  // Route param, bound by withComponentInputBinding().
   readonly id = input.required<string>();
 
   protected readonly SearchIcon = Search;
-  // Only admins have the Products page, so only they get links to it.
   protected readonly canOpenProducts = computed(() => {
     const role = this.auth.user()?.role;
     return role === 'system_admin' || role === 'module_admin';

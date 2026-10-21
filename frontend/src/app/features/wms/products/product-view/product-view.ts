@@ -7,7 +7,6 @@ import { StockService } from '../../stock/stock.service';
 import { PRODUCT_POS_STATUS_LABELS, PRODUCT_USAGE_LABELS, Product } from '../product.model';
 import { ProductService } from '../product.service';
 
-// One product: its catalogue details, where it is (stock by warehouse) and its stock history.
 @Component({
   selector: 'app-product-view',
   imports: [DecimalPipe, RouterLink, MovementHistory],
@@ -17,7 +16,6 @@ export class ProductView implements OnInit {
   private readonly productService = inject(ProductService);
   private readonly stockService = inject(StockService);
 
-  // Route param, bound by withComponentInputBinding().
   readonly id = input.required<string>();
 
   protected readonly usageLabels = PRODUCT_USAGE_LABELS;
@@ -27,7 +25,6 @@ export class ProductView implements OnInit {
   protected readonly movements = signal<StockMovement[]>([]);
   protected readonly errorMessage = signal('');
 
-  // Total value of the stock at cost price.
   protected readonly stockValue = computed(() => {
     const product = this.product();
     return product ? product.quantity * product.costPrice : 0;

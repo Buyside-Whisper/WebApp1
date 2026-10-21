@@ -13,8 +13,6 @@ export interface AuditEntry {
   summary: string;
 }
 
-// Who did what and when. The backend returns everything to the superuser and only the
-// company's own entries to a system admin, so the same page serves both.
 @Component({
   selector: 'app-audit-log-page',
   imports: [DatePipe],
@@ -23,7 +21,6 @@ export interface AuditEntry {
 export class AuditLogPage implements OnInit {
   private readonly http = inject(HttpClient);
 
-  // Set from the route's `data`.
   readonly eyebrow = input('');
 
   protected readonly entries = signal<AuditEntry[]>([]);

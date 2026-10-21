@@ -13,18 +13,17 @@ export interface TransferLine {
   id: string;
   position: number;
   productId: string;
-  quantity: number; // sent
-  receivedQuantity: number | null; // set when received
+  quantity: number;
+  receivedQuantity: number | null;
   product: { id: string; name: string; barcode: string; unit: ProductUnit };
 }
 
 type WarehouseRef = { id: string; code: string; name: string };
 
-// Transfer (გადაადგილება): goods from one warehouse to another, sent and then received.
 export interface Transfer {
   id: string;
   number: number;
-  code: string; // TR-000001
+  code: string;
   status: TransferStatus;
   fromWarehouseId: string;
   toWarehouseId: string;
@@ -33,7 +32,7 @@ export interface Transfer {
   date: string;
   note: string | null;
   lineCount: number;
-  lines?: TransferLine[]; // only on GET /:id
+  lines?: TransferLine[];
   createdByName: string;
   createdAt: string;
   sentByName: string | null;
