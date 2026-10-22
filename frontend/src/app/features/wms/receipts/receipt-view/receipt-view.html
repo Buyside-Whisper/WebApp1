@@ -17,7 +17,7 @@
       </div>
       @if (receipt(); as receipt) {
         <p class="page-description">
-          {{ receipt.supplier }} → {{ receipt.warehouse.code }} {{ receipt.warehouse.name }}
+          {{ receipt.supplier.name }} → {{ receipt.warehouse.code }} {{ receipt.warehouse.name }}
         </p>
       }
     </div>
@@ -55,8 +55,13 @@
             {{ receipt.warehouse.name }}
           </dd>
         </div>
-        <div><dt>Supplier</dt><dd>{{ receipt.supplier }}</dd></div>
-        <div><dt>Waybill / invoice</dt><dd>{{ receipt.waybillNumber ?? '–' }}</dd></div>
+        <div><dt>Supplier</dt><dd>{{ receipt.supplier.name }}@if (receipt.supplier.identificationCode) {<br /><span class="muted">{{ receipt.supplier.identificationCode }}</span>}</dd></div>
+        @if (receipt.rsWaybillId) {
+          <div><dt>RS waybill</dt><dd>{{ receipt.waybillNumber }}<br /><span class="muted">{{ receipt.rsConfirmedAt ? 'Confirmed in RS ' + (receipt.rsConfirmedAt | date: 'dd.MM.yyyy HH:mm') : 'Not confirmed in RS yet' }}</span></dd></div>
+        }
+        @if (!receipt.rsWaybillId) {
+          <div><dt>Waybill / invoice</dt><dd>{{ receipt.waybillNumber ?? '–' }}</dd></div>
+        }
         <div><dt>Date</dt><dd>{{ receipt.date | date: 'dd.MM.yyyy' }}</dd></div>
         <div><dt>Created by</dt><dd>{{ receipt.createdByName }}</dd></div>
         @if (receipt.postedAt) {
@@ -92,15 +97,22 @@
               @for (line of receipt.lines; track line.id) {
                 <tr>
                   <td class="cell-strong">
-                    @if (canOpenProducts()) {
-                      <a [routerLink]="['/wms/products', line.productId]">{{ line.product.name }}</a>
+                    @if (line.product; as product) {
+                      @if (canOpenProducts()) {
+                        <a [routerLink]="['/wms/products', product.id]">{{ product.name }}</a>
+                      } @else {
+                        {{ product.name }}
+                      }
                     } @else {
-                      {{ line.product.name }}
+                      <span class="short">Not linked yet</span>
+                    }
+                    @if (line.rsName && line.rsName !== line.product?.name) {
+                      <div class="muted">RS: {{ line.rsName }}</div>
                     }
                   </td>
-                  <td><code class="code-tag">{{ line.product.barcode }}</code></td>
+                  <td><code class="code-tag">{{ line.product?.barcode ?? line.rsBarcode ?? '—' }}</code></td>
                   <td class="cell-figure">{{ line.quantity | number: '1.0-3' }}</td>
-                  <td>{{ line.product.unit }}</td>
+                  <td>{{ line.product?.unit ?? line.rsUnit }}</td>
                   <td class="cell-figure">₾{{ line.unitCost | number: '1.2-2' }}</td>
                   <td class="cell-figure">₾{{ line.quantity * line.unitCost | number: '1.2-2' }}</td>
                 </tr>

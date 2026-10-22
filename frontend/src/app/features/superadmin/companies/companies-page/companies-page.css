@@ -1,49 +1,38 @@
-.company-form-row {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
-}
-
-.module-picker {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.module-option {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 9px 16px;
-  border: 1px solid #cbd5e1;
-  border-radius: 999px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #334155;
-  cursor: pointer;
-}
-
-.module-option--on {
-  border-color: #4f46e5;
-  background: rgba(79, 70, 229, 0.08);
-  color: #4338ca;
-}
-
 .chip--module {
   background: rgba(79, 70, 229, 0.1);
   color: #4338ca;
 }
 
-.modal-actions {
-  justify-content: flex-end;
+.company-link {
+  color: #0f172a;
+  text-decoration: none;
 }
 
-.nowrap {
-  white-space: nowrap;
+.company-link:hover {
+  color: #4338ca;
+  text-decoration: underline;
 }
 
-@media (max-width: 600px) {
-  .company-form-row {
-    grid-template-columns: 1fr;
-  }
+.billing-sub {
+  margin-top: 4px;
+  font-size: 0.8rem;
+}
+
+.stat--button {
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+
+.stat--button:hover {
+  border-color: #c7d2fe;
+}
+
+.stat--alert {
+  border-color: rgba(220, 38, 38, 0.35);
+  background: rgba(220, 38, 38, 0.04);
+}
+
+.stat--alert .stat__value {
+  color: #b91c1c;
 }

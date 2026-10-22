@@ -66,7 +66,10 @@ export class TransferView implements OnInit {
   }
 
   cancel(): void {
-    if (confirm('Cancel this transfer? The goods go back into the source warehouse.')) {
+    const question = this.transfer()?.rsWaybillId
+      ? 'Cancel this transfer? This works only after the waybill was cancelled in RS. The goods go back into the source warehouse.'
+      : 'Cancel this transfer? The goods go back into the source warehouse.';
+    if (confirm(question)) {
       this.run(this.transferService.cancel(this.id()));
     }
   }
@@ -82,6 +85,22 @@ export class TransferView implements OnInit {
   }
 
   startReceiving(): void {
+    const transfer = this.transfer();
+    if (transfer?.rsWaybillId) {
+      if (
+        confirm(
+          `Receive everything on waybill ${transfer.waybillNumber}? The waybill is closed in RS (დასრულებული) and the goods go into ${transfer.toWarehouse.code}.`,
+        )
+      ) {
+        this.run(
+          this.transferService.receive(
+            this.id(),
+            (transfer.lines ?? []).map((line) => ({ lineId: line.id, receivedQuantity: line.quantity })),
+          ),
+        );
+      }
+      return;
+    }
     const lines = this.transfer()?.lines ?? [];
     this.received.set(Object.fromEntries(lines.map((line) => [line.id, line.quantity])));
     this.receiving.set(true);
@@ -96,7 +115,7 @@ export class TransferView implements OnInit {
     const entries = lines.map((line) => ({ line, value: Number(this.received()[line.id]) }));
     const bad = entries.find(({ line, value }) => !(value >= 0) || value > line.quantity);
     if (bad) {
-      this.errorMessage.set(`${bad.line.product.name}: enter between 0 and ${bad.line.quantity}.`);
+      this.errorMessage.set(`${bad.line.product?.name ?? bad.line.rsName}: enter between 0 and ${bad.line.quantity}.`);
       return;
     }
     const short = entries.filter(({ line, value }) => value < line.quantity).length;

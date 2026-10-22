@@ -4,8 +4,14 @@
       <p class="page-eyebrow">WMS · Transfers</p>
       <h1 class="page-title">{{ id() ? 'Edit ' + code() : 'New transfer' }}</h1>
       <p class="page-description">
-        Move goods from one warehouse to another. Save a draft while you prepare it; sending takes the
-        goods out of the source.
+        @if (rsWaybillId()) {
+          Made from RS internal waybill {{ waybillNumber() }} (შიდა გადაზიდვა). Choose the two
+          warehouses and link each line to a product the source warehouse has; quantities come from the
+          waybill. Receiving it closes the waybill in RS.
+        } @else {
+          Move goods from one warehouse to another. Save a draft while you prepare it; sending takes the
+          goods out of the source.
+        }
       </p>
     </div>
     <a class="button button--secondary" [routerLink]="id() ? ['/wms/transfers', id()] : '/wms/transfers'">
@@ -41,7 +47,11 @@
       </div>
       <div class="field">
         <label for="transferDate">Date</label>
-        <input id="transferDate" class="text-input" type="date" [(ngModel)]="date" />
+        @if (rsWaybillId()) {
+          <div class="read-only-value" id="transferDate">{{ date() }} <span class="muted">· waybill {{ waybillNumber() }}</span></div>
+        } @else {
+          <input id="transferDate" class="text-input" type="date" [(ngModel)]="date" />
+        }
       </div>
       <div class="field">
         <label for="transferNote">Note</label>
@@ -50,6 +60,76 @@
     </div>
   </div>
 
+  @if (rsWaybillId()) {
+  <div class="page-card">
+    <h2 class="card-title">
+      Goods on the waybill
+      @if (unlinkedCount()) {
+        <span class="card-title__note short">{{ unlinkedCount() }} not linked to a product yet</span>
+      } @else {
+        <span class="card-title__note">all linked</span>
+      }
+    </h2>
+    <div class="table-scroll">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>On the waybill</th>
+            <th>Your product</th>
+            <th>Available in source</th>
+            <th>Quantity</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (line of lines(); track $index; let i = $index) {
+            <tr>
+              <td>
+                <div class="cell-strong">{{ line.rs?.name }}</div>
+                <div class="muted">
+                  @if (line.rs?.barcode; as rsBarcode) {
+                    <code class="code-tag">{{ rsBarcode }}</code>
+                  }
+                  {{ line.rs?.unit }}
+                </div>
+              </td>
+              <td class="rs-product-cell">
+                @if (line.productId) {
+                  <div class="cell-strong">{{ line.name }}</div>
+                  <div class="muted">
+                    <code class="code-tag">{{ line.barcode }}</code> {{ line.unit }}
+                    <button type="button" class="link-button" (click)="unlinkProduct(i)">Change</button>
+                  </div>
+                  @if (unitProblem(line); as problem) {
+                    <div class="field-error">{{ problem }}</div>
+                  }
+                } @else if (!fromWarehouseId()) {
+                  <span class="muted">Choose the source warehouse first.</span>
+                } @else {
+                  <app-product-picker
+                    [products]="pickable()"
+                    placeholder="Find the product in the source warehouse"
+                    (picked)="linkProduct(i, $event)"
+                  />
+                }
+              </td>
+              <td
+                class="cell-figure"
+                [class.short]="!!line.productId && line.quantity > (available().get(line.productId) ?? 0)"
+              >
+                {{ line.productId ? (available().get(line.productId) ?? 0 | number: '1.0-3') : '—' }}
+              </td>
+              <td class="cell-figure">{{ line.quantity | number: '1.0-3' }} <span class="muted">{{ line.rs?.unit }}</span></td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <p class="field-hint">
+      Lines are matched by barcode, or by a link you made before. A line you link now is remembered for
+      the next internal waybills.
+    </p>
+  </div>
+  } @else {
   <div class="page-card">
     <h2 class="card-title">Products</h2>
     @if (!fromWarehouseId()) {
@@ -83,9 +163,9 @@
                   <td><code class="code-tag">{{ line.barcode }}</code></td>
                   <td
                     class="cell-figure"
-                    [class.short]="(line.quantity || 0) > (available().get(line.productId) ?? 0)"
+                    [class.short]="(line.quantity || 0) > (available().get(line.productId ?? '') ?? 0)"
                   >
-                    {{ available().get(line.productId) ?? 0 | number: '1.0-3' }}
+                    {{ available().get(line.productId ?? '') ?? 0 | number: '1.0-3' }}
                   </td>
                   <td>
                     <input
@@ -118,6 +198,8 @@
       }
     }
   </div>
+
+  }
 
   @if (errorMessage()) {
     <p class="field-error">{{ errorMessage() }}</p>

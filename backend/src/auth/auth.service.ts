@@ -11,6 +11,7 @@ import { AuditService } from '../audit/audit.service.js';
 import { AuthUser, SessionUser, toSessionUser } from './auth-user.js';
 import { hashPassword, verifyPassword } from './password.js';
 import { signToken, verifyToken } from './token.js';
+import { CompanyStatus } from '../companies/company-status.enum.js';
 import { UserRole } from './user-role.enum.js';
 import { User } from './user.entity.js';
 
@@ -58,16 +59,22 @@ export class AuthService implements OnModuleInit {
       where: { username: username.trim() },
       relations: { company: true, employee: true },
     });
-    const authUser =
-      user && verifyPassword(password, user.passwordHash)
-        ? this.toAuthUser(user)
-        : null;
+    const passwordOk = !!user && verifyPassword(password, user.passwordHash);
+    const authUser = user && passwordOk ? this.toAuthUser(user) : null;
 
     if (
       !user ||
-      !authUser ||
+      !passwordOk ||
       (user.role === UserRole.SUPERUSER) !== superuser
     ) {
+      throw new UnauthorizedException('Wrong username or password');
+    }
+    if (user.company && user.company.status !== CompanyStatus.ACTIVE) {
+      throw new UnauthorizedException(
+        `${user.company.name}'s access is ${user.company.status === CompanyStatus.SUSPENDED ? 'suspended' : 'cancelled'}. Please contact the app provider.`,
+      );
+    }
+    if (!authUser) {
       throw new UnauthorizedException('Wrong username or password');
     }
 
@@ -93,6 +100,9 @@ export class AuthService implements OnModuleInit {
 
   private toAuthUser(user: User): AuthUser | null {
     const today = new Date().toISOString().slice(0, 10);
+    if (user.company && user.company.status !== CompanyStatus.ACTIVE) {
+      return null;
+    }
     if (user.employee?.endDate && user.employee.endDate <= today) {
       return null;
     }

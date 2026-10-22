@@ -1,6 +1,6 @@
 export type Role = 'superuser' | 'system_admin' | 'module_admin' | 'manager' | 'cashier';
 export type AppModule = 'wms' | 'store' | 'restaurant';
-export type AccessModule = 'hr' | AppModule;
+export type AccessModule = 'hr' | 'rs' | AppModule;
 
 export interface SessionUser {
   username: string;

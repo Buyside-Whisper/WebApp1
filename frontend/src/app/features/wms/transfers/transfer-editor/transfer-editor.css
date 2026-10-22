@@ -1,0 +1,11 @@
+.read-only-value {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  color: #0f172a;
+}
+
+.rs-product-cell {
+  min-width: 260px;
+}

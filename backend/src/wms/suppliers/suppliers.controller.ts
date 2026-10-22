@@ -18,6 +18,12 @@ export class SuppliersController {
     return this.suppliersService.findAll(user);
   }
 
+  @Get('options')
+  @Roles(...ADMIN_ROLES, UserRole.MANAGER)
+  options(@CurrentUser() user: AuthUser): Promise<Pick<Supplier, 'id' | 'name' | 'identificationCode'>[]> {
+    return this.suppliersService.options(user);
+  }
+
   @Post()
   @Roles(UserRole.MODULE_ADMIN)
   create(@CurrentUser() user: AuthUser, @Body() dto: CreateSupplierDto): Promise<Supplier> {

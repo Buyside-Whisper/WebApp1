@@ -1,23 +1,36 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, EntityManager, In, Repository } from 'typeorm';
+import { DataSource, EntityManager, In, IsNull, Not, Repository } from 'typeorm';
 import { AuditService } from '../../audit/audit.service.js';
 import { AuthUser } from '../../auth/auth-user.js';
 import { UserRole } from '../../auth/user-role.enum.js';
+import { RsClient, RsWaybillDetail } from '../../rs/waybills/rs-client.js';
+import { RsWaybillsService } from '../../rs/waybills/waybills.service.js';
 import { Product } from '../products/product.entity.js';
 import { ProductUnit } from '../products/product-unit.enum.js';
 import { formatDocumentNumber, nextDocumentNumber } from '../stock/document-number.js';
 import { StockMovementKind } from '../stock/stock-movement-kind.enum.js';
+import { matchRsProducts, rememberRsProducts, rsUnitProblem } from '../stock/rs-matching.js';
 import { StockService } from '../stock/stock.service.js';
 import { Warehouse } from '../warehouses/warehouse.entity.js';
 import { WarehouseStatus } from '../warehouses/warehouse-status.enum.js';
-import { ReceiveTransferDto, SaveTransferDto } from './dto/transfer.dto.js';
+import { CreateTransferFromRsDto, ReceiveTransferDto, SaveTransferDto } from './dto/transfer.dto.js';
 import { Transfer } from './transfer.entity.js';
 import { TransferLine } from './transfer-line.entity.js';
 import { TransferStatus } from './transfer-status.enum.js';
 
 const PREFIX = 'TR';
 const round3 = (value: number) => Math.round(value * 1000) / 1000;
+const RS_INTERNAL_TYPE = 1;
+const RS_ACTIVE = 1;
+const RS_CLOSED = 2;
+
+export interface RsTransferLink {
+  rsWaybillId: string;
+  transferId: string;
+  code: string;
+  status: TransferStatus;
+}
 
 type WarehouseRef = Pick<Warehouse, 'id' | 'code' | 'name'>;
 
@@ -27,7 +40,7 @@ export type TransferView = Omit<Transfer, 'fromWarehouse' | 'toWarehouse' | 'lin
   fromWarehouse: WarehouseRef;
   toWarehouse: WarehouseRef;
   lines?: (Omit<TransferLine, 'product' | 'transfer'> & {
-    product: Pick<Product, 'id' | 'name' | 'barcode' | 'unit'>;
+    product: Pick<Product, 'id' | 'name' | 'barcode' | 'unit'> | null;
   })[];
 };
 
@@ -39,6 +52,8 @@ export class TransfersService {
     @InjectRepository(Transfer)
     private readonly transfersRepository: Repository<Transfer>,
     private readonly stockService: StockService,
+    private readonly rsWaybills: RsWaybillsService,
+    private readonly rsClient: RsClient,
     private readonly dataSource: DataSource,
     private readonly audit: AuditService,
   ) {}
@@ -63,7 +78,69 @@ export class TransfersService {
     return this.toView(await this.load(actor, id), true);
   }
 
+  async rsLinks(actor: AuthUser): Promise<RsTransferLink[]> {
+    const transfers = await this.transfersRepository.find({
+      select: { id: true, number: true, status: true, rsWaybillId: true },
+      where: { companyId: actor.companyId!, rsWaybillId: Not(IsNull()), status: Not(TransferStatus.CANCELLED) },
+    });
+    return transfers.map((t) => ({ rsWaybillId: t.rsWaybillId!, transferId: t.id, code: this.code(t), status: t.status }));
+  }
+
+  async createFromRs(actor: AuthUser, waybillId: string, dto: CreateTransferFromRsDto): Promise<TransferView> {
+    if (actor.role !== UserRole.MODULE_ADMIN) {
+      throw new BadRequestException('Only the WMS admin creates transfers from RS waybills');
+    }
+    await this.checkWarehouses(actor, dto, true);
+    const existing = await this.transfersRepository.findOneBy({
+      companyId: actor.companyId!,
+      rsWaybillId: waybillId,
+      status: Not(TransferStatus.CANCELLED),
+    });
+    if (existing) {
+      throw new ConflictException({ message: `This waybill already has transfer ${this.code(existing)}`, transferId: existing.id });
+    }
+    const waybill = await this.rsClient.waybill(await this.rsWaybills.companyCredentials(actor), waybillId);
+    this.assertInternal(waybill);
+    const products = await matchRsProducts(this.dataSource, actor.companyId!, waybill.sellerTin ?? '', waybill.goods);
+
+    const id = await this.dataSource.transaction(async (manager) => {
+      const transfer = manager.create(Transfer, {
+        companyId: actor.companyId!,
+        number: await nextDocumentNumber(manager, Transfer, actor.companyId!, 'transfer'),
+        status: TransferStatus.DRAFT,
+        fromWarehouseId: dto.fromWarehouseId,
+        toWarehouseId: dto.toWarehouseId,
+        date: (waybill.activatedAt ?? waybill.createdAt ?? new Date().toISOString()).slice(0, 10),
+        note: waybill.comment,
+        rsWaybillId: waybill.id,
+        waybillNumber: waybill.number,
+        rsSellerTin: waybill.sellerTin,
+        rsClosedAt: waybill.status === RS_CLOSED ? new Date() : null,
+        createdByName: actor.displayName,
+        lines: waybill.goods.map((goods, position) => ({
+          companyId: actor.companyId!,
+          position,
+          productId: products[position]?.id ?? null,
+          quantity: round3(goods.quantity),
+          rsName: goods.name,
+          rsBarcode: goods.barcode,
+          rsUnitId: goods.unitId,
+          rsUnit: goods.unitName,
+        })),
+      });
+      return (await manager.save(transfer)).id;
+    });
+    const view = await this.findOne(actor, id);
+    await this.audit.record(
+      actor,
+      'transfer.create_from_rs',
+      `Created draft transfer ${view.code} from RS waybill ${waybill.number} (${view.fromWarehouse.code} → ${view.toWarehouse.code})`,
+    );
+    return view;
+  }
+
   async create(actor: AuthUser, dto: SaveTransferDto): Promise<TransferView> {
+    this.requireProducts(dto.lines);
     await this.checkWarehouses(actor, dto);
     const id = await this.dataSource.transaction(async (manager) => {
       await this.checkProducts(manager, actor, dto.lines);
@@ -87,6 +164,10 @@ export class TransfersService {
     this.assertStatus(transfer, TransferStatus.DRAFT);
     await this.assertSide(actor, transfer, 'from');
     await this.checkWarehouses(actor, dto);
+    if (transfer.rsWaybillId) {
+      return this.updateFromRsDraft(actor, transfer, dto);
+    }
+    this.requireProducts(dto.lines);
     await this.dataSource.transaction(async (manager) => {
       await this.checkProducts(manager, actor, dto.lines);
       await manager.delete(TransferLine, { transferId: id, companyId: actor.companyId! });
@@ -110,6 +191,10 @@ export class TransfersService {
   }
 
   async send(actor: AuthUser, id: string): Promise<TransferView> {
+    const draft = await this.load(actor, id);
+    if (draft.rsWaybillId && draft.status === TransferStatus.DRAFT) {
+      await this.checkRsBeforeSend(actor, draft);
+    }
     await this.dataSource.transaction(async (manager) => {
       const transfer = await this.lockForChange(manager, actor, id);
       this.assertStatus(transfer, TransferStatus.DRAFT);
@@ -122,7 +207,7 @@ export class TransfersService {
         manager,
         actor,
         transfer.lines.map((line) => ({
-          productId: line.productId,
+          productId: line.productId!,
           warehouseId: transfer.fromWarehouseId,
           quantity: -line.quantity,
         })),
@@ -140,6 +225,20 @@ export class TransfersService {
   }
 
   async receive(actor: AuthUser, id: string, dto: ReceiveTransferDto): Promise<TransferView> {
+    const sent = await this.load(actor, id);
+    if (sent.rsWaybillId && sent.status === TransferStatus.IN_TRANSIT) {
+      await this.assertSide(actor, sent, 'to');
+      const short = dto.lines.find((given) => {
+        const line = sent.lines.find((l) => l.id === given.lineId);
+        return line && given.receivedQuantity !== line.quantity;
+      });
+      if (short) {
+        throw new BadRequestException(
+          'A transfer from an RS waybill is received in full: the waybill fixes the quantities. If something is missing, correct the waybill in RS first.',
+        );
+      }
+      await this.closeInRs(actor, sent);
+    }
     await this.dataSource.transaction(async (manager) => {
       const transfer = await this.lockForChange(manager, actor, id);
       this.assertStatus(transfer, TransferStatus.IN_TRANSIT);
@@ -152,7 +251,7 @@ export class TransfersService {
         }
       }
       const products = await manager.findBy(Product, {
-        id: In(transfer.lines.map((line) => line.productId)),
+        id: In(transfer.lines.map((line) => line.productId!)),
         companyId: actor.companyId!,
       });
       for (const line of transfer.lines) {
@@ -172,7 +271,7 @@ export class TransfersService {
         manager,
         actor,
         transfer.lines.map((line) => ({
-          productId: line.productId,
+          productId: line.productId!,
           warehouseId: transfer.toWarehouseId,
           quantity: line.receivedQuantity!,
         })),
@@ -195,6 +294,15 @@ export class TransfersService {
   }
 
   async cancel(actor: AuthUser, id: string): Promise<TransferView> {
+    const current = await this.load(actor, id);
+    if (current.rsWaybillId && current.status === TransferStatus.IN_TRANSIT) {
+      const waybill = await this.rsClient.waybill(await this.rsWaybills.companyCredentials(actor), current.rsWaybillId);
+      if (waybill.status === RS_ACTIVE || waybill.status === RS_CLOSED) {
+        throw new BadRequestException(
+          `Waybill ${waybill.number} is still ${waybill.status === RS_ACTIVE ? 'active' : 'closed'} in RS. Cancel it in RS first; then the goods can go back here.`,
+        );
+      }
+    }
     await this.dataSource.transaction(async (manager) => {
       const transfer = await this.lockForChange(manager, actor, id);
       this.assertStatus(transfer, TransferStatus.IN_TRANSIT);
@@ -203,7 +311,7 @@ export class TransfersService {
         manager,
         actor,
         transfer.lines.map((line) => ({
-          productId: line.productId,
+          productId: line.productId!,
           warehouseId: transfer.fromWarehouseId,
           quantity: line.quantity,
         })),
@@ -218,6 +326,100 @@ export class TransfersService {
     const view = await this.findOne(actor, id);
     await this.audit.record(actor, 'transfer.cancel', `Cancelled transfer ${view.code}`);
     return view;
+  }
+
+  private async updateFromRsDraft(actor: AuthUser, transfer: Transfer, dto: SaveTransferDto): Promise<TransferView> {
+    if (dto.lines.length !== transfer.lines.length) {
+      throw new BadRequestException("A transfer from an RS waybill keeps the waybill's lines; only their products can change");
+    }
+    const productIds = dto.lines.map((line) => line.productId ?? null);
+    await this.dataSource.transaction(async (manager) => {
+      await this.checkProducts(
+        manager,
+        actor,
+        transfer.lines.map((line, i) => ({ productId: productIds[i], quantity: line.quantity })),
+      );
+      await manager.update(
+        Transfer,
+        { id: transfer.id, companyId: actor.companyId! },
+        { fromWarehouseId: dto.fromWarehouseId, toWarehouseId: dto.toWarehouseId, note: dto.note ?? null },
+      );
+      for (const [i, line] of transfer.lines.entries()) {
+        if (line.productId !== productIds[i]) {
+          await manager.update(TransferLine, { id: line.id }, { productId: productIds[i] });
+        }
+      }
+      await rememberRsProducts(manager, actor.companyId!, transfer.rsSellerTin, transfer.lines, productIds);
+    });
+    const view = await this.findOne(actor, transfer.id);
+    await this.audit.record(actor, 'transfer.update', `Updated draft transfer ${view.code} (from RS)`);
+    return view;
+  }
+
+  private async checkRsBeforeSend(actor: AuthUser, transfer: Transfer): Promise<void> {
+    const unlinked = transfer.lines.filter((line) => !line.productId);
+    if (unlinked.length) {
+      throw new BadRequestException(`Link every line to a product first (${unlinked.map((line) => line.rsName).join(', ')})`);
+    }
+    for (const line of transfer.lines) {
+      const problem = rsUnitProblem(line, line.product);
+      if (problem) {
+        throw new BadRequestException(problem);
+      }
+    }
+    const waybill = await this.rsClient.waybill(await this.rsWaybills.companyCredentials(actor), transfer.rsWaybillId!);
+    this.assertInternal(waybill);
+    const changed =
+      waybill.goods.length !== transfer.lines.length ||
+      waybill.goods.some((goods, i) => round3(goods.quantity) !== transfer.lines[i].quantity || goods.name !== transfer.lines[i].rsName);
+    if (changed) {
+      throw new BadRequestException(
+        `Waybill ${waybill.number} was changed in RS after this transfer was made. Delete this draft and create the transfer again.`,
+      );
+    }
+  }
+
+  private async closeInRs(actor: AuthUser, transfer: Transfer): Promise<void> {
+    if (transfer.rsClosedAt) {
+      return;
+    }
+    const credentials = await this.rsWaybills.companyCredentials(actor);
+    const waybill = await this.rsClient.waybill(credentials, transfer.rsWaybillId!);
+    if (waybill.status !== RS_CLOSED) {
+      if (waybill.status !== RS_ACTIVE) {
+        throw new BadRequestException(`Waybill ${waybill.number} is no longer active in RS (deleted or cancelled), so it can't be received`);
+      }
+      const result = await this.rsClient.closeWaybill(credentials, waybill.id, new Date());
+      if (result !== '1') {
+        throw new BadRequestException(
+          `RS did not close waybill ${waybill.number} (${this.rsClient.errorText(result)}). Nothing was received.`,
+        );
+      }
+      await this.audit.record(actor, 'rs.close', `Closed RS waybill ${waybill.number} for ${this.code(transfer)}`);
+    }
+    await this.transfersRepository.update({ id: transfer.id }, { rsClosedAt: new Date() });
+    transfer.rsClosedAt = new Date();
+    this.rsWaybills.forgetLists(actor);
+  }
+
+  private assertInternal(waybill: RsWaybillDetail): void {
+    if (waybill.typeId !== RS_INTERNAL_TYPE) {
+      throw new BadRequestException(
+        `Waybill ${waybill.number} is ${waybill.typeName ?? 'of another type'}; only internal transfers (შიდა გადაზიდვა) become transfers`,
+      );
+    }
+    if (waybill.status !== RS_ACTIVE && waybill.status !== RS_CLOSED) {
+      throw new BadRequestException(`Waybill ${waybill.number} is not active in RS (it was saved only, deleted or cancelled)`);
+    }
+    if (waybill.goods.length === 0) {
+      throw new BadRequestException(`Waybill ${waybill.number} has no goods lines`);
+    }
+  }
+
+  private requireProducts(lines: { productId: string | null }[]): void {
+    if (lines.some((line) => !line.productId)) {
+      throw new BadRequestException('Every line needs a product');
+    }
   }
 
   private async checkWarehouses(
@@ -250,17 +452,18 @@ export class TransfersService {
   private async checkProducts(
     manager: EntityManager,
     actor: AuthUser,
-    lines: { productId: string; quantity: number }[],
+    lines: { productId: string | null; quantity: number }[],
   ): Promise<void> {
-    const ids = [...new Set(lines.map((line) => line.productId))];
-    if (ids.length !== lines.length) {
+    const linked = lines.filter((line): line is { productId: string; quantity: number } => !!line.productId);
+    const ids = [...new Set(linked.map((line) => line.productId))];
+    if (ids.length !== linked.length) {
       throw new BadRequestException('A product is listed more than once');
     }
     const products = ids.length ? await manager.findBy(Product, { id: In(ids), companyId: actor.companyId! }) : [];
     if (products.length !== ids.length) {
       throw new BadRequestException('One or more products do not exist');
     }
-    for (const line of lines) {
+    for (const line of linked) {
       const product = products.find((p) => p.id === line.productId)!;
       if (product.unit === ProductUnit.PCS && !Number.isInteger(line.quantity)) {
         throw new BadRequestException(`${product.name} is counted in pcs, so its quantity must be whole`);
@@ -355,7 +558,7 @@ export class TransfersService {
         ? {
             lines: lines.map(({ product, transfer: _transfer, ...line }) => ({
               ...line,
-              product: { id: product!.id, name: product!.name, barcode: product!.barcode, unit: product!.unit },
+              product: product ? { id: product.id, name: product.name, barcode: product.barcode, unit: product.unit } : null,
             })),
           }
         : {}),

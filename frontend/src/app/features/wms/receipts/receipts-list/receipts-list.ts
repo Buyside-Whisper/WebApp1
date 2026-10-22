@@ -55,7 +55,7 @@ export class ReceiptsList implements OnInit {
         (this.statusFilter() === 'all' || r.status === this.statusFilter()) &&
         (this.warehouseFilter() === 'all' || r.warehouseId === this.warehouseFilter()) &&
         (!query ||
-          [r.code, r.supplier, r.waybillNumber ?? '', r.warehouse.code, r.warehouse.name].some((value) =>
+          [r.code, r.supplier.name, r.waybillNumber ?? '', r.warehouse.code, r.warehouse.name].some((value) =>
             value.toLowerCase().includes(query),
           )),
     );

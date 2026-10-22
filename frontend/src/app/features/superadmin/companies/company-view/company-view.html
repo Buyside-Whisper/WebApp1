@@ -1,0 +1,292 @@
+@let company = this.company();
+<div class="page-stack">
+  @if (isLoading() && !company) {
+    <p class="page-description">Loading…</p>
+  } @else if (company) {
+    <div class="page-header">
+      <div>
+        <p class="page-eyebrow"><a routerLink="/superadmin/companies">Companies</a></p>
+        <div class="page-header__title-row">
+          <h1 class="page-title">{{ company.name }}</h1>
+          <span class="badge" [class]="billingBadges[company.billing.state]">
+            {{ billingLabels[company.billing.state] }}
+            @if (company.billing.state === 'overdue') {
+              · {{ company.billing.daysOverdue }} {{ company.billing.daysOverdue === 1 ? 'day' : 'days' }}
+            }
+          </span>
+        </div>
+        <p class="page-description">
+          {{ company.legalName ?? 'Legal name not set' }}
+          @if (company.identificationCode) {
+            · ს/კ <code class="code-tag">{{ company.identificationCode }}</code>
+          }
+          · customer since {{ company.createdAt | date: 'dd.MM.yyyy' }}
+        </p>
+      </div>
+      <div class="button-row page-header__actions">
+        <a class="button button--outline" [routerLink]="['/superadmin/companies', company.id, 'edit']">Edit</a>
+        <button type="button" class="button button--outline" (click)="resetPassword()">Reset admin password</button>
+        @if (company.status === 'active') {
+          <button type="button" class="button button--outline" (click)="setStatus('suspended')">Suspend</button>
+        } @else {
+          <button type="button" class="button button--outline" (click)="setStatus('active')">Reactivate</button>
+        }
+        <button type="button" class="button button--primary" (click)="openPayment()">Record payment</button>
+      </div>
+    </div>
+
+    @if (errorMessage()) {
+      <p class="field-error">{{ errorMessage() }}</p>
+    }
+    @if (company.status !== 'active') {
+      <p class="status-banner">
+        {{ company.status === 'suspended' ? 'Suspended' : 'Cancelled' }}: nobody in this company can log in.
+        Data is kept; "Reactivate" restores access.
+      </p>
+    } @else if (company.billing.state === 'overdue') {
+      <p class="status-banner">
+        Payment was due on {{ company.billing.nextDue | date: 'dd.MM.yyyy' }}
+        ({{ company.billing.daysOverdue }} {{ company.billing.daysOverdue === 1 ? 'day' : 'days' }} ago).
+        Record the payment when it arrives, or suspend the company.
+      </p>
+    }
+    @if (incomplete()) {
+      <p class="status-banner status-banner--info">
+        Some details are missing (legal name, identification code or contact email). Use Edit to fill them in.
+      </p>
+    }
+
+    <div class="stat-row">
+      <div class="stat">
+        <div class="stat__label">Monthly</div>
+        <div class="stat__value">₾{{ company.billing.monthlyTotal | number: '1.2-2' }}</div>
+      </div>
+      <div class="stat">
+        <div class="stat__label">Paid until</div>
+        <div class="stat__value">{{ company.billing.paidUntil ? (company.billing.paidUntil | date: 'dd.MM.yyyy') : '—' }}</div>
+      </div>
+      <div class="stat">
+        <div class="stat__label">Next payment due</div>
+        <div class="stat__value" [class.short]="company.billing.state === 'overdue'">
+          {{ company.billing.monthlyTotal > 0 ? (company.billing.nextDue | date: 'dd.MM.yyyy') : '—' }}
+        </div>
+      </div>
+      <div class="stat">
+        <div class="stat__label">Paid in total</div>
+        <div class="stat__value">₾{{ company.totalPaid | number: '1.2-2' }}</div>
+      </div>
+    </div>
+
+    <div class="view-columns">
+      <section class="page-card">
+        <h2 class="card-title">Subscription</h2>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Module</th>
+              <th>Per month</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>HR <span class="muted">(always included)</span></td>
+              <td class="cell-figure">₾0.00</td>
+            </tr>
+            <tr>
+              <td>RS <span class="muted">(always included)</span></td>
+              <td class="cell-figure">₾0.00</td>
+            </tr>
+            @for (module of company.modules; track module) {
+              <tr>
+                <td class="cell-strong">{{ moduleLabels[module] }}</td>
+                <td class="cell-figure">₾{{ company.modulePrices[module] ?? 0 | number: '1.2-2' }}</td>
+              </tr>
+            }
+            <tr class="total-row">
+              <td>Total</td>
+              <td class="cell-figure">₾{{ company.billing.monthlyTotal | number: '1.2-2' }}</td>
+            </tr>
+          </tbody>
+        </table>
+        <dl class="detail-grid detail-grid--tight">
+          <div><dt>Starts on</dt><dd>{{ company.subscriptionStart ? (company.subscriptionStart | date: 'dd.MM.yyyy') : '—' }}</dd></div>
+          <div><dt>Free trial</dt><dd>{{ company.trialEndsOn ? 'until ' + (company.trialEndsOn | date: 'dd.MM.yyyy') : 'No' }}</dd></div>
+          <div><dt>People</dt><dd>{{ company.employeeCount }}</dd></div>
+        </dl>
+      </section>
+
+      <section class="page-card">
+        <h2 class="card-title">Legal details</h2>
+        <dl class="detail-grid">
+          <div><dt>Legal name</dt><dd>{{ company.legalName ?? '—' }}</dd></div>
+          <div><dt>Legal form</dt><dd>{{ company.legalForm ? legalFormLabels[company.legalForm] : '—' }}</dd></div>
+          <div><dt>Identification code</dt><dd>{{ company.identificationCode ?? '—' }}</dd></div>
+          <div><dt>VAT</dt><dd>{{ company.vatPayer ? 'VAT payer' : 'Not a VAT payer' }}</dd></div>
+          <div class="detail-grid__wide"><dt>Legal address</dt><dd>{{ company.legalAddress ?? '—' }}</dd></div>
+        </dl>
+        <h2 class="card-title card-title--spaced">System admin and contact</h2>
+        <dl class="detail-grid">
+          <div><dt>Name</dt><dd>{{ company.adminName ?? '—' }}</dd></div>
+          <div><dt>Login</dt><dd>@if (company.adminUsername) {<code class="code-tag">{{ company.adminUsername }}</code>} @else {—}</dd></div>
+          <div><dt>Email</dt><dd>@if (company.contactEmail) {<a [href]="'mailto:' + company.contactEmail">{{ company.contactEmail }}</a>} @else {—}</dd></div>
+          <div><dt>Phone</dt><dd>{{ company.contactPhone ?? '—' }}</dd></div>
+        </dl>
+        @if (company.notes) {
+          <h2 class="card-title card-title--spaced">Notes</h2>
+          <p class="notes">{{ company.notes }}</p>
+        }
+      </section>
+    </div>
+
+    <section class="page-card">
+      <h2 class="card-title">
+        Payments
+        <span class="card-title__note">{{ company.payments.length }} recorded</span>
+      </h2>
+      @if (company.payments.length === 0) {
+        <p class="page-description">No payments yet. Use “Record payment” when money arrives.</p>
+      } @else {
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Paid on</th>
+                <th>For the period</th>
+                <th>Amount</th>
+                <th>Method</th>
+                <th>Reference</th>
+                <th>Recorded by</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (payment of company.payments; track payment.id) {
+                <tr>
+                  <td class="cell-figure">{{ payment.paidOn | date: 'dd.MM.yyyy' }}</td>
+                  <td class="cell-nowrap">
+                    {{ payment.periodFrom | date: 'dd.MM.yyyy' }} – {{ payment.periodTo | date: 'dd.MM.yyyy' }}
+                  </td>
+                  <td class="cell-figure cell-strong">₾{{ payment.amount | number: '1.2-2' }}</td>
+                  <td>{{ methodLabels[payment.method] }}</td>
+                  <td>
+                    @if (payment.reference) {
+                      {{ payment.reference }}
+                    } @else {
+                      <span class="muted">—</span>
+                    }
+                    @if (payment.note) {
+                      <div class="muted">{{ payment.note }}</div>
+                    }
+                  </td>
+                  <td>{{ payment.recordedBy }}</td>
+                  <td>
+                    <button
+                      type="button"
+                      class="icon-action icon-action--danger"
+                      title="Delete (if it was recorded by mistake)"
+                      [attr.aria-label]="'Delete payment of ' + payment.paidOn"
+                      (click)="removePayment(payment)"
+                    >
+                      <lucide-icon [img]="DeleteIcon" [size]="18"></lucide-icon>
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+
+    <section class="page-card danger-zone">
+      <h2 class="card-title">Ending the contract</h2>
+      <p class="page-description">
+        Cancelling keeps all of the company's data but nobody can log in; you can reactivate it later.
+        Deleting removes the company and everything in it for good.
+      </p>
+      <div class="button-row">
+        @if (company.status !== 'cancelled') {
+          <button type="button" class="button button--outline" (click)="setStatus('cancelled')">Cancel subscription</button>
+        }
+        <button type="button" class="button button--danger" (click)="remove()">Delete company and all data</button>
+      </div>
+    </section>
+  } @else if (errorMessage()) {
+    <p class="field-error">{{ errorMessage() }}</p>
+  }
+</div>
+
+<app-modal [open]="isPaymentOpen()" title="Record payment" (closed)="isPaymentOpen.set(false)">
+  @if (company; as current) {
+    <form class="page-stack" (ngSubmit)="savePayment()">
+      <p class="page-description">
+        Money received from {{ current.name }}. The period decides the new "paid until" date
+        (now {{ current.billing.paidUntil ? (current.billing.paidUntil | date: 'dd.MM.yyyy') : 'nothing paid yet' }}).
+      </p>
+      <div class="field">
+        <span class="field-label">Pays for</span>
+        <div class="month-choices">
+          @for (option of [1, 3, 6, 12]; track option) {
+            <button
+              type="button"
+              class="check-chip"
+              [class.check-chip--on]="months() === option"
+              (click)="applyMonths(option)"
+            >
+              {{ option }} {{ option === 1 ? 'month' : 'months' }}
+            </button>
+          }
+          <button type="button" class="check-chip" [class.check-chip--on]="months() === 0" (click)="months.set(0)">
+            Custom
+          </button>
+        </div>
+      </div>
+      <div class="form-grid">
+        <div class="field">
+          <label for="periodFrom">Period from</label>
+          <input id="periodFrom" class="text-input" type="date" name="periodFrom" [ngModel]="periodFrom()" (ngModelChange)="changePeriodFrom($event)" />
+        </div>
+        <div class="field">
+          <label for="periodTo">Period to</label>
+          <input id="periodTo" class="text-input" type="date" name="periodTo" [ngModel]="periodTo()" (ngModelChange)="periodTo.set($event); months.set(0)" />
+        </div>
+        <div class="field">
+          <label for="amount">Amount received (₾)</label>
+          <input id="amount" class="text-input" type="number" min="0.01" step="0.01" name="amount" [(ngModel)]="amount" />
+          <span class="field-hint">₾{{ current.billing.monthlyTotal | number: '1.2-2' }} per month</span>
+        </div>
+        <div class="field">
+          <label for="paidOn">Received on</label>
+          <input id="paidOn" class="text-input" type="date" name="paidOn" [(ngModel)]="paidOn" />
+        </div>
+        <div class="field">
+          <label for="method">Method</label>
+          <select id="method" class="text-select" name="method" [(ngModel)]="method">
+            @for (option of methods; track option) {
+              <option [value]="option">{{ methodLabels[option] }}</option>
+            }
+          </select>
+        </div>
+        <div class="field">
+          <label for="reference">Reference (optional)</label>
+          <input id="reference" class="text-input" name="reference" [(ngModel)]="reference" placeholder="e.g. bank transaction no." />
+        </div>
+      </div>
+      <div class="field">
+        <label for="note">Note (optional)</label>
+        <input id="note" class="text-input" name="note" [(ngModel)]="note" placeholder="e.g. paid with a 10% discount" />
+      </div>
+      @if (paymentError()) {
+        <p class="field-error">{{ paymentError() }}</p>
+      }
+      <div class="button-row form-actions">
+        <button type="button" class="button button--secondary" (click)="isPaymentOpen.set(false)">Cancel</button>
+        <button type="submit" class="button button--primary" [disabled]="isSaving()">
+          {{ isSaving() ? 'Saving…' : 'Record payment' }}
+        </button>
+      </div>
+    </form>
+  }
+</app-modal>
+
+<app-credentials-modal [credentials]="credentials()" title="Login for the system admin" (closed)="credentials.set(null)" />

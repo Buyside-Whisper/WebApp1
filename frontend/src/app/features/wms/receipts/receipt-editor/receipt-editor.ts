@@ -9,19 +9,27 @@ import { Modal } from '../../../../shared/modal/modal';
 import { ProductForm } from '../../products/product-form/product-form';
 import { Product, ProductOption, ProductUnit } from '../../products/product.model';
 import { ProductService } from '../../products/product.service';
+import { SupplierService } from '../../suppliers/supplier.service';
 import { PickableProduct, ProductPicker } from '../../stock/product-picker/product-picker';
 import { WarehouseOption } from '../../warehouses/warehouse.model';
 import { WarehouseService } from '../../warehouses/warehouse.service';
-import { Receipt, ReceiptPayload } from '../receipt.model';
+import { RS_UNIT_TO_PRODUCT_UNIT, Receipt, ReceiptPayload } from '../receipt.model';
 import { ReceiptService } from '../receipt.service';
 
 interface EditableLine {
-  productId: string;
-  name: string;
-  barcode: string;
-  unit: ProductUnit;
+  productId: string | null;
+  name: string | null;
+  barcode: string | null;
+  unit: ProductUnit | null;
   quantity: number;
   unitCost: number;
+  rs: { name: string; barcode: string | null; unitId: number | null; unit: string | null } | null;
+}
+
+interface SupplierChoice {
+  id: string;
+  name: string;
+  identificationCode: string | null;
 }
 
 const today = () => new Date().toLocaleDateString('sv-SE');
@@ -30,11 +38,13 @@ const today = () => new Date().toLocaleDateString('sv-SE');
   selector: 'app-receipt-editor',
   imports: [DecimalPipe, FormsModule, RouterLink, LucideAngularModule, ProductPicker, Modal, ProductForm],
   templateUrl: './receipt-editor.html',
+  styleUrl: './receipt-editor.css',
 })
 export class ReceiptEditor implements OnInit {
   private readonly receiptService = inject(ReceiptService);
   private readonly productService = inject(ProductService);
   private readonly warehouseService = inject(WarehouseService);
+  private readonly supplierService = inject(SupplierService);
   private readonly router = inject(Router);
   private readonly auth = inject(AuthService);
 
@@ -54,7 +64,10 @@ export class ReceiptEditor implements OnInit {
   protected readonly errorMessage = signal('');
 
   protected readonly warehouseId = signal('');
-  protected readonly supplier = signal('');
+  protected readonly supplierId = signal('');
+  protected readonly suppliers = signal<SupplierChoice[]>([]);
+  protected readonly rsWaybillId = signal<string | null>(null);
+  protected readonly rsSupplier = signal<SupplierChoice | null>(null);
   protected readonly waybillNumber = signal('');
   protected readonly date = signal(today());
   protected readonly note = signal('');
@@ -63,7 +76,8 @@ export class ReceiptEditor implements OnInit {
   protected readonly myWarehouses = computed(() =>
     this.warehouses().filter((w) => w.mine && w.status === 'active'),
   );
-  protected readonly takenIds = computed(() => this.lines().map((line) => line.productId));
+  protected readonly takenIds = computed(() => this.lines().flatMap((line) => (line.productId ? [line.productId] : [])));
+  protected readonly unlinkedCount = computed(() => this.lines().filter((line) => !line.productId).length);
   protected readonly total = computed(() =>
     this.lines().reduce((sum, line) => sum + (Number(line.quantity) || 0) * (Number(line.unitCost) || 0), 0),
   );
@@ -77,6 +91,14 @@ export class ReceiptEditor implements OnInit {
         }
       },
       error: () => this.errorMessage.set('Could not load warehouses.'),
+    });
+    this.supplierService.options().subscribe({
+      next: (suppliers) =>
+        this.suppliers.update((current) => [
+          ...suppliers,
+          ...current.filter((s) => !suppliers.some((option) => option.id === s.id)),
+        ]),
+      error: () => this.errorMessage.set('Could not load suppliers.'),
     });
     this.productService.options().subscribe({
       next: (products) => this.products.set(products),
@@ -106,8 +128,42 @@ export class ReceiptEditor implements OnInit {
         unit: product.unit,
         quantity: 1,
         unitCost: product.costPrice,
+        rs: null,
       },
     ]);
+  }
+
+  linkProduct(index: number, picked: PickableProduct): void {
+    this.lines.update((lines) =>
+      lines.map((line, i) =>
+        i === index ? { ...line, productId: picked.id, name: picked.name, barcode: picked.barcode, unit: picked.unit } : line,
+      ),
+    );
+  }
+
+  unlinkProduct(index: number): void {
+    this.lines.update((lines) =>
+      lines.map((line, i) => (i === index ? { ...line, productId: null, name: null, barcode: null, unit: null } : line)),
+    );
+  }
+
+  protected unitProblem(line: EditableLine): string {
+    if (!line.rs || !line.unit) {
+      return '';
+    }
+    const expected = line.rs.unitId !== null ? RS_UNIT_TO_PRODUCT_UNIT[line.rs.unitId] : undefined;
+    if (!expected) {
+      return `The waybill counts it in ${line.rs.unit ?? 'an unknown unit'}; products are only pcs or kg. Ask the supplier to correct the waybill, or reject it.`;
+    }
+    return expected === line.unit ? '' : `The waybill says ${line.rs.unit}, but this product is counted in ${line.unit}.`;
+  }
+
+  protected readonly linkingIndex = signal<number | null>(null);
+
+  openProductForm(lineIndex: number | null): void {
+    this.productNotice.set('');
+    this.linkingIndex.set(lineIndex);
+    this.isProductFormOpen.set(true);
   }
 
   onProductCreated(product: Product): void {
@@ -117,8 +173,14 @@ export class ReceiptEditor implements OnInit {
       return;
     }
     this.products.update((products) => [...products, product]);
-    this.addProduct(product);
-    this.productNotice.set(`${product.name} was added to Products and to this receipt.`);
+    const index = this.linkingIndex();
+    if (index !== null) {
+      this.linkProduct(index, product);
+      this.productNotice.set(`${product.name} was added to Products and linked to the waybill line.`);
+    } else {
+      this.addProduct(product);
+      this.productNotice.set(`${product.name} was added to Products and to this receipt.`);
+    }
   }
 
   updateLine(index: number, field: 'quantity' | 'unitCost', value: number): void {
@@ -136,7 +198,10 @@ export class ReceiptEditor implements OnInit {
       this.errorMessage.set(problem);
       return;
     }
-    if (andPost && !confirm('Post this receipt? The goods go into the warehouse and the receipt is locked.')) {
+    const question = this.rsWaybillId()
+      ? 'Post this receipt? The waybill is confirmed in RS (მიღებული), the goods go into the warehouse and the receipt is locked.'
+      : 'Post this receipt? The goods go into the warehouse and the receipt is locked.';
+    if (andPost && !confirm(question)) {
       return;
     }
 
@@ -178,7 +243,7 @@ export class ReceiptEditor implements OnInit {
   private payload(): ReceiptPayload {
     return {
       warehouseId: this.warehouseId(),
-      supplier: this.supplier().trim(),
+      supplierId: this.supplierId(),
       waybillNumber: this.waybillNumber().trim() || null,
       date: this.date(),
       note: this.note().trim() || null,
@@ -191,8 +256,18 @@ export class ReceiptEditor implements OnInit {
   }
 
   private validate(payload: ReceiptPayload, andPost: boolean): string {
-    if (!payload.warehouseId || !payload.supplier || !payload.date) {
+    if (!payload.warehouseId || !payload.supplierId || !payload.date) {
       return 'Warehouse, supplier and date are required.';
+    }
+    if (this.rsWaybillId()) {
+      if (!andPost) {
+        return '';
+      }
+      if (this.unlinkedCount()) {
+        return `Link every waybill line to one of your products first (${this.unlinkedCount()} left).`;
+      }
+      const problem = this.lines().find((line) => this.unitProblem(line));
+      return problem ? `${problem.rs?.name}: ${this.unitProblem(problem)}` : '';
     }
     if (andPost && payload.lines.length === 0) {
       return 'Add at least one product before posting.';
@@ -219,18 +294,27 @@ export class ReceiptEditor implements OnInit {
     }
     this.code.set(receipt.code);
     this.warehouseId.set(receipt.warehouseId);
-    this.supplier.set(receipt.supplier);
+    this.supplierId.set(receipt.supplierId);
+    this.rsWaybillId.set(receipt.rsWaybillId);
+    const supplier = {
+      id: receipt.supplier.id,
+      name: receipt.supplier.status === 'active' ? receipt.supplier.name : `${receipt.supplier.name} (inactive)`,
+      identificationCode: receipt.supplier.identificationCode,
+    };
+    this.rsSupplier.set(supplier);
+    this.suppliers.update((list) => (list.some((s) => s.id === supplier.id) ? list : [...list, supplier]));
     this.waybillNumber.set(receipt.waybillNumber ?? '');
     this.date.set(receipt.date);
     this.note.set(receipt.note ?? '');
     this.lines.set(
       (receipt.lines ?? []).map((line) => ({
         productId: line.productId,
-        name: line.product.name,
-        barcode: line.product.barcode,
-        unit: line.product.unit,
+        name: line.product?.name ?? null,
+        barcode: line.product?.barcode ?? null,
+        unit: line.product?.unit ?? null,
         quantity: line.quantity,
         unitCost: line.unitCost,
+        rs: line.rsName ? { name: line.rsName, barcode: line.rsBarcode, unitId: line.rsUnitId, unit: line.rsUnit } : null,
       })),
     );
   }

@@ -62,6 +62,45 @@
         </div>
       }
 
+      @if (showRs()) {
+        <div class="shell-nav__group">
+          <button
+            type="button"
+            class="shell-nav__button"
+            [class.shell-nav__button--active]="isRsActive()"
+            (click)="toggleRsMenu()"
+          >
+            <span class="shell-nav__main">
+              <lucide-icon [img]="RsIcon" class="shell-nav__icon" [size]="18"></lucide-icon>
+              @if (isSidebarOpen()) {
+                <span class="shell-nav__label">RS</span>
+              }
+            </span>
+            @if (isSidebarOpen()) {
+              <span class="shell-nav__caret">
+                @if (isRsExpanded()) {
+                  <lucide-icon [img]="ChevronDownIcon" [size]="14"></lucide-icon>
+                } @else {
+                  <lucide-icon [img]="ChevronRightIcon" [size]="14"></lucide-icon>
+                }
+              </span>
+            }
+          </button>
+
+          @if (isSidebarOpen() && isRsExpanded()) {
+            <div class="shell-nav__submenu">
+              <a
+                class="shell-nav__subitem"
+                routerLink="/rs/waybills"
+                routerLinkActive="shell-nav__subitem--active"
+              >
+                RS waybills
+              </a>
+            </div>
+          }
+        </div>
+      }
+
       @if (showWms()) {
         <div class="shell-nav__group">
           <button

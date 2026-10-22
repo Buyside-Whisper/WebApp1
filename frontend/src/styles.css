@@ -1077,3 +1077,11 @@ lucide-icon.search-input__icon {
   background: #eef2ff;
   color: #4338ca;
 }
+
+.chip--rs {
+  margin-left: 6px;
+  padding: 1px 8px;
+  background: rgba(79, 70, 229, 0.1);
+  color: #4338ca;
+  font-size: 0.72rem;
+}

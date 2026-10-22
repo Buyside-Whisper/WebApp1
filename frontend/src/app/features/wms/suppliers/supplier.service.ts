@@ -16,6 +16,10 @@ export class SupplierService {
     return this.http.get<Supplier[]>(API_URL);
   }
 
+  options(): Observable<Pick<Supplier, 'id' | 'name' | 'identificationCode'>[]> {
+    return this.http.get<Pick<Supplier, 'id' | 'name' | 'identificationCode'>[]>(`${API_URL}/options`);
+  }
+
   create(payload: SupplierPayload): Observable<Supplier> {
     return this.http.post<Supplier>(API_URL, payload);
   }

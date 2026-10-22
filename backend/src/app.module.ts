@@ -9,6 +9,7 @@ import { HrModule } from './hr/hr.module.js';
 import { StoreModule } from './store/store.module.js';
 import { SuperadminModule } from './superadmin/superadmin.module.js';
 import { WmsModule } from './wms/wms.module.js';
+import { RsModule } from './rs/rs.module.js';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { WmsModule } from './wms/wms.module.js';
     AuthModule,
     SuperadminModule,
     HrModule,
+    RsModule,
     WmsModule,
     StoreModule,
   ],

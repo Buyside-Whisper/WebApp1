@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { API_BASE_URL } from '../../../core/api';
-import { Receipt, ReceiptPayload } from './receipt.model';
+import { Receipt, ReceiptPayload, RsReceiptLink } from './receipt.model';
 
 const API_URL = `${API_BASE_URL}/wms/receipts`;
 
@@ -34,6 +34,18 @@ export class ReceiptService {
 
   post(id: string): Observable<Receipt> {
     return this.http.post<Receipt>(`${API_URL}/${id}/post`, {});
+  }
+
+  rsLinks(): Observable<RsReceiptLink[]> {
+    return this.http.get<RsReceiptLink[]>(`${API_URL}/rs-links`);
+  }
+
+  createFromRs(waybillId: string, warehouseId: string, createSupplier = false): Observable<Receipt> {
+    return this.http.post<Receipt>(`${API_URL}/from-rs/${waybillId}`, { warehouseId, createSupplier });
+  }
+
+  rejectRs(waybillId: string): Observable<void> {
+    return this.http.post<void>(`${API_URL}/from-rs/${waybillId}/reject`, {});
   }
 
   cancel(id: string): Observable<Receipt> {

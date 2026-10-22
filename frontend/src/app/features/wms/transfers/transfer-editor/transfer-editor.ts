@@ -10,15 +10,17 @@ import { WarehouseStockRow } from '../../stock/stock.model';
 import { StockService } from '../../stock/stock.service';
 import { WarehouseOption } from '../../warehouses/warehouse.model';
 import { WarehouseService } from '../../warehouses/warehouse.service';
+import { RS_UNIT_TO_PRODUCT_UNIT } from '../../receipts/receipt.model';
 import { Transfer, TransferPayload } from '../transfer.model';
 import { TransferService } from '../transfer.service';
 
 interface EditableLine {
-  productId: string;
-  name: string;
-  barcode: string;
-  unit: ProductUnit;
+  productId: string | null;
+  name: string | null;
+  barcode: string | null;
+  unit: ProductUnit | null;
   quantity: number;
+  rs: { name: string; barcode: string | null; unitId: number | null; unit: string | null } | null;
 }
 
 const today = () => new Date().toLocaleDateString('sv-SE');
@@ -27,6 +29,7 @@ const today = () => new Date().toLocaleDateString('sv-SE');
   selector: 'app-transfer-editor',
   imports: [DecimalPipe, FormsModule, RouterLink, LucideAngularModule, ProductPicker],
   templateUrl: './transfer-editor.html',
+  styleUrl: './transfer-editor.css',
 })
 export class TransferEditor implements OnInit {
   private readonly transferService = inject(TransferService);
@@ -49,6 +52,9 @@ export class TransferEditor implements OnInit {
   protected readonly date = signal(today());
   protected readonly note = signal('');
   protected readonly lines = signal<EditableLine[]>([]);
+  protected readonly rsWaybillId = signal<string | null>(null);
+  protected readonly waybillNumber = signal('');
+  protected readonly unlinkedCount = computed(() => this.lines().filter((line) => !line.productId).length);
 
   protected readonly sources = computed(() => this.warehouses().filter((w) => w.mine && w.status === 'active'));
   protected readonly destinations = computed(() =>
@@ -69,7 +75,7 @@ export class TransferEditor implements OnInit {
   protected readonly available = computed(
     () => new Map(this.sourceStock().map((row) => [row.productId, row.quantity])),
   );
-  protected readonly takenIds = computed(() => this.lines().map((line) => line.productId));
+  protected readonly takenIds = computed(() => this.lines().flatMap((line) => (line.productId ? [line.productId] : [])));
 
   ngOnInit(): void {
     this.warehouseService.options().subscribe({
@@ -95,6 +101,14 @@ export class TransferEditor implements OnInit {
   }
 
   changeSource(warehouseId: string): void {
+    if (this.rsWaybillId()) {
+      this.fromWarehouseId.set(warehouseId);
+      if (this.toWarehouseId() === warehouseId) {
+        this.toWarehouseId.set('');
+      }
+      this.loadSourceStock(warehouseId);
+      return;
+    }
     if (this.lines().length && !confirm('Changing the source warehouse removes the products added so far.')) {
       return;
     }
@@ -109,8 +123,33 @@ export class TransferEditor implements OnInit {
   addProduct(product: PickableProduct): void {
     this.lines.update((lines) => [
       ...lines,
-      { productId: product.id, name: product.name, barcode: product.barcode, unit: product.unit, quantity: 1 },
+      { productId: product.id, name: product.name, barcode: product.barcode, unit: product.unit, quantity: 1, rs: null },
     ]);
+  }
+
+  linkProduct(index: number, picked: PickableProduct): void {
+    this.lines.update((lines) =>
+      lines.map((line, i) =>
+        i === index ? { ...line, productId: picked.id, name: picked.name, barcode: picked.barcode, unit: picked.unit } : line,
+      ),
+    );
+  }
+
+  unlinkProduct(index: number): void {
+    this.lines.update((lines) =>
+      lines.map((line, i) => (i === index ? { ...line, productId: null, name: null, barcode: null, unit: null } : line)),
+    );
+  }
+
+  protected unitProblem(line: EditableLine): string {
+    if (!line.rs || !line.unit) {
+      return '';
+    }
+    const expected = line.rs.unitId !== null ? RS_UNIT_TO_PRODUCT_UNIT[line.rs.unitId] : undefined;
+    if (!expected) {
+      return `The waybill counts it in ${line.rs.unit ?? 'an unknown unit'}; products are only pcs or kg.`;
+    }
+    return expected === line.unit ? '' : `The waybill says ${line.rs.unit}, but this product is counted in ${line.unit}.`;
   }
 
   updateQuantity(index: number, value: number): void {
@@ -128,7 +167,14 @@ export class TransferEditor implements OnInit {
       this.errorMessage.set(problem);
       return;
     }
-    if (andSend && !confirm('Send this transfer? The goods leave the source warehouse now.')) {
+    if (
+      andSend &&
+      !confirm(
+        this.rsWaybillId()
+          ? 'Send this transfer? The goods leave the source warehouse now. The RS waybill is already active, so nothing changes in RS.'
+          : 'Send this transfer? The goods leave the source warehouse now.',
+      )
+    ) {
       return;
     }
     const id = this.id();
@@ -181,8 +227,23 @@ export class TransferEditor implements OnInit {
     if (andSend && payload.lines.length === 0) {
       return 'Add at least one product before sending.';
     }
+    if (this.rsWaybillId()) {
+      if (!andSend) {
+        return '';
+      }
+      if (this.unlinkedCount()) {
+        return `Link every waybill line to one of your products first (${this.unlinkedCount()} left).`;
+      }
+      const problem = this.lines().find((line) => this.unitProblem(line));
+      if (problem) {
+        return `${problem.rs?.name}: ${this.unitProblem(problem)}`;
+      }
+    }
     for (const [i, line] of payload.lines.entries()) {
       const { name, unit } = this.lines()[i];
+      if (!line.productId) {
+        continue;
+      }
       const available = this.available().get(line.productId) ?? 0;
       if (line.quantity <= 0) {
         return `Enter a quantity for ${name}.`;
@@ -217,13 +278,16 @@ export class TransferEditor implements OnInit {
     this.toWarehouseId.set(transfer.toWarehouseId);
     this.date.set(transfer.date);
     this.note.set(transfer.note ?? '');
+    this.rsWaybillId.set(transfer.rsWaybillId);
+    this.waybillNumber.set(transfer.waybillNumber ?? '');
     this.lines.set(
       (transfer.lines ?? []).map((line) => ({
         productId: line.productId,
-        name: line.product.name,
-        barcode: line.product.barcode,
-        unit: line.product.unit,
+        name: line.product?.name ?? null,
+        barcode: line.product?.barcode ?? null,
+        unit: line.product?.unit ?? null,
         quantity: line.quantity,
+        rs: line.rsName ? { name: line.rsName, barcode: line.rsBarcode, unitId: line.rsUnitId, unit: line.rsUnit } : null,
       })),
     );
     this.loadSourceStock(transfer.fromWarehouseId);

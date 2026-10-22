@@ -2,6 +2,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   OneToMany,
@@ -11,12 +12,17 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { TenantEntity } from '../../companies/tenant.entity.js';
+import { Supplier } from '../suppliers/supplier.entity.js';
 import { Warehouse } from '../warehouses/warehouse.entity.js';
 import { ReceiptLine } from './receipt-line.entity.js';
 import { ReceiptStatus } from './receipt-status.enum.js';
 
 @Entity({ name: 'receipts' })
 @Unique(['companyId', 'number'])
+@Index('UQ_receipts_rs_waybill', ['companyId', 'rsWaybillId'], {
+  unique: true,
+  where: `"rs_waybill_id" IS NOT NULL AND "status" <> 'cancelled'`,
+})
 export class Receipt extends TenantEntity {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
@@ -34,8 +40,18 @@ export class Receipt extends TenantEntity {
   @JoinColumn({ name: 'warehouse_id' })
   warehouse?: Relation<Warehouse>;
 
-  @Column()
-  supplier!: string;
+  @Column({ name: 'supplier_id', type: 'uuid' })
+  supplierId!: string;
+
+  @ManyToOne(() => Supplier, { onDelete: 'RESTRICT' })
+  @JoinColumn({ name: 'supplier_id' })
+  supplier?: Pick<Supplier, 'id' | 'name' | 'identificationCode' | 'status'>;
+
+  @Column({ name: 'rs_waybill_id', type: 'varchar', nullable: true })
+  rsWaybillId!: string | null;
+
+  @Column({ name: 'rs_confirmed_at', type: 'timestamptz', nullable: true })
+  rsConfirmedAt!: Date | null;
 
   @Column({ name: 'waybill_number', type: 'varchar', nullable: true })
   waybillNumber!: string | null;

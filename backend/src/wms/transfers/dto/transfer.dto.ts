@@ -5,8 +5,9 @@ const blankToNull = ({ value }: { value: unknown }) =>
   typeof value === 'string' ? value.trim() || null : value;
 
 export class TransferLineDto {
+  @IsOptional()
   @IsUUID()
-  productId!: string;
+  productId!: string | null;
 
   @IsNumber({ maxDecimalPlaces: 3 }, { message: 'quantity must be a number with at most 3 decimals' })
   @Min(0.001, { message: 'quantity must be more than 0' })
@@ -48,4 +49,12 @@ export class ReceiveTransferDto {
   @ValidateNested({ each: true })
   @Type(() => ReceivedLineDto)
   lines!: ReceivedLineDto[];
+}
+
+export class CreateTransferFromRsDto {
+  @IsUUID()
+  fromWarehouseId!: string;
+
+  @IsUUID()
+  toWarehouseId!: string;
 }

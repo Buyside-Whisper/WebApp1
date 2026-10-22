@@ -1,0 +1,108 @@
+<div class="page-stack">
+  <div class="page-header">
+    <div>
+      <p class="page-eyebrow">RS</p>
+      <h1 class="page-title">RS waybills</h1>
+      <p class="page-description">
+        The app reads your waybills from RS with your company's RS <strong>service user</strong>
+        (სერვისის მომხმარებელი), created in your rs.ge account.
+      </p>
+    </div>
+  </div>
+
+  <app-rs-tabs />
+
+  @if (message()) {
+    <p class="notice-success">{{ message() }}</p>
+  }
+  @if (errorMessage()) {
+    <p class="field-error">{{ errorMessage() }}</p>
+  }
+
+  @if (connection(); as conn) {
+    <section class="page-card">
+      <h2 class="card-title">RS connection</h2>
+      @if (conn.connected && !isEditing()) {
+        <dl class="detail-grid">
+          <div><dt>Status</dt><dd>
+            <span class="badge" [class.badge--active]="conn.checkOk" [class.badge--cancelled]="!conn.checkOk">
+              {{ conn.checkOk ? 'Connected' : 'RS refused the login' }}
+            </span>
+          </dd></div>
+          <div><dt>Service user</dt><dd><code class="code-tag">{{ conn.username }}</code></dd></div>
+          <div><dt>RS taxpayer id</dt><dd>{{ conn.rsUnId ?? '—' }}</dd></div>
+          <div><dt>Last checked</dt><dd>{{ conn.checkedAt ? (conn.checkedAt | date: 'dd.MM.yyyy HH:mm') : '—' }}</dd></div>
+          <div><dt>Set by</dt><dd>{{ conn.updatedBy ?? '—' }}</dd></div>
+        </dl>
+        <div class="button-row actions">
+          <button type="button" class="button button--outline" [disabled]="busy() !== ''" (click)="check()">
+            {{ busy() === 'check' ? 'Checking…' : 'Check now' }}
+          </button>
+          @if (canEdit()) {
+            <button type="button" class="button button--outline" [disabled]="busy() !== ''" (click)="startEditing()">
+              Change service user
+            </button>
+            <button type="button" class="button button--danger" [disabled]="busy() !== ''" (click)="remove()">
+              Remove
+            </button>
+          }
+        </div>
+      } @else if (!canEdit()) {
+        <p class="page-description">
+          RS isn't connected yet. The company's system admin adds the RS service user here.
+        </p>
+      } @else {
+        <form class="page-stack" (ngSubmit)="save()">
+          <div class="form-grid">
+            <div class="field">
+              <label for="rsUser">Service user</label>
+              <input
+                id="rsUser"
+                class="text-input"
+                name="username"
+                autocomplete="off"
+                [(ngModel)]="username"
+                placeholder="e.g. name:206322102"
+              />
+              <span class="field-hint">Usually your name, a colon and the company's identification code.</span>
+            </div>
+            <div class="field">
+              <label for="rsPassword">Password</label>
+              <div class="password-input">
+                <input
+                  id="rsPassword"
+                  class="text-input"
+                  name="password"
+                  autocomplete="new-password"
+                  [type]="showPassword() ? 'text' : 'password'"
+                  [(ngModel)]="password"
+                />
+                <button
+                  type="button"
+                  class="icon-action"
+                  [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'"
+                  (click)="showPassword.set(!showPassword())"
+                >
+                  <lucide-icon [img]="showPassword() ? HideIcon : ShowIcon" [size]="18"></lucide-icon>
+                </button>
+              </div>
+              <span class="field-hint">Typed exactly: a dot or space at the end is part of it.</span>
+            </div>
+          </div>
+          <p class="field-hint">
+            The app checks the login with RS before saving it, and stores the password encrypted. In
+            RS, the service user must allow the IP address of the server this app runs on.
+          </p>
+          <div class="button-row">
+            <button type="submit" class="button button--dark" [disabled]="busy() !== ''">
+              {{ busy() === 'save' ? 'Checking with RS…' : 'Check and save' }}
+            </button>
+            @if (conn.connected) {
+              <button type="button" class="button button--secondary" (click)="isEditing.set(false)">Cancel</button>
+            }
+          </div>
+        </form>
+      }
+    </section>
+  }
+</div>

@@ -77,6 +77,9 @@
               <tr>
                 <td class="cell-strong">
                   <a [routerLink]="['/wms/transfers', transfer.id]">{{ transfer.code }}</a>
+                  @if (transfer.rsWaybillId) {
+                    <span class="chip chip--rs" title="Made from an RS waybill">RS</span>
+                  }
                 </td>
                 <td class="cell-figure">{{ transfer.date | date: 'dd.MM.yyyy' }}</td>
                 <td class="cell-nowrap">

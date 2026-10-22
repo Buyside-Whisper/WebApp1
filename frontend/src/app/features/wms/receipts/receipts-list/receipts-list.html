@@ -83,7 +83,12 @@
                   <code class="code-tag">{{ receipt.warehouse.code }}</code>
                   {{ receipt.warehouse.name }}
                 </td>
-                <td>{{ receipt.supplier }}</td>
+                <td>
+                  {{ receipt.supplier.name }}
+                  @if (receipt.rsWaybillId) {
+                    <span class="chip chip--rs" title="Made from an RS waybill">RS</span>
+                  }
+                </td>
                 <td>{{ receipt.waybillNumber ?? '–' }}</td>
                 <td class="cell-figure">{{ receipt.lineCount }}</td>
                 <td class="cell-figure">₾{{ receipt.total | number: '1.2-2' }}</td>

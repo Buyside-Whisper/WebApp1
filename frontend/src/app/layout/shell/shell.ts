@@ -15,6 +15,7 @@ import {
   Store,
   Utensils,
   LogOut,
+  FileText,
 } from 'lucide-angular';
 
 @Component({
@@ -32,9 +33,11 @@ export class Shell {
   protected readonly StoreIcon = Store;
   protected readonly UtensilsIcon = Utensils;
   protected readonly LogOutIcon = LogOut;
+  protected readonly RsIcon = FileText;
 
   protected readonly isSidebarOpen = signal(true);
   protected readonly isHrExpanded = signal(true);
+  protected readonly isRsExpanded = signal(true);
   protected readonly isWmsExpanded = signal(true);
   protected readonly isStoreExpanded = signal(true);
   protected readonly isRestaurantExpanded = signal(true);
@@ -44,6 +47,7 @@ export class Shell {
 
   protected readonly user = this.auth.user;
   protected readonly showHr = computed(() => canAccessModule(this.user(), 'hr'));
+  protected readonly showRs = computed(() => canAccessModule(this.user(), 'rs'));
   protected readonly showWms = computed(() => canAccessModule(this.user(), 'wms'));
   protected readonly showStore = computed(() => canAccessModule(this.user(), 'store'));
   protected readonly showRestaurant = computed(() => canAccessModule(this.user(), 'restaurant'));
@@ -73,6 +77,7 @@ export class Shell {
   );
 
   protected readonly isHrActive = computed(() => this.currentUrl().startsWith('/hr'));
+  protected readonly isRsActive = computed(() => this.currentUrl().startsWith('/rs'));
   protected readonly isWmsActive = computed(() => this.currentUrl().startsWith('/wms'));
   protected readonly isStoreActive = computed(() => this.currentUrl().startsWith('/store'));
   protected readonly isRestaurantActive = computed(() =>
@@ -91,6 +96,16 @@ export class Shell {
     }
 
     this.isHrExpanded.update((value) => !value);
+  }
+
+  toggleRsMenu(): void {
+    if (!this.isSidebarOpen()) {
+      this.isSidebarOpen.set(true);
+      this.isRsExpanded.set(true);
+      return;
+    }
+
+    this.isRsExpanded.update((value) => !value);
   }
 
   toggleWmsMenu(): void {

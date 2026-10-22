@@ -2,6 +2,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   OneToMany,
@@ -17,6 +18,10 @@ import { TransferStatus } from './transfer-status.enum.js';
 
 @Entity({ name: 'transfers' })
 @Unique(['companyId', 'number'])
+@Index('UQ_transfers_rs_waybill', ['companyId', 'rsWaybillId'], {
+  unique: true,
+  where: `"rs_waybill_id" IS NOT NULL AND "status" <> 'cancelled'`,
+})
 export class Transfer extends TenantEntity {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
@@ -46,6 +51,18 @@ export class Transfer extends TenantEntity {
 
   @Column({ type: 'varchar', nullable: true })
   note!: string | null;
+
+  @Column({ name: 'rs_waybill_id', type: 'varchar', nullable: true })
+  rsWaybillId!: string | null;
+
+  @Column({ name: 'waybill_number', type: 'varchar', nullable: true })
+  waybillNumber!: string | null;
+
+  @Column({ name: 'rs_seller_tin', type: 'varchar', nullable: true })
+  rsSellerTin!: string | null;
+
+  @Column({ name: 'rs_closed_at', type: 'timestamptz', nullable: true })
+  rsClosedAt!: Date | null;
 
   @OneToMany(() => TransferLine, (line) => line.transfer, { cascade: true })
   lines!: Relation<TransferLine>[];

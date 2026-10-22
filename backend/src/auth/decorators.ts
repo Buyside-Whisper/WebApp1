@@ -3,7 +3,7 @@ import { AppModuleName } from '../companies/app-module.enum.js';
 import { AuthUser } from './auth-user.js';
 import { UserRole } from './user-role.enum.js';
 
-export type AccessModule = 'hr' | AppModuleName;
+export type AccessModule = 'hr' | 'rs' | AppModuleName;
 
 export const IS_PUBLIC = 'isPublic';
 export const ACCESS_MODULE = 'accessModule';

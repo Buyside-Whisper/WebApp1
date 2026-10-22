@@ -1,0 +1,19 @@
+.read-only-value {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 2px;
+  color: #0f172a;
+}
+
+.rs-product-cell {
+  min-width: 260px;
+}
+
+.read-only-value--stacked {
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 2px;
+}

@@ -1,7 +1,7 @@
 import { Transform, Type } from 'class-transformer';
 import {
   IsArray,
-  IsNotEmpty,
+  IsBoolean,
   IsNumber,
   IsOptional,
   IsString,
@@ -13,11 +13,11 @@ import {
 
 const blankToNull = ({ value }: { value: unknown }) =>
   typeof value === 'string' ? value.trim() || null : value;
-const trim = ({ value }: { value: unknown }) => (typeof value === 'string' ? value.trim() : value);
 
 export class ReceiptLineDto {
+  @IsOptional()
   @IsUUID()
-  productId!: string;
+  productId!: string | null;
 
   @IsNumber({ maxDecimalPlaces: 3 }, { message: 'quantity must be a number with at most 3 decimals' })
   @Min(0.001, { message: 'quantity must be more than 0' })
@@ -32,10 +32,8 @@ export class SaveReceiptDto {
   @IsUUID()
   warehouseId!: string;
 
-  @Transform(trim)
-  @IsString()
-  @IsNotEmpty()
-  supplier!: string;
+  @IsUUID()
+  supplierId!: string;
 
   @IsOptional()
   @Transform(blankToNull)
@@ -54,4 +52,13 @@ export class SaveReceiptDto {
   @ValidateNested({ each: true })
   @Type(() => ReceiptLineDto)
   lines!: ReceiptLineDto[];
+}
+
+export class CreateReceiptFromRsDto {
+  @IsUUID()
+  warehouseId!: string;
+
+  @IsOptional()
+  @IsBoolean()
+  createSupplier?: boolean;
 }

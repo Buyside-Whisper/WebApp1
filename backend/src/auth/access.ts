@@ -7,6 +7,9 @@ export function canAccessModule(user: AuthUser, module: AccessModule): boolean {
   if (user.role === UserRole.SUPERUSER) {
     return false;
   }
+  if (module === 'rs') {
+    return user.role === UserRole.SYSTEM_ADMIN || user.role === UserRole.MODULE_ADMIN;
+  }
   if (module !== 'hr' && !user.companyModules.includes(module)) {
     return false;
   }

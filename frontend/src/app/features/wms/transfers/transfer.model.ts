@@ -12,10 +12,14 @@ export const TRANSFER_STATUS_LABELS: Record<TransferStatus, string> = {
 export interface TransferLine {
   id: string;
   position: number;
-  productId: string;
+  productId: string | null;
   quantity: number;
   receivedQuantity: number | null;
-  product: { id: string; name: string; barcode: string; unit: ProductUnit };
+  product: { id: string; name: string; barcode: string; unit: ProductUnit } | null;
+  rsName: string | null;
+  rsBarcode: string | null;
+  rsUnitId: number | null;
+  rsUnit: string | null;
 }
 
 type WarehouseRef = { id: string; code: string; name: string };
@@ -31,6 +35,9 @@ export interface Transfer {
   toWarehouse: WarehouseRef;
   date: string;
   note: string | null;
+  rsWaybillId: string | null;
+  waybillNumber: string | null;
+  rsClosedAt: string | null;
   lineCount: number;
   lines?: TransferLine[];
   createdByName: string;
@@ -48,5 +55,5 @@ export interface TransferPayload {
   toWarehouseId: string;
   date: string;
   note: string | null;
-  lines: { productId: string; quantity: number }[];
+  lines: { productId: string | null; quantity: number }[];
 }

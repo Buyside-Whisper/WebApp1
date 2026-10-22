@@ -39,7 +39,9 @@ export class LoginPage {
         this.isLoading.set(false);
         this.errorMessage.set(
           error.status === 401
-            ? 'Wrong username or password.'
+            ? typeof error.error?.message === 'string' && error.error.message !== 'Wrong username or password'
+              ? error.error.message
+              : 'Wrong username or password.'
             : 'Could not reach the server. Is the backend running?',
         );
       },

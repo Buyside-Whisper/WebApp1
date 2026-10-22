@@ -8,6 +8,21 @@ export default [
       import('./companies/companies-page/companies-page').then((m) => m.CompaniesPage),
   },
   {
+    path: 'companies/new',
+    loadComponent: () =>
+      import('./companies/company-form/company-form').then((m) => m.CompanyForm),
+  },
+  {
+    path: 'companies/:id/edit',
+    loadComponent: () =>
+      import('./companies/company-form/company-form').then((m) => m.CompanyForm),
+  },
+  {
+    path: 'companies/:id',
+    loadComponent: () =>
+      import('./companies/company-view/company-view').then((m) => m.CompanyView),
+  },
+  {
     path: 'audit',
     data: { eyebrow: 'Platform' },
     loadComponent: () =>

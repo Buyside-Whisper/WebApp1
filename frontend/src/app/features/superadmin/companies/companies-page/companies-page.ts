@@ -1,44 +1,17 @@
-import { Component, OnInit, WritableSignal, inject, signal } from '@angular/core';
-import { DatePipe } from '@angular/common';
-import { HttpErrorResponse } from '@angular/common/http';
-import {
-  AbstractControl,
-  FormBuilder,
-  FormsModule,
-  ReactiveFormsModule,
-  ValidationErrors,
-} from '@angular/forms';
-import { LucideAngularModule, Plus } from 'lucide-angular';
-import { AppModule, Credentials, MODULE_LABELS } from '../../../../core/auth/auth.model';
-import { CredentialsModal } from '../../../../shared/credentials-modal/credentials-modal';
-import { Modal } from '../../../../shared/modal/modal';
-import { Company } from '../company.model';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { DatePipe, DecimalPipe } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
+import { Eye, LucideAngularModule, PenLine, Plus, Search } from 'lucide-angular';
+import { MODULE_LABELS } from '../../../../core/auth/auth.model';
+import { Pager } from '../../../../shared/pager/pager';
+import { Pagination } from '../../../../shared/pager/pagination';
+import { BILLING_BADGES, BILLING_LABELS, BillingState, Company } from '../company.model';
 import { CompanyService } from '../company.service';
-
-const ALL_MODULES: AppModule[] = ['wms', 'store', 'restaurant'];
-
-const ERROR_MESSAGES: Record<string, string> = {
-  required: 'This field is required.',
-  blank: 'This field is required.',
-  email: 'Enter a valid email address.',
-  personalId: 'Personal ID must be exactly 11 digits.',
-  phone: 'Enter a valid phone number.',
-  notInPast: 'Date of birth must be in the past.',
-  moduleRequired: 'Choose a module for this role.',
-};
-
-type FieldName = 'companyName' | 'adminFirst' | 'adminLast';
 
 @Component({
   selector: 'app-companies-page',
-  imports: [
-    CredentialsModal,
-    DatePipe,
-    FormsModule,
-    LucideAngularModule,
-    Modal,
-    ReactiveFormsModule,
-  ],
+  imports: [DatePipe, DecimalPipe, FormsModule, LucideAngularModule, Pager, RouterLink],
   templateUrl: './companies-page.html',
   styleUrl: './companies-page.css',
 })
@@ -46,31 +19,44 @@ export class CompaniesPage implements OnInit {
   private readonly companyService = inject(CompanyService);
 
   protected readonly PlusIcon = Plus;
-  protected readonly modules = ALL_MODULES;
+  protected readonly SearchIcon = Search;
+  protected readonly ViewIcon = Eye;
+  protected readonly EditIcon = PenLine;
   protected readonly labels = MODULE_LABELS;
+  protected readonly billingLabels = BILLING_LABELS;
+  protected readonly billingBadges = BILLING_BADGES;
+  protected readonly billingStates = Object.keys(BILLING_LABELS) as BillingState[];
 
   protected readonly companies = signal<Company[]>([]);
   protected readonly isLoading = signal(false);
-  protected readonly isSaving = signal(false);
   protected readonly errorMessage = signal('');
 
-  protected readonly credentials = signal<Credentials | null>(null);
-
-  protected readonly isCreateOpen = signal(false);
-
-  protected readonly newModules = signal<AppModule[]>([]);
-  protected readonly formError = signal('');
-
-  protected readonly editing = signal<Company | null>(null);
-  protected readonly editName = signal('');
-  protected readonly editModules = signal<AppModule[]>([]);
-  private readonly fb = inject(FormBuilder).nonNullable;
-
-  protected readonly form = this.fb.group({
-    companyName: ['', notBlank],
-    adminFirst: ['', notBlank],
-    adminLast: ['', notBlank],
+  protected readonly search = signal('');
+  protected readonly billingFilter = signal<'all' | BillingState>('all');
+  protected readonly hasFilters = computed(() => this.search().trim() !== '' || this.billingFilter() !== 'all');
+  protected readonly filtered = computed(() => {
+    const query = this.search().trim().toLowerCase();
+    const state = this.billingFilter();
+    return this.companies().filter(
+      (c) =>
+        (state === 'all' || c.billing.state === state) &&
+        (!query ||
+          [c.name, c.legalName, c.identificationCode, c.adminName, c.adminUsername].some((value) =>
+            (value ?? '').toLowerCase().includes(query),
+          )),
+    );
   });
+  protected readonly pages = new Pagination(
+    () => this.filtered(),
+    () => [this.search(), this.billingFilter()],
+  );
+
+  protected readonly paying = computed(() => this.companies().filter((c) => c.status === 'active'));
+  protected readonly monthlyRevenue = computed(() =>
+    this.paying().reduce((sum, c) => sum + c.billing.monthlyTotal, 0),
+  );
+  protected readonly overdue = computed(() => this.companies().filter((c) => c.billing.state === 'overdue'));
+  protected readonly blocked = computed(() => this.companies().filter((c) => c.status !== 'active').length);
 
   ngOnInit(): void {
     this.load();
@@ -90,126 +76,13 @@ export class CompaniesPage implements OnInit {
     });
   }
 
-  openCreate(): void {
-    this.form.reset();
-    this.newModules.set([]);
-    this.formError.set('');
-    this.isCreateOpen.set(true);
+  clearFilters(): void {
+    this.search.set('');
+    this.billingFilter.set('all');
   }
 
-  toggle(list: WritableSignal<AppModule[]>, module: AppModule): void {
-    list.update((current) =>
-      current.includes(module) ? current.filter((m) => m !== module) : [...current, module],
-    );
+  showOverdue(): void {
+    this.search.set('');
+    this.billingFilter.set('overdue');
   }
-
-  protected errorFor(name: FieldName): string {
-    const control = this.form.controls[name];
-    if (!control.touched || !control.errors) {
-      return '';
-    }
-    const key = Object.keys(control.errors)[0];
-    return ERROR_MESSAGES[key] ?? 'Invalid value.';
-  }
-
-  create(): void {
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
-      return;
-    }
-
-    const value = this.form.getRawValue();
-    this.isSaving.set(true);
-    this.formError.set('');
-    this.companyService
-      .create({
-        name: value.companyName.trim(),
-        adminFirstName: value.adminFirst.trim(),
-        adminLastName: value.adminLast.trim(),
-        modules: this.newModules(),
-      })
-      .subscribe({
-        next: ({ credentials }) => {
-          this.isSaving.set(false);
-          this.isCreateOpen.set(false);
-          this.credentials.set(credentials);
-          this.load();
-        },
-        error: (error: HttpErrorResponse) => {
-          this.isSaving.set(false);
-          this.formError.set(messageOf(error, 'Could not create the company.'));
-        },
-      });
-  }
-
-  openEdit(company: Company): void {
-    this.editing.set(company);
-    this.editName.set(company.name);
-    this.editModules.set([...company.modules]);
-    this.formError.set('');
-  }
-
-  saveEdit(): void {
-    const company = this.editing();
-    if (!company || !this.editName().trim()) {
-      return;
-    }
-
-    this.isSaving.set(true);
-    this.formError.set('');
-    this.companyService
-      .update(company.id, { name: this.editName().trim(), modules: this.editModules() })
-      .subscribe({
-        next: () => {
-          this.isSaving.set(false);
-          this.editing.set(null);
-          this.load();
-        },
-        error: (error: HttpErrorResponse) => {
-          this.isSaving.set(false);
-          this.formError.set(messageOf(error, 'Could not save the company.'));
-        },
-      });
-  }
-
-  resetPassword(company: Company): void {
-    if (
-      !confirm(
-        `Reset the system admin password of ${company.name}? The old password stops working.`,
-      )
-    ) {
-      return;
-    }
-    this.companyService.resetAdminPassword(company.id).subscribe({
-      next: (credentials) => this.credentials.set(credentials),
-      error: () => this.errorMessage.set('Could not reset the password.'),
-    });
-  }
-
-  remove(company: Company): void {
-    if (
-      !confirm(
-        `Delete ${company.name} and ALL of its data (people, warehouses, sales, logins)? This cannot be undone.`,
-      )
-    ) {
-      return;
-    }
-    this.companyService.remove(company.id).subscribe({
-      next: () => this.load(),
-      error: () => this.errorMessage.set('Could not delete the company.'),
-    });
-  }
-}
-
-function messageOf(error: HttpErrorResponse, fallback: string): string {
-  const message = error.error?.message;
-  return Array.isArray(message)
-    ? message.join(', ')
-    : typeof message === 'string'
-      ? message
-      : fallback;
-}
-
-function notBlank(control: AbstractControl<string>): ValidationErrors | null {
-  return control.value?.trim() ? null : { blank: true };
 }

@@ -4,19 +4,37 @@
       <p class="page-eyebrow">Platform</p>
       <h1 class="page-title">Companies</h1>
       <p class="page-description">
-        Every company that bought the app, and which modules it has. Selling a company creates the
-        login of its system admin.
+        Your customers: what each one bought, what it pays per month and whether it is paid up.
       </p>
     </div>
-    <button type="button" class="button button--primary" (click)="openCreate()">
+    <a class="button button--primary" routerLink="/superadmin/companies/new">
       <lucide-icon [img]="PlusIcon" [size]="16"></lucide-icon>
       Sell to a new company
-    </button>
+    </a>
   </div>
 
   @if (errorMessage()) {
     <p class="field-error">{{ errorMessage() }}</p>
   }
+
+  <div class="stat-row">
+    <div class="stat">
+      <div class="stat__label">Active customers</div>
+      <div class="stat__value">{{ paying().length }}</div>
+    </div>
+    <div class="stat">
+      <div class="stat__label">Monthly revenue</div>
+      <div class="stat__value">₾{{ monthlyRevenue() | number: '1.2-2' }}</div>
+    </div>
+    <button type="button" class="stat stat--button" [class.stat--alert]="overdue().length > 0" (click)="showOverdue()">
+      <div class="stat__label">Overdue</div>
+      <div class="stat__value">{{ overdue().length }}</div>
+    </button>
+    <div class="stat">
+      <div class="stat__label">Suspended or cancelled</div>
+      <div class="stat__value">{{ blocked() }}</div>
+    </div>
+  </div>
 
   <div class="page-card">
     @if (isLoading()) {
@@ -26,192 +44,122 @@
         No companies yet. Use “Sell to a new company” to add the first one.
       </p>
     } @else {
+      <div class="table-filters">
+        <div class="search-input table-filters__search">
+          <lucide-icon [img]="SearchIcon" [size]="16" class="search-input__icon"></lucide-icon>
+          <input
+            class="text-input"
+            type="search"
+            aria-label="Search companies"
+            [(ngModel)]="search"
+            placeholder="Name, legal name, identification code or admin"
+          />
+        </div>
+        <select class="text-select" aria-label="Billing" [(ngModel)]="billingFilter">
+          <option value="all">Any billing status</option>
+          @for (state of billingStates; track state) {
+            <option [value]="state">{{ billingLabels[state] }}</option>
+          }
+        </select>
+        @if (hasFilters()) {
+          <button type="button" class="link-button" (click)="clearFilters()">Clear</button>
+        }
+      </div>
+      <div class="table-toolbar">
+        <span>
+          @if (hasFilters()) {
+            {{ filtered().length }} of {{ companies().length }} companies
+          } @else {
+            {{ companies().length }} companies
+          }
+        </span>
+      </div>
       <div class="table-scroll">
         <table class="data-table">
           <thead>
             <tr>
               <th>Company</th>
               <th>Modules</th>
+              <th>Monthly</th>
+              <th>Billing</th>
               <th>System admin</th>
-              <th class="cell-number">People</th>
-              <th>Created</th>
+              <th>People</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            @for (company of companies(); track company.id) {
+            @for (company of pages.items(); track company.id) {
               <tr>
-                <td class="cell-strong">{{ company.name }}</td>
+                <td>
+                  <a class="cell-strong company-link" [routerLink]="['/superadmin/companies', company.id]">{{ company.name }}</a>
+                  <div class="muted">
+                    {{ company.legalName ?? 'Legal details missing' }}
+                    @if (company.identificationCode) {
+                      · {{ company.identificationCode }}
+                    }
+                  </div>
+                </td>
                 <td>
                   <div class="chip-list">
                     <span class="chip">HR</span>
+                    <span class="chip">RS</span>
                     @for (module of company.modules; track module) {
                       <span class="chip chip--module">{{ labels[module] }}</span>
                     }
                   </div>
                 </td>
-                <td>
-                  <div class="cell-strong">{{ company.adminName ?? '–' }}</div>
-                  @if (company.adminUsername) {
-                    <div class="cell-sub">
-                      <code class="code-tag">{{ company.adminUsername }}</code>
-                    </div>
-                  }
-                </td>
-                <td class="cell-number">{{ company.employeeCount }}</td>
-                <td class="nowrap">{{ company.createdAt | date: 'mediumDate' }}</td>
-                <td>
-                  <div class="button-row button-row--tight">
-                    <button
-                      type="button"
-                      class="button button--secondary button--sm"
-                      (click)="openEdit(company)"
-                    >
-                      Modules
-                    </button>
-                    <button
-                      type="button"
-                      class="button button--secondary button--sm"
-                      (click)="resetPassword(company)"
-                    >
-                      Reset password
-                    </button>
-                    <button
-                      type="button"
-                      class="button button--secondary button--sm"
-                      (click)="remove(company)"
-                    >
-                      Delete
-                    </button>
+                <td class="cell-figure cell-strong">₾{{ company.billing.monthlyTotal | number: '1.2-2' }}</td>
+                <td class="cell-nowrap">
+                  <span class="badge" [class]="billingBadges[company.billing.state]">
+                    {{ billingLabels[company.billing.state] }}
+                  </span>
+                  <div class="muted billing-sub">
+                    @switch (company.billing.state) {
+                      @case ('overdue') {
+                        {{ company.billing.daysOverdue }} {{ company.billing.daysOverdue === 1 ? 'day' : 'days' }} since {{ company.billing.nextDue | date: 'dd.MM.yyyy' }}
+                      }
+                      @case ('trial') {
+                        until {{ company.trialEndsOn | date: 'dd.MM.yyyy' }}
+                      }
+                      @case ('not_started') {
+                        starts {{ company.billing.nextDue | date: 'dd.MM.yyyy' }}
+                      }
+                      @case ('paid') {
+                        until {{ company.billing.paidUntil | date: 'dd.MM.yyyy' }}
+                      }
+                      @case ('due_soon') {
+                        due {{ company.billing.nextDue | date: 'dd.MM.yyyy' }}
+                      }
+                    }
                   </div>
                 </td>
+                <td>
+                  <div>{{ company.adminName ?? '–' }}</div>
+                  @if (company.adminUsername) {
+                    <code class="code-tag">{{ company.adminUsername }}</code>
+                  }
+                </td>
+                <td class="cell-figure">{{ company.employeeCount }}</td>
+                <td>
+                  <div class="icon-actions">
+                    <a class="icon-action" [routerLink]="['/superadmin/companies', company.id]" title="View" [attr.aria-label]="'View ' + company.name">
+                      <lucide-icon [img]="ViewIcon" [size]="18"></lucide-icon>
+                    </a>
+                    <a class="icon-action" [routerLink]="['/superadmin/companies', company.id, 'edit']" title="Edit" [attr.aria-label]="'Edit ' + company.name">
+                      <lucide-icon [img]="EditIcon" [size]="18"></lucide-icon>
+                    </a>
+                  </div>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td class="muted" colspan="7">No companies match the search and filters.</td>
               </tr>
             }
           </tbody>
         </table>
       </div>
+      <app-pager [pagination]="pages" />
     }
   </div>
 </div>
-
-<app-modal [open]="isCreateOpen()" title="Sell to a new company" (closed)="isCreateOpen.set(false)">
-  <form class="page-stack" [formGroup]="form" (ngSubmit)="create()">
-    <div class="field">
-      <label for="companyName">Company name</label>
-      <input
-        id="companyName"
-        class="text-input"
-        formControlName="companyName"
-        placeholder="e.g. Acme Retail"
-      />
-      @if (errorFor('companyName'); as message) {
-        <span class="field-error">{{ message }}</span>
-      }
-    </div>
-
-    <div class="company-form-row">
-      <div class="field">
-        <label for="adminFirst">System admin: first name</label>
-        <input
-          id="adminFirst"
-          class="text-input"
-          formControlName="adminFirst"
-          placeholder="David"
-        />
-        @if (errorFor('adminFirst'); as message) {
-          <span class="field-error">{{ message }}</span>
-        }
-      </div>
-      <div class="field">
-        <label for="adminLast">System admin: last name</label>
-        <input
-          id="adminLast"
-          class="text-input"
-          formControlName="adminLast"
-          placeholder="Gogichaishvili"
-        />
-        @if (errorFor('adminLast'); as message) {
-          <span class="field-error">{{ message }}</span>
-        }
-      </div>
-    </div>
-
-    <div class="field">
-      <span class="field-label"
-        >Modules sold <span class="label-hint">(HR is always included)</span></span
-      >
-      <div class="module-picker">
-        @for (module of modules; track module) {
-          <label class="module-option" [class.module-option--on]="newModules().includes(module)">
-            <input
-              type="checkbox"
-              [checked]="newModules().includes(module)"
-              (change)="toggle(newModules, module)"
-            />
-            {{ labels[module] }}
-          </label>
-        }
-      </div>
-    </div>
-
-    @if (formError()) {
-      <p class="field-error">{{ formError() }}</p>
-    }
-
-    <div class="button-row modal-actions">
-      <button type="button" class="button button--secondary" (click)="isCreateOpen.set(false)">
-        Cancel
-      </button>
-      <button type="submit" class="button button--primary" [disabled]="isSaving()">
-        {{ isSaving() ? 'Creating…' : 'Create and issue login' }}
-      </button>
-    </div>
-  </form>
-</app-modal>
-
-<app-modal [open]="editing() !== null" title="Edit company" (closed)="editing.set(null)">
-  <form class="page-stack" (ngSubmit)="saveEdit()">
-    <div class="field">
-      <label for="editCompanyName">Company name</label>
-      <input id="editCompanyName" class="text-input" name="name" [(ngModel)]="editName" />
-    </div>
-
-    <div class="field">
-      <span class="field-label">Modules sold</span>
-      <div class="module-picker">
-        @for (module of modules; track module) {
-          <label class="module-option" [class.module-option--on]="editModules().includes(module)">
-            <input
-              type="checkbox"
-              [checked]="editModules().includes(module)"
-              (change)="toggle(editModules, module)"
-            />
-            {{ labels[module] }}
-          </label>
-        }
-      </div>
-      <span class="label-hint">
-        Removing a module hides it from everyone in the company straight away. Its data is kept.
-      </span>
-    </div>
-
-    @if (formError()) {
-      <p class="field-error">{{ formError() }}</p>
-    }
-
-    <div class="button-row modal-actions">
-      <button type="button" class="button button--secondary" (click)="editing.set(null)">
-        Cancel
-      </button>
-      <button type="submit" class="button button--primary" [disabled]="isSaving()">
-        {{ isSaving() ? 'Saving…' : 'Save' }}
-      </button>
-    </div>
-  </form>
-</app-modal>
-
-<app-credentials-modal
-  [credentials]="credentials()"
-  title="Login for the system admin"
-  (closed)="credentials.set(null)"
-/>

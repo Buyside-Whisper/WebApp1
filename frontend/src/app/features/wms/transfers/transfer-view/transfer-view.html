@@ -39,7 +39,9 @@
             </button>
           }
           @if (actsForDestination()) {
-            <button type="button" class="button button--dark" (click)="startReceiving()">Receive</button>
+            <button type="button" class="button button--dark" [disabled]="isBusy()" (click)="startReceiving()">
+              {{ transfer.rsWaybillId ? 'Receive and close in RS' : 'Receive' }}
+            </button>
           }
         }
       }
@@ -70,6 +72,15 @@
           </dd>
         </div>
         <div><dt>Date</dt><dd>{{ transfer.date | date: 'dd.MM.yyyy' }}</dd></div>
+        @if (transfer.rsWaybillId) {
+          <div>
+            <dt>RS waybill</dt>
+            <dd>
+              {{ transfer.waybillNumber }}
+              <br /><span class="muted">{{ transfer.rsClosedAt ? 'Closed in RS ' + (transfer.rsClosedAt | date: 'dd.MM.yyyy HH:mm') : 'Active in RS' }}</span>
+            </dd>
+          </div>
+        }
         <div><dt>Created by</dt><dd>{{ transfer.createdByName }}</dd></div>
         @if (transfer.sentAt) {
           <div><dt>Sent</dt><dd>{{ transfer.sentByName }}, {{ transfer.sentAt | date: 'dd.MM.yyyy HH:mm' }}</dd></div>
@@ -116,13 +127,20 @@
               @for (line of transfer.lines; track line.id) {
                 <tr>
                   <td class="cell-strong">
-                    @if (canOpenProducts()) {
-                      <a [routerLink]="['/wms/products', line.productId]">{{ line.product.name }}</a>
+                    @if (line.product; as product) {
+                      @if (canOpenProducts()) {
+                        <a [routerLink]="['/wms/products', product.id]">{{ product.name }}</a>
+                      } @else {
+                        {{ product.name }}
+                      }
                     } @else {
-                      {{ line.product.name }}
+                      <span class="short">Not linked yet</span>
+                    }
+                    @if (line.rsName && line.rsName !== line.product?.name) {
+                      <div class="muted">RS: {{ line.rsName }}</div>
                     }
                   </td>
-                  <td><code class="code-tag">{{ line.product.barcode }}</code></td>
+                  <td><code class="code-tag">{{ line.product?.barcode ?? line.rsBarcode ?? '—' }}</code></td>
                   <td class="cell-figure">{{ line.quantity | number: '1.0-3' }}</td>
                   @if (receiving()) {
                     <td>
@@ -131,8 +149,8 @@
                         type="number"
                         min="0"
                         [max]="line.quantity"
-                        [step]="line.product.unit === 'kg' ? 0.001 : 1"
-                        [attr.aria-label]="'Received ' + line.product.name"
+                        [step]="line.product?.unit === 'kg' ? 0.001 : 1"
+                        [attr.aria-label]="'Received ' + (line.product?.name ?? line.rsName)"
                         [ngModel]="received()[line.id]"
                         (ngModelChange)="setReceived(line.id, $event)"
                       />
@@ -146,7 +164,7 @@
                       {{ line.quantity - (line.receivedQuantity ?? 0) | number: '1.0-3' }}
                     </td>
                   }
-                  <td>{{ line.product.unit }}</td>
+                  <td>{{ line.product?.unit ?? line.rsUnit }}</td>
                 </tr>
               }
             </tbody>

@@ -1,10 +1,10 @@
-import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, ParseUUIDPipe, Patch, Post } from '@nestjs/common';
 import { AuthUser } from '../../auth/auth-user.js';
 import { Access, CurrentUser, Roles } from '../../auth/decorators.js';
 import { ADMIN_ROLES, UserRole } from '../../auth/user-role.enum.js';
 import { AppModuleName } from '../../companies/app-module.enum.js';
-import { ReceiveTransferDto, SaveTransferDto } from './dto/transfer.dto.js';
-import { TransfersService, TransferView } from './transfers.service.js';
+import { CreateTransferFromRsDto, ReceiveTransferDto, SaveTransferDto } from './dto/transfer.dto.js';
+import { RsTransferLink, TransfersService, TransferView } from './transfers.service.js';
 
 const WRITERS = [UserRole.MODULE_ADMIN, UserRole.MANAGER];
 
@@ -17,6 +17,22 @@ export class TransfersController {
   @Get()
   findAll(@CurrentUser() user: AuthUser): Promise<TransferView[]> {
     return this.transfersService.findAll(user);
+  }
+
+  @Get('rs-links')
+  @Roles(...ADMIN_ROLES)
+  rsLinks(@CurrentUser() user: AuthUser): Promise<RsTransferLink[]> {
+    return this.transfersService.rsLinks(user);
+  }
+
+  @Post('from-rs/:waybillId')
+  @Roles(UserRole.MODULE_ADMIN)
+  createFromRs(
+    @CurrentUser() user: AuthUser,
+    @Param('waybillId', new ParseIntPipe()) waybillId: number,
+    @Body() dto: CreateTransferFromRsDto,
+  ): Promise<TransferView> {
+    return this.transfersService.createFromRs(user, String(waybillId), dto);
   }
 
   @Get(':id')

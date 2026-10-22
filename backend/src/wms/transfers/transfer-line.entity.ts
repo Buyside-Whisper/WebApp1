@@ -19,8 +19,8 @@ export class TransferLine extends TenantEntity {
   @Column({ type: 'int' })
   position!: number;
 
-  @Column({ name: 'product_id', type: 'uuid' })
-  productId!: string;
+  @Column({ name: 'product_id', type: 'uuid', nullable: true })
+  productId!: string | null;
 
   @ManyToOne(() => Product, { onDelete: 'NO ACTION' })
   @JoinColumn({ name: 'product_id' })
@@ -31,4 +31,16 @@ export class TransferLine extends TenantEntity {
 
   @Column({ name: 'received_quantity', type: 'numeric', precision: 12, scale: 3, nullable: true, transformer: decimalTransformer })
   receivedQuantity!: number | null;
+
+  @Column({ name: 'rs_name', type: 'varchar', nullable: true })
+  rsName!: string | null;
+
+  @Column({ name: 'rs_barcode', type: 'varchar', nullable: true })
+  rsBarcode!: string | null;
+
+  @Column({ name: 'rs_unit_id', type: 'int', nullable: true })
+  rsUnitId!: number | null;
+
+  @Column({ name: 'rs_unit', type: 'varchar', nullable: true })
+  rsUnit!: string | null;
 }

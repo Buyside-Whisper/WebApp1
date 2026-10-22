@@ -1,0 +1,228 @@
+<div class="page-stack">
+  <div class="page-header">
+    <div>
+      <p class="page-eyebrow">Platform · Companies</p>
+      <h1 class="page-title">{{ id() ? 'Edit ' + (company()?.name ?? 'company') : 'Sell to a new company' }}</h1>
+      <p class="page-description">
+        @if (id()) {
+          Change the company's details, modules or prices. Payments are recorded on the company's page.
+        } @else {
+          The company's legal details, who runs it, which modules it buys and at what price. Saving
+          creates the system admin's login.
+        }
+      </p>
+    </div>
+    <a class="button button--secondary" [routerLink]="id() ? ['/superadmin/companies', id()] : '/superadmin/companies'">
+      Cancel
+    </a>
+  </div>
+
+  @if (isLoading()) {
+    <p class="page-description">Loading…</p>
+  } @else {
+    <form class="page-stack" [formGroup]="form" (ngSubmit)="save()" novalidate>
+      <section class="page-card">
+        <h2 class="card-title">Company</h2>
+        <div class="form-grid">
+          <div class="field">
+            <label for="name">Name in the app</label>
+            <input id="name" class="text-input" formControlName="name" placeholder="e.g. Acme Retail" />
+            @if (errorFor('name'); as message) {
+              <span class="field-error">{{ message }}</span>
+            }
+          </div>
+          <div class="field">
+            <label for="legalForm">Legal form</label>
+            <select id="legalForm" class="text-select" formControlName="legalForm">
+              @for (option of legalForms; track option[0]) {
+                <option [value]="option[0]">{{ option[1] }}</option>
+              }
+            </select>
+          </div>
+          <div class="field">
+            <label for="legalName">Registered legal name</label>
+            <input id="legalName" class="text-input" formControlName="legalName" placeholder="e.g. შპს აკმე რითეილი" />
+            @if (errorFor('legalName'); as message) {
+              <span class="field-error">{{ message }}</span>
+            }
+          </div>
+          <div class="field">
+            <label for="identificationCode">Identification code (ს/კ)</label>
+            <input
+              id="identificationCode"
+              class="text-input"
+              inputmode="numeric"
+              formControlName="identificationCode"
+              [placeholder]="form.controls.legalForm.value === 'individual_entrepreneur' ? '11-digit personal ID' : '9 digits, e.g. 405123456'"
+            />
+            @if (errorFor('identificationCode'); as message) {
+              <span class="field-error">{{ message }}</span>
+            }
+          </div>
+          <div class="field">
+            <label for="vatPayer">VAT</label>
+            <select id="vatPayer" class="text-select" formControlName="vatPayer">
+              <option [ngValue]="true">VAT payer</option>
+              <option [ngValue]="false">Not a VAT payer</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="legalAddress">Legal address</label>
+            <input id="legalAddress" class="text-input" formControlName="legalAddress" placeholder="e.g. 12 Rustaveli Ave, Tbilisi" />
+            @if (errorFor('legalAddress'); as message) {
+              <span class="field-error">{{ message }}</span>
+            }
+          </div>
+        </div>
+      </section>
+
+      <section class="page-card">
+        <h2 class="card-title">
+          System admin and contact
+          <span class="card-title__note">the person who runs the app in this company; invoices and notices go here</span>
+        </h2>
+        <div class="form-grid">
+          <div class="field">
+            <label for="adminFirst">First name</label>
+            <input id="adminFirst" class="text-input" formControlName="adminFirst" placeholder="e.g. Nino" />
+            @if (errorFor('adminFirst'); as message) {
+              <span class="field-error">{{ message }}</span>
+            }
+          </div>
+          <div class="field">
+            <label for="adminLast">Last name</label>
+            <input id="adminLast" class="text-input" formControlName="adminLast" placeholder="e.g. Beridze" />
+            @if (errorFor('adminLast'); as message) {
+              <span class="field-error">{{ message }}</span>
+            }
+          </div>
+          <div class="field">
+            <label for="contactEmail">Email</label>
+            <input id="contactEmail" class="text-input" type="email" formControlName="contactEmail" placeholder="e.g. nino@acme.ge" />
+            @if (errorFor('contactEmail'); as message) {
+              <span class="field-error">{{ message }}</span>
+            }
+          </div>
+          <div class="field">
+            <label for="contactPhone">Phone</label>
+            <input id="contactPhone" class="text-input" type="tel" formControlName="contactPhone" placeholder="e.g. +995 555 12 34 56" />
+            @if (errorFor('contactPhone'); as message) {
+              <span class="field-error">{{ message }}</span>
+            }
+          </div>
+        </div>
+        @if (id()) {
+          <p class="field-hint">
+            The admin's name and login ({{ company()?.adminUsername ?? '—' }}) can't be changed here; use
+            "Reset admin password" on the company's page if they lost it.
+          </p>
+        }
+      </section>
+
+      <section class="page-card">
+        <h2 class="card-title">
+          Modules and price
+          <span class="card-title__note">₾ per month for each module this company buys</span>
+        </h2>
+        <div class="module-prices" formGroupName="prices">
+          @for (included of ['HR', 'RS']; track included) {
+            <div class="module-price module-price--included">
+              <div class="module-price__head">
+                <strong>{{ included }}</strong>
+                <span class="muted">Always included</span>
+              </div>
+              <span class="module-price__amount">₾0</span>
+            </div>
+          }
+          @for (module of modules; track module) {
+            <div class="module-price" [class.module-price--on]="selected().includes(module)">
+              <label class="module-price__head">
+                <input type="checkbox" [checked]="selected().includes(module)" (change)="toggleModule(module)" />
+                <strong>{{ moduleLabels[module] }}</strong>
+              </label>
+              @if (selected().includes(module)) {
+                <div class="field">
+                  <div class="price-input">
+                    <span>₾</span>
+                    <input
+                      class="text-input"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      [formControlName]="module"
+                      [attr.aria-label]="moduleLabels[module] + ' price per month'"
+                    />
+                    <span class="muted">/ month</span>
+                  </div>
+                  @if (priceError(module); as message) {
+                    <span class="field-error">{{ message }}</span>
+                  }
+                </div>
+              } @else {
+                <span class="muted">Not sold</span>
+              }
+            </div>
+          }
+        </div>
+        <p class="monthly-total">
+          Monthly total: <strong>₾{{ monthlyTotal().toFixed(2) }}</strong>
+          @if (id()) {
+            <span class="muted">Removing a module hides it from the company straight away; its data is kept.</span>
+          }
+        </p>
+      </section>
+
+      <section class="page-card">
+        <h2 class="card-title">Subscription</h2>
+        <div class="form-grid">
+          <div class="field">
+            <label for="subscriptionStart">Starts on</label>
+            <input id="subscriptionStart" class="text-input" type="date" formControlName="subscriptionStart" />
+            <span class="field-hint">The first month is due from this day (after the trial, if any).</span>
+          </div>
+          <div class="field">
+            <label class="trial-toggle">
+              <input type="checkbox" formControlName="hasTrial" (change)="toggleTrial()" />
+              Free trial
+            </label>
+            @if (form.controls.hasTrial.value) {
+              <input class="text-input" type="date" formControlName="trialEndsOn" aria-label="Trial ends on" />
+              <span class="field-hint">Nothing is due until the day after the trial ends.</span>
+              @if (errorFor('trialEndsOn'); as message) {
+                <span class="field-error">{{ message }}</span>
+              }
+            }
+          </div>
+        </div>
+      </section>
+
+      <section class="page-card">
+        <h2 class="card-title">Notes <span class="card-title__note">only you see these</span></h2>
+        <textarea class="text-input notes-input" rows="3" formControlName="notes" placeholder="e.g. Agreed a 10% discount for the first year"></textarea>
+      </section>
+
+      @if (formError()) {
+        <p class="field-error">{{ formError() }}</p>
+      }
+
+      <div class="button-row form-actions">
+        <a class="button button--secondary" [routerLink]="id() ? ['/superadmin/companies', id()] : '/superadmin/companies'">
+          Cancel
+        </a>
+        <button type="submit" class="button button--primary" [disabled]="isSaving()">
+          @if (id()) {
+            {{ isSaving() ? 'Saving…' : 'Save changes' }}
+          } @else {
+            {{ isSaving() ? 'Creating…' : 'Create company and issue login' }}
+          }
+        </button>
+      </div>
+    </form>
+  }
+</div>
+
+<app-credentials-modal
+  [credentials]="credentials()"
+  title="Login for the system admin"
+  (closed)="credentialsClosed()"
+/>

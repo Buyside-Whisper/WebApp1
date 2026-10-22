@@ -8,6 +8,7 @@ import { nameKey, nameKeySql } from '../../common/name-key.js';
 import { Product } from '../products/product.entity.js';
 import { CreateSupplierDto, UpdateSupplierDto } from './dto/supplier.dto.js';
 import { Supplier } from './supplier.entity.js';
+import { SupplierStatus } from './supplier-status.enum.js';
 import { SupplierType } from './supplier-type.enum.js';
 
 @Injectable()
@@ -34,6 +35,14 @@ export class SuppliersService {
       .getRawMany();
     const byId = new Map(counts.map((row) => [row.supplierId, Number(row.count)]));
     return suppliers.map((supplier) => Object.assign(supplier, { productCount: byId.get(supplier.id) ?? 0 }));
+  }
+
+  options(actor: AuthUser): Promise<Pick<Supplier, 'id' | 'name' | 'identificationCode'>[]> {
+    return this.suppliersRepository.find({
+      select: { id: true, name: true, identificationCode: true },
+      where: { companyId: actor.companyId!, status: SupplierStatus.ACTIVE },
+      order: { name: 'ASC' },
+    });
   }
 
   async create(actor: AuthUser, dto: CreateSupplierDto): Promise<Supplier> {

@@ -147,8 +147,33 @@ submodules are planned, so keep to the structure below.
   movement kind and posts through `StockService.post`. Until write-offs / sales exist, stock only
   comes in and moves around; nothing takes it out of the company except cancelling a receipt.
 - **WMS** → **Receipts** (მიღება, `wms/receipts/`, `/wms/receipts`, numbers REC-000001 per company):
-  goods from a supplier into one warehouse. Header: warehouse, supplier (free text), waybill /
-  invoice no., date, note; lines: product, quantity, price per unit. **Draft** (editable, changes
+  goods from a supplier into one warehouse. Header: warehouse, **supplier** (from the Suppliers
+  list, `supplier_id`, required; until 2026-10-22 it was free text, the old texts were linked to
+  suppliers and Demo Company got a supplier named "xxx" for its four test receipts), waybill /
+  invoice no., date, note; lines: product, quantity, price per unit. The editor's supplier dropdown
+  uses `GET /wms/suppliers/options` (active, managers allowed).
+  **Receipt from an RS waybill** (2026-10-22): on RS → RS waybills the **WMS admin** clicks "Create
+  receipt" on a purchase waybill (RS types 2 / 3 / 4 / 6, status active or closed, not rejected),
+  picks the warehouse, and `POST /wms/receipts/from-rs/:waybillId` makes a **draft** from the
+  waybill as RS returns it right then: supplier found by the seller's identification code
+  (unknown → 409 `SUPPLIER_MISSING`, the page asks, then `createSupplier: true` creates it, or adds
+  the code to a supplier with the same name and no code), waybill no. and date from RS, one line per
+  goods line with an RS snapshot (`rs_name`, `rs_barcode`, `rs_unit_id`, `rs_unit`) and the
+  product matched by a remembered link (`rs_product_links`: seller code + barcode, or the name when
+  there's no barcode) or by barcode, else left empty. `receipts.rs_waybill_id` links it; a partial
+  unique index allows one non-cancelled receipt per waybill. On such a draft **quantities, prices,
+  lines, supplier, number and date are locked**; only the warehouse, note and each line's product
+  change, and every link made is remembered for that supplier. **Posting** first requires every
+  line linked and RS unit = product unit (ცალი = pcs, კგ = kg; any other RS unit blocks it), then
+  re-reads the waybill (refused if it changed in RS), **confirms it in RS** (`confirm_waybill`,
+  skipped if already accepted; sets `rs_confirmed_at`), and only then posts stock; if RS refuses,
+  nothing is posted. `POST /wms/receipts/from-rs/:waybillId/reject` rejects it in RS
+  (`reject_waybill`) and deletes its draft; refused once a receipt is posted. `GET
+  /wms/receipts/rs-links` feeds the RS page's Receipt column. Prices are taken as on the waybill
+  (incl. VAT), the user's choice. The WMS receipt code depends on the RS module
+  (`RsWaybillsService.companyCredentials`, `RsClient`), a deliberate exception like HR's
+  `Employee`: RS is an always-included core module. The RS frontend page calls those receipt
+  endpoints through its own `rs.service.ts` instead of importing WMS code. **Draft** (editable, changes
   nothing) → **Post** (stock in, kind `receipt`; locked) → optional **Cancel** (stock back out, kind
   `receipt_cancel`; refused if the goods already left). Posting sets each product's cost price to the
   **weighted average** ((on hand × cost + received × price) / total, over all warehouses); cancelling
@@ -161,6 +186,18 @@ submodules are planned, so keep to the structure below.
   (the destination enters what arrived, ≤ sent; that goes in, kind `transfer_in`; any shortfall stays
   visible as "missing"; final). **Cancel** only while in transit (goods back to the source, kind
   `transfer_cancel`); a received transfer is undone with a new transfer back. One line per product.
+  **Transfer from an RS internal waybill** (2026-10-22; the user chose importing over the app
+  issuing waybills itself): on RS → RS waybills, a შიდა გადაზიდვა (type 1, seller = buyer, status
+  active or closed) gets "Create transfer" for the **WMS admin**; they pick From and To (RS only has
+  the two addresses as text, shown as hints), and `POST /wms/transfers/from-rs/:waybillId` makes a
+  draft with the waybill's lines (RS snapshot + products matched like receipts, through the shared
+  `wms/stock/rs-matching.ts` and `rs_product_links`), `rs_waybill_id`, `waybill_number`,
+  `rs_seller_tin`. Quantities and lines are locked; warehouses, note and line products change.
+  **Send** re-reads the waybill (still active, unchanged) and changes nothing in RS. **Receive** is
+  in full only (the waybill fixes the quantities) and first **closes the waybill in RS**
+  (`close_waybill_vd` with the Tbilisi delivery time; `1` = OK, already closed is fine); if RS
+  refuses, nothing is received. **Cancel** while in transit is allowed only after the waybill was
+  cancelled / deleted in RS. `GET /wms/transfers/rs-links` feeds the RS page's Document column.
 - **Who does documents**: the WMS admin everything; a WMS manager only for warehouses he runs (receipts
   into them; transfers: prepares / sends / cancels from his warehouse, receives into his warehouse,
   sees transfers touching his warehouses); the system admin read-only. Pickers use
@@ -170,6 +207,40 @@ submodules are planned, so keep to the structure below.
   scan a barcode + Enter); if saving a new draft works but posting / sending fails, the editor moves
   to that draft's edit page instead of creating a second one. Stock history rows link to their
   document. Demo Company has REC-000001 and TR-000001 from the UI test.
+- **RS** → **RS waybills** (its own module since 2026-10-22, first built under WMS the same day;
+  backend `rs/rs.module.ts` + submodule `rs/waybills/`, API `/rs/waybills/...`, frontend
+  `features/rs/rs.routes.ts` + `features/rs/waybills/`, pages `/rs/waybills` (received) and
+  `/rs/waybills/connection` with tabs `rs-tabs/`). **Like HR, RS is never sold: every company has
+  it** (`@Access('rs')`: the company's modules aren't checked; the system admin and every module
+  admin may use it; managers and cashiers get 403; the superuser screens show "RS · always
+  included"). A **read-only** view of the waybills (ზედნადები) other companies issued to this
+  company in RS (rs.ge, the Revenue Service). *RS connection*: the **system admin** enters the company's
+  RS **service user** (`name:identification-code`) and password; `PUT /rs/waybills/connection` checks it
+  with RS (`chek_service_user`) **before saving** and stores the password AES-256-GCM encrypted
+  (`common/secret-box.ts`, key `SECRETS_KEY` env, falling back to `AUTH_SECRET`); it is never sent
+  back to the browser (`rs_connections`, one row per company). The password is **not trimmed**: the
+  test user's password ends in a period, and losing it once cost a long debugging detour. Module
+  admins can only see the status and "Check now". *Received waybills*: a created-date period (at most
+  92 days; quick 7 / 30 / 90 days), `GET /rs/waybills/received?from&to[&refresh=true]`
+  (`get_buyer_waybills`) and `GET /rs/waybills/:id` (`get_waybill`, with goods lines); filters
+  (search, type, RS status, your confirmation) in the browser. RS is slow on a **new** query (≈20 s,
+  sometimes more) and fast on a repeated one, so the client allows 90 s for the list and the service
+  caches each period for 5 minutes per company (Refresh bypasses it). `rs-client.ts` holds the SOAP
+  calls (SOAP 1.1, `https://services.rs.ge/WayBillService/WayBillService.asmx`, override with
+  `RS_WAYBILL_SERVICE_URL`), the regex XML parsing, and RS's type / unit names (`get_waybill_types`,
+  `get_waybill_units`, cached 12 h). Status codes shown as 0 Saved / 1 Active / 2 Closed / −1
+  Deleted / −2 Cancelled; `IS_CONFIRMED` 0 / 1 / −1 = waiting for you / accepted / rejected. RS
+  error −100 means wrong service user or password. **A service user only works from the IP
+  addresses allowed for it in RS** (this machine: 5.178.128.217); a deployed server needs its own IP
+  added. Test account: RS's shared test company 206322102 (≈1,200 waybills a month from everyone's
+  tests); the user's test service user is `david.gogi:206322102` (password: ask the user, never
+  write it down). Built on top of it: receipts from purchase waybills (confirm / reject in RS) and
+  transfers from internal waybills (close in RS); see WMS → Receipts / Transfers. The page's
+  Document column links each waybill to its receipt or transfer. In the shared test company,
+  purchases come from სატესტოk სატესტოk (12345678910) and internal transfers from სატესტო კოდი1
+  (206322102, the company itself, usually ₾0.00). Not built yet: the app issuing its own waybills
+  (save / activate in RS), sales waybills (see RetailApp's `src/rs-waybill/`). RS dates come in two formats
+  (`2026-10-22T14:04:39` and `22-OCT-26`); `rsDate` in `rs-client.ts` turns both into ISO.
 - **Store** → **Stores**, **Cash register**, **POS**, **Recording an expense**.
   - *Stores* (CRUD by the **Store admin only**; the system admin sees all stores read-only): name,
     address, **number of cash registers** (default 1, max 50; only
@@ -203,7 +274,25 @@ number, გაფორმების თარიღი = Hire date,
 Read this before adding any module, endpoint or page.
 
 - **Companies** (`companies` table) own all data. `modules` lists what the superuser sold
-  (`wms`/`store`/`restaurant`; **HR is always included**).
+  (`wms`/`store`/`restaurant`; **HR and RS are always included** and never stored in `modules`).
+- **Superuser area = the customer / billing side** (2026-10-22, `superadmin/companies/`, frontend
+  `features/superadmin/companies/`: list `companies-page/`, full-page form `company-form/` at
+  `/superadmin/companies/new` and `/:id/edit`, company page `company-view/` at `/:id`). A company
+  has: name in the app (unique), legal name, legal form (`llc` შპს / `jsc` სს /
+  `individual_entrepreneur` ი/მ / `other`), identification code (9 digits, 11 for an individual
+  entrepreneur; unique), VAT payer, legal address, the system admin's email + phone (the contact),
+  **a monthly price per bought module** (`module_prices` jsonb, ₾, HR free; the user's choice),
+  subscription start, optional free trial end, notes, and **status** `active` / `suspended` /
+  `cancelled`. Companies created before 2026-10-22 (Demo Company) have these fields empty and no
+  prices ("No charge") until edited. **Payments are recorded by hand** (`company_payments`: paid on,
+  amount, method bank transfer / cash / card / other, the period it covers, reference, note, who
+  recorded it; deletable for mistakes); no online payments. `billing.ts` computes, never stores:
+  paid until = the latest covered day, next due = the day after the paid period or trial (or the
+  start), and a state trial / not started / paid / due soon (≤ 7 days) / overdue / no charge /
+  suspended / cancelled. **Overdue only warns; the superuser suspends by hand** (the user's choice).
+  A suspended or cancelled company's users can't log in (clear message) and their open sessions
+  get 401 (`AuthService.toAuthUser`); its data is kept, Reactivate restores access. Every change,
+  status change and payment goes to the audit log.
 - **Roles** (`auth/user-role.enum.ts`): `superuser` (no company; own area), `system_admin` (whole
   company: HR + every bought module), `module_admin` (one module + HR limited to that module's people),
   `manager` and `cashier` (one module only, never HR). A system admin is not an employee; the others are
@@ -224,7 +313,7 @@ Read this before adding any module, endpoint or page.
   independence. There is no edit form
   for employees yet, so a role can't be changed after creation (remove and re-add).
 - **Scoping rules, enforced in the backend** (the frontend only hides things):
-  - `auth/auth.guard.ts` is a global guard. Controllers declare `@Access('hr' | 'wms' | 'store' |
+  - `auth/auth.guard.ts` is a global guard. Controllers declare `@Access('hr' | 'rs' | 'wms' | 'store' |
     'restaurant')` (company must have bought the module and the user must work in it, see
     `auth/access.ts`) and optionally `@Roles(...)` (class or method). `@Public()` skips login.
     `@CurrentUser() user: AuthUser` gives the logged-in user.
@@ -326,6 +415,7 @@ sidebar WMS → Products = frontend route `/wms/products` = API `/wms/products`.
 - `auth/` (users, login, guard, decorators), `companies/` (company entity, `TenantEntity`, module enum),
   `audit/` (audit log), `superadmin/` (the superuser's `/superadmin/companies` API). HR employees are
   the shared core: other modules may reference the `Employee` entity (managers, cashiers).
+- `rs/` has `waybills/` (RS connection + received waybills; `rs-client.ts` talks SOAP to RS).
 - `wms/` has `warehouses/`, `products/`, `categories/`, `suppliers/`, `stock/` (balances, movement history, `StockService`, document
   numbers), `receipts/`, `transfers/` (documents that post through `StockService`).
 - `store/` has `stores/`, `pos/`, `cash-register/` (POS uses the register sessions that Cash register
@@ -387,6 +477,9 @@ sidebar WMS → Products = frontend route `/wms/products` = API `/wms/products`.
 - **Backend uses NodeNext ESM** (`"type": "module"` + `moduleResolution: "nodenext"`) — every
   relative import needs an explicit `.js` extension even though the source files are `.ts`
   (e.g. `import { Employee } from './employee.entity.js'`).
+- **RetailApp also uses port 3000** (`/home/david/Desktop/Job/RetailApp`, frontend on 5173). When
+  it runs, WebApp1's backend can't start and WebApp1's frontend (4200) would talk to RetailApp's
+  API; stop one before running the other (tests here used `PORT=3001`).
 - **No `sudo` access** in this environment (passwordless sudo isn't configured, and this session
   can't do interactive password prompts) — ask the user to run `sudo` commands.
 - **`ng build` (production) needs internet**: it inlines the Google Fonts stylesheet and fails
