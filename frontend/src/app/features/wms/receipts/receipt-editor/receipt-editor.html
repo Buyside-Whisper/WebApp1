@@ -106,53 +106,66 @@
       @if (productNotice()) {
         <p class="field-hint">{{ productNotice() | t }}</p>
       }
+      <app-column-tools [columnOrder]="rsColumns" [alone]="true" [hint]="false" />
       <div class="table-scroll">
-        <table class="data-table">
+        <table class="data-table" [appColumns]="rsColumns">
           <thead>
             <tr>
-              <th>{{ 'On the waybill' | t }}</th>
-              <th>{{ 'Your product' | t }}</th>
-              <th>{{ 'Quantity' | t }}</th>
-              <th>{{ 'Price per unit (₾)' | t }}</th>
-              <th>{{ 'Line total' | t }}</th>
+              @for (column of rsColumns.columns(); track column.key) {
+                <th [appColumn]="column.key" [columnOrder]="rsColumns">{{ column.label | t }}</th>
+              }
             </tr>
           </thead>
           <tbody>
             @for (line of lines(); track $index; let i = $index) {
               <tr>
-                <td>
-                  <div class="cell-strong">{{ line.rs?.name }}</div>
-                  <div class="muted">
-                    @if (line.rs?.barcode; as rsBarcode) {
-                      <code class="code-tag">{{ rsBarcode }}</code>
+                @for (column of rsColumns.columns(); track column.key) {
+                  @switch (column.key) {
+                    @case ('onTheWaybill') {
+                      <td>
+                      <div class="cell-strong">{{ line.rs?.name }}</div>
+                      <div class="muted">
+                        @if (line.rs?.barcode; as rsBarcode) {
+                          <code class="code-tag">{{ rsBarcode }}</code>
+                        }
+                        {{ line.rs?.unit }}
+                      </div>
+                    </td>
                     }
-                    {{ line.rs?.unit }}
-                  </div>
-                </td>
-                <td class="rs-product-cell">
-                  @if (line.productId) {
-                    <div class="cell-strong">{{ line.name }}</div>
-                    <div class="muted">
-                      <code class="code-tag">{{ line.barcode }}</code> {{ line.unit | t }}
-                      <button type="button" class="link-button" (click)="unlinkProduct(i)">{{ 'Change' | t }}</button>
-                    </div>
-                    @if (unitProblem(line); as problem) {
-                      <div class="field-error">{{ problem | t }}</div>
+                    @case ('yourProduct') {
+                      <td class="rs-product-cell">
+                      @if (line.productId) {
+                        <div class="cell-strong">{{ line.name }}</div>
+                        <div class="muted">
+                          <code class="code-tag">{{ line.barcode }}</code> {{ line.unit | t }}
+                          <button type="button" class="link-button" (click)="unlinkProduct(i)">{{ 'Change' | t }}</button>
+                        </div>
+                        @if (unitProblem(line); as problem) {
+                          <div class="field-error">{{ problem | t }}</div>
+                        }
+                      } @else {
+                        <app-product-picker
+                          [products]="products()"
+                          [placeholder]="'Find your product: name or barcode' | t"
+                          (picked)="linkProduct(i, $event)"
+                        />
+                        @if (canCreateProducts()) {
+                          <button type="button" class="link-button" (click)="openProductForm(i)">{{ '+ New product' | t }}</button>
+                        }
+                      }
+                    </td>
                     }
-                  } @else {
-                    <app-product-picker
-                      [products]="products()"
-                      [placeholder]="'Find your product: name or barcode' | t"
-                      (picked)="linkProduct(i, $event)"
-                    />
-                    @if (canCreateProducts()) {
-                      <button type="button" class="link-button" (click)="openProductForm(i)">{{ '+ New product' | t }}</button>
+                    @case ('quantity') {
+                      <td class="cell-figure">{{ line.quantity | number: '1.0-3' }} <span class="muted">{{ line.rs?.unit }}</span></td>
+                    }
+                    @case ('pricePerUnit') {
+                      <td class="cell-figure">₾{{ line.unitCost | number: '1.2-2' }}</td>
+                    }
+                    @case ('lineTotal') {
+                      <td class="cell-figure">₾{{ line.quantity * line.unitCost | number: '1.2-2' }}</td>
                     }
                   }
-                </td>
-                <td class="cell-figure">{{ line.quantity | number: '1.0-3' }} <span class="muted">{{ line.rs?.unit }}</span></td>
-                <td class="cell-figure">₾{{ line.unitCost | number: '1.2-2' }}</td>
-                <td class="cell-figure">₾{{ line.quantity * line.unitCost | number: '1.2-2' }}</td>
+                }
               </tr>
             }
           </tbody>
@@ -183,48 +196,62 @@
       @if (lines().length === 0) {
         <p class="page-description">{{ 'No products yet. Search above, or scan a barcode and press Enter.' | t }}</p>
       } @else {
+        <app-column-tools [columnOrder]="lineColumns" [alone]="true" [hint]="false" />
         <div class="table-scroll">
-          <table class="data-table">
+          <table class="data-table" [appColumns]="lineColumns">
             <thead>
               <tr>
-                <th>{{ 'Product' | t }}</th>
-                <th>{{ 'Barcode' | t }}</th>
-                <th>{{ 'Quantity' | t }}</th>
-                <th>{{ 'Unit' | t }}</th>
-                <th>{{ 'Price per unit (₾)' | t }}</th>
-                <th>{{ 'Line total' | t }}</th>
+                @for (column of lineColumns.columns(); track column.key) {
+                  <th [appColumn]="column.key" [columnOrder]="lineColumns">{{ column.label | t }}</th>
+                }
                 <th></th>
               </tr>
             </thead>
             <tbody>
               @for (line of lines(); track line.productId; let i = $index) {
                 <tr>
-                  <td class="cell-strong">{{ line.name }}</td>
-                  <td><code class="code-tag">{{ line.barcode }}</code></td>
-                  <td>
-                    <input
-                      class="text-input line-input"
-                      type="number"
-                      min="0"
-                      [step]="line.unit === 'kg' ? 0.001 : 1"
-                      [attr.aria-label]="'Quantity of {name}' | t: { name: line.name }"
-                      [ngModel]="line.quantity"
-                      (ngModelChange)="updateLine(i, 'quantity', $event)"
-                    />
-                  </td>
-                  <td>{{ line.unit | t }}</td>
-                  <td>
-                    <input
-                      class="text-input line-input"
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      [attr.aria-label]="'Price of {name}' | t: { name: line.name }"
-                      [ngModel]="line.unitCost"
-                      (ngModelChange)="updateLine(i, 'unitCost', $event)"
-                    />
-                  </td>
-                  <td class="cell-figure">₾{{ (line.quantity || 0) * (line.unitCost || 0) | number: '1.2-2' }}</td>
+                  @for (column of lineColumns.columns(); track column.key) {
+                    @switch (column.key) {
+                      @case ('product') {
+                        <td class="cell-strong">{{ line.name }}</td>
+                      }
+                      @case ('barcode') {
+                        <td><code class="code-tag">{{ line.barcode }}</code></td>
+                      }
+                      @case ('quantity') {
+                        <td>
+                        <input
+                          class="text-input line-input"
+                          type="number"
+                          min="0"
+                          [step]="line.unit === 'kg' ? 0.001 : 1"
+                          [attr.aria-label]="'Quantity of {name}' | t: { name: line.name }"
+                          [ngModel]="line.quantity"
+                          (ngModelChange)="updateLine(i, 'quantity', $event)"
+                        />
+                      </td>
+                      }
+                      @case ('unit') {
+                        <td>{{ line.unit | t }}</td>
+                      }
+                      @case ('pricePerUnit') {
+                        <td>
+                        <input
+                          class="text-input line-input"
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          [attr.aria-label]="'Price of {name}' | t: { name: line.name }"
+                          [ngModel]="line.unitCost"
+                          (ngModelChange)="updateLine(i, 'unitCost', $event)"
+                        />
+                      </td>
+                      }
+                      @case ('lineTotal') {
+                        <td class="cell-figure">₾{{ (line.quantity || 0) * (line.unitCost || 0) | number: '1.2-2' }}</td>
+                      }
+                    }
+                  }
                   <td>
                     <button
                       type="button"

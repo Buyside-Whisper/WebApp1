@@ -99,33 +99,14 @@
             {{ '{p0} warehouses' | t: { p0: warehouses().length } }}
           }
         </span>
-        <div class="table-toolbar__hint">
-          <span>{{ 'Drag a column header to move it.' | t }}</span>
-          @if (columnOrder.isCustom()) {
-            <button type="button" class="link-button" (click)="columnOrder.reset()">
-              {{ 'Reset column order' | t }}
-            </button>
-          }
-        </div>
+        <app-column-tools [columnOrder]="columnOrder" />
       </div>
       <div class="table-scroll">
-        <table class="data-table">
+        <table class="data-table" [appColumns]="columnOrder">
           <thead>
             <tr>
               @for (column of columnOrder.columns(); track column.key) {
-                <th
-                  class="th-draggable"
-                  draggable="true"
-                  [class.th-dragging]="columnOrder.dragging() === column.key"
-                  [class.th-drop-before]="columnOrder.dropSide(column.key) === 'before'"
-                  [class.th-drop-after]="columnOrder.dropSide(column.key) === 'after'"
-                  (dragstart)="columnOrder.dragStart($event, column.key)"
-                  (dragover)="columnOrder.dragOver($event, column.key)"
-                  (drop)="columnOrder.drop($event, column.key)"
-                  (dragend)="columnOrder.dragEnd()"
-                >
-                  {{ column.label | t }}
-                </th>
+                <th [appColumn]="column.key" [columnOrder]="columnOrder">{{ column.label | t }}</th>
               }
               <th>{{ 'Actions' | t }}</th>
             </tr>

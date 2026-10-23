@@ -15,7 +15,7 @@ class LoginDto {
 }
 
 class LanguageDto {
-  @IsIn(['en', 'ka'])
+  @IsIn(['en', 'ka', 'ru'])
   language!: string;
 }
 

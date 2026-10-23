@@ -382,33 +382,33 @@ count, ...). **.xlsx only** (`exceljs` on the backend; nothing Excel-related in 
   downloads a blob (exports are named `<page>-YYYY-MM-DD.xlsx`). Exports contain everything the user
   may see, **not** the current search / filters.
 
-## Languages (English / Georgian)
+## Languages (English / Georgian / Russian)
 
-Added 2026-10-23. The EN / ქა switch (`shared/language-switch/`) sits in the sidebar footer, the
+Added 2026-10-23 (Russian the same day). The ENG / ქარ / РУС switch (`shared/language-switch/`) sits in the sidebar footer, the
 superuser top bar and both login pages. It changes the language instantly and is remembered per
 account (`users.language`, `PATCH /auth/language`, applied at login; the login pages remember it per
 browser in localStorage). **English text is the key**: there are no message ids.
 - Frontend: `core/i18n/` holds `I18nService` (`language` signal, `t(text, params)`, `confirm(text,
-  params)`), the impure `t` pipe and `ka.ts` (English → Georgian). Templates write
+  params)`), the impure `t` pipe, `ka.ts` (English → Georgian) and `ru.ts` (English → Russian). Templates write
   `{{ 'Add product' | t }}`, `[placeholder]="'e.g. Vake' | t"`, and values with placeholders:
   `{{ '{p0} of {p1} products' | t: { p0: shown, p1: total } }}`. Label maps (`*_LABELS`), messages
   and backend errors are shown through `| t` too; TS code uses `this.i18n.t(...)` and
   `this.i18n.confirm(...)` instead of `confirm(...)`. A missing key just shows the English. **Every
-  new UI text needs its Georgian line in `core/i18n/ka.ts`.** Dates use numeric formats
+  new UI text needs its line in both `core/i18n/ka.ts` and `core/i18n/ru.ts`.** Dates use numeric formats
   (`dd.MM.yyyy`), because Angular's month names would stay English.
-- The frontend sends `Accept-Language: en|ka` on every request (`auth.interceptor.ts`).
-- Backend: `common/i18n/` — `ka.ts` (exact messages and patterns like
+- The frontend sends `Accept-Language: en|ka|ru` on every request (`auth.interceptor.ts`).
+- Backend: `common/i18n/` — `ka.ts` / `ru.ts` (exact messages and patterns like
   `Not enough {name} in {code}: {quantity} {unit} available`; captured values are translated too,
   e.g. `pcs`), `translate.ts` (`translate`, `languageOf`, the `@Lang()` parameter decorator),
   `translate.filter.ts` (global: translates every `HttpException` message, class-validator ones
   included, with field names like `firstName`) and `translate.interceptor.ts` (global: translates
   import reports' messages and column names). Services keep throwing English. **A new backend
-  message needs its Georgian line in `common/i18n/ka.ts`.**
+  message needs its line in both `common/i18n/ka.ts` and `common/i18n/ru.ts`.**
 - Excel: templates and exports are written in the user's language: `workbookBuffer(workbook,
   language)` translates sheet names, header rows, the Instructions sheet, dropdown lists, their
   error texts and the data cells of columns marked `translated: true` (Type, Status, Unit, ...;
-  never names). Imports accept both languages: sheet names, headers (`headerKeys`) and choices
-  (`choiceKeys`) match the English or the Georgian label.
+  never names). Imports accept all three languages: sheet names, headers (`headerKeys`) and choices
+  (`choiceKeys`) match the English, Georgian or Russian label.
 - **Not translated, by the user's choice**: saved texts (audit log summaries) and data the users typed.
 
 ## Verifying changes and known gaps
@@ -477,9 +477,15 @@ sidebar WMS → Products = frontend route `/wms/products` = API `/wms/products`.
   (a submodule may use another submodule of the same module, e.g. Products uses WarehouseService).
   Also in `shared/`: `credentials-modal/` (one-time login display), `audit-log/` and `xlsx-import/`
   (the Excel import pop-up, see below).
-  `shared/column-order/` (`ColumnOrder`): table headers you can drag to reorder, remembered per
-  browser in localStorage (`columns:<table>`), with "Reset column order"; used by the WMS
-  Warehouses and Products tables (the Actions column stays last). Row actions there are icon
+  `shared/column-order/` (`ColumnOrder`): table columns you can drag to reorder and resize by
+  their right edge, remembered per browser in localStorage (`columns:<table>` and
+  `columns:<table>:widths`), with "Reset columns". Used by **every WMS table and HR Employees**.
+  Pattern: `new ColumnOrder('table-id', [{ key, label }], isShown?)` in the component (`isShown` for
+  columns that only sometimes appear, e.g. Received on a transfer), `<table [appColumns]>`,
+  `@for (column of x.columns()) { <th [appColumn]="column.key" [columnOrder]="x"> }` and the same
+  `@for` + `@switch (column.key)` for the cells; `<app-column-tools>` shows the hint / reset
+  (`[alone]` when there's no toolbar, `[hint]="false"` in small tables). The Actions column stays
+  last and fixed. Row actions there are icon
   buttons (`.icon-actions` / `.icon-action` in `styles.css`: Lucide Package = View, PenLine = Edit,
   red Trash2 = Delete); users who may not edit see Edit/Delete greyed out with a tooltip. Numbers in
   tables are left-aligned (`.cell-figure`), not right-aligned (the user found that ugly).

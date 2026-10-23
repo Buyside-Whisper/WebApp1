@@ -5,11 +5,22 @@
       <h1 class="page-title">{{ 'Employees' | t }}</h1>
       <p class="page-description">
         @if (isSystemAdmin()) {
-          {{ 'Your whole team. A role gives a person a login and a limited view; with no role they are just a record here, described by their position.' | t }}
+          {{
+            'Your whole team. A role gives a person a login and a limited view; with no role they are just a record here, described by their position.'
+              | t
+          }}
         } @else if (isManager()) {
-          {{ (placeKind() === 'store' ? 'The people of your stores. Add someone without a role, or a cashier (they get a login), and pick the stores they work in.' : 'The people of your warehouses. Add someone without a role and pick the warehouses they work in.') | t }}
+          {{
+            (placeKind() === 'store'
+              ? 'The people of your stores. Add someone without a role, or a cashier (they get a login), and pick the stores they work in.'
+              : 'The people of your warehouses. Add someone without a role and pick the warehouses they work in.'
+            ) | t
+          }}
         } @else {
-          {{ 'The people of your module. Add managers (they get a login) or people without a role.' | t }}
+          {{
+            'The people of your module. Add managers (they get a login) or people without a role.'
+              | t
+          }}
         }
       </p>
     </div>
@@ -46,7 +57,9 @@
     </div>
 
     @if (hasActiveFilters()) {
-      <button type="button" class="button button--secondary" (click)="clearFilters()">{{ 'Clear' | t }}</button>
+      <button type="button" class="button button--secondary" (click)="clearFilters()">
+        {{ 'Clear' | t }}
+      </button>
     }
   </div>
 
@@ -62,99 +75,121 @@
     @if (isLoading()) {
       <p class="page-description">{{ 'Loading…' | t }}</p>
     } @else if (employees().length === 0) {
-      <p class="page-description">{{ 'No employees yet. Use “Add employee” to add the first one.' | t }}</p>
+      <p class="page-description">
+        {{ 'No employees yet. Use “Add employee” to add the first one.' | t }}
+      </p>
     } @else if (filteredEmployees().length === 0) {
       <p class="page-description">{{ 'No employees match your search.' | t }}</p>
     } @else {
       @if (hasActiveFilters()) {
         <p class="page-description results-count">
-          {{ 'Showing {p0} of {p1} employees' | t: { p0: filteredEmployees().length, p1: employees().length } }}
+          {{
+            'Showing {p0} of {p1} employees'
+              | t: { p0: filteredEmployees().length, p1: employees().length }
+          }}
         </p>
       }
+      <app-column-tools [columnOrder]="columnOrder" [alone]="true" />
       <div class="table-scroll">
-        <table class="data-table">
+        <table class="data-table" [appColumns]="columnOrder">
           <thead>
             <tr>
-              <th>{{ 'Employee' | t }}</th>
-              <th>{{ 'Position' | t }}</th>
-              <th>{{ 'Personal ID' | t }}</th>
-              <th>{{ 'Email' | t }}</th>
-              <th>{{ 'Phone' | t }}</th>
-              <th>{{ 'Role' | t }}</th>
-              <th>{{ 'Login' | t }}</th>
-              <th>{{ 'Status' | t }}</th>
-              <th>{{ 'Hire date' | t }}</th>
+              @for (column of columnOrder.columns(); track column.key) {
+                <th [appColumn]="column.key" [columnOrder]="columnOrder">{{ column.label | t }}</th>
+              }
               <th>{{ 'Actions' | t }}</th>
             </tr>
           </thead>
           <tbody>
             @for (employee of filteredEmployees(); track employee.id) {
               <tr>
-                <td>
-                  <div class="cell-strong">{{ employee.firstName }} {{ employee.lastName }}</div>
-                </td>
-                <td>{{ employee.position ?? '–' }}</td>
-                <td>
-                  @if (employee.personalId) {
-                    <code class="code-tag">{{ employee.personalId }}</code>
-                  } @else {
-                    <span class="muted">–</span>
+                @for (column of columnOrder.columns(); track column.key) {
+                  @switch (column.key) {
+                    @case ('employee') {
+                      <td>
+                      <div class="cell-strong">{{ employee.firstName }} {{ employee.lastName }}</div>
+                    </td>
+                    }
+                    @case ('position') {
+                      <td>{{ employee.position ?? '–' }}</td>
+                    }
+                    @case ('personalId') {
+                      <td>
+                      @if (employee.personalId) {
+                        <code class="code-tag">{{ employee.personalId }}</code>
+                      } @else {
+                        <span class="muted">–</span>
+                      }
+                    </td>
+                    }
+                    @case ('email') {
+                      <td>{{ employee.email ?? '–' }}</td>
+                    }
+                    @case ('phone') {
+                      <td class="nowrap">{{ employee.phone ?? '–' }}</td>
+                    }
+                    @case ('role') {
+                      <td>
+                      <span
+                        class="badge"
+                        [class.badge--admin]="employee.role !== null"
+                        [class.badge--staff]="employee.role === null"
+                      >
+                        {{ (employee.role ? roleLabels[employee.role] : 'No role') | t }}
+                      </span>
+                      @if (employee.module && isSystemAdmin()) {
+                        <div class="cell-sub">{{ moduleLabels[employee.module] | t }}</div>
+                      }
+                    </td>
+                    }
+                    @case ('login') {
+                      <td>
+                      @if (!canManage(employee)) {
+                        <span class="muted">{{ employee.username ?? '–' }}</span>
+                      } @else if (employee.username) {
+                        <code class="code-tag">{{ employee.username }}</code>
+                        <div>
+                          <button type="button" class="link-button" (click)="issueLogin(employee)">
+                            {{ 'Reset password' | t }}
+                          </button>
+                        </div>
+                      } @else if (canHaveLogin(employee)) {
+                        <button
+                          type="button"
+                          class="button button--secondary button--sm"
+                          (click)="issueLogin(employee)"
+                        >
+                          {{ 'Create login' | t }}
+                        </button>
+                      } @else {
+                        <span class="muted">–</span>
+                      }
+                    </td>
+                    }
+                    @case ('status') {
+                      <td class="nowrap">
+                      <span
+                        class="badge"
+                        [class.badge--active]="employee.status === 'active'"
+                        [class.badge--inactive]="employee.status === 'former'"
+                      >
+                        {{ employee.status === 'active' ? ('Active' | t) : ('Former' | t) }}
+                      </span>
+                      @if (employee.endDate) {
+                        <div class="cell-sub">
+                          {{ (employee.status === 'former' ? 'since' : 'until') | t }}
+                          {{ employee.endDate | date: 'dd.MM.yyyy' }}
+                        </div>
+                      }
+                    </td>
+                    }
+                    @case ('hireDate') {
+                      <td class="nowrap">
+                      {{ employee.hireDate ? (employee.hireDate | date: 'dd.MM.yyyy') : '–' }}
+                    </td>
+                    }
                   }
-                </td>
-                <td>{{ employee.email ?? '–' }}</td>
-                <td class="nowrap">{{ employee.phone ?? '–' }}</td>
-                <td>
-                  <span
-                    class="badge"
-                    [class.badge--admin]="employee.role !== null"
-                    [class.badge--staff]="employee.role === null"
-                  >
-                    {{ (employee.role ? roleLabels[employee.role] : 'No role') | t }}
-                  </span>
-                  @if (employee.module && isSystemAdmin()) {
-                    <div class="cell-sub">{{ moduleLabels[employee.module] | t }}</div>
-                  }
-                </td>
-                <td>
-                  @if (!canManage(employee)) {
-                    <span class="muted">{{ employee.username ?? '–' }}</span>
-                  } @else if (employee.username) {
-                    <code class="code-tag">{{ employee.username }}</code>
-                    <div>
-                      <button type="button" class="link-button" (click)="issueLogin(employee)">
-                        {{ 'Reset password' | t }}
-                      </button>
-                    </div>
-                  } @else if (canHaveLogin(employee)) {
-                    <button
-                      type="button"
-                      class="button button--secondary button--sm"
-                      (click)="issueLogin(employee)"
-                    >
-                      {{ 'Create login' | t }}
-                    </button>
-                  } @else {
-                    <span class="muted">–</span>
-                  }
-                </td>
-                <td class="nowrap">
-                  <span
-                    class="badge"
-                    [class.badge--active]="employee.status === 'active'"
-                    [class.badge--inactive]="employee.status === 'former'"
-                  >
-                    {{ employee.status === 'active' ? ('Active' | t) : ('Former' | t) }}
-                  </span>
-                  @if (employee.endDate) {
-                    <div class="cell-sub">
-                      {{ (employee.status === 'former' ? 'since' : 'until') | t }}
-                      {{ employee.endDate | date: 'dd.MM.yyyy' }}
-                    </div>
-                  }
-                </td>
-                <td class="nowrap">
-                  {{ employee.hireDate ? (employee.hireDate | date: 'dd.MM.yyyy') : '–' }}
-                </td>
+                }
                 <td>
                   @if (canManage(employee)) {
                     <button
@@ -179,7 +214,10 @@
   <form class="page-stack" [formGroup]="form" (ngSubmit)="addEmployee()" novalidate>
     @if (quickAdd) {
       <p class="field-hint">
-        {{ 'Quick add (temporary): fill in first name, position, role and where they work. The greyed-out fields are filled with random data.' | t }}
+        {{
+          'Quick add (temporary): fill in first name, position, role and where they work. The greyed-out fields are filled with random data.'
+            | t
+        }}
       </p>
     }
     <div class="employee-form-grid">
@@ -273,7 +311,8 @@
 
       <div class="field">
         <label for="role"
-          >{{ 'Role' | t }} <span class="label-hint">{{ '(no role = no access to the app)' | t }}</span></label
+          >{{ 'Role' | t }}
+          <span class="label-hint">{{ '(no role = no access to the app)' | t }}</span></label
         >
         <select id="role" class="text-select" formControlName="role" (change)="onRoleChange()">
           <option value="">{{ 'No role' | t }}</option>
@@ -311,7 +350,10 @@
       @if (isManager()) {
         <div class="field employee-form-grid__wide">
           <span class="field-label">
-            {{ '{p0} this person works in' | t: { p0: (placeKind() === 'warehouse' ? ('Warehouses' | t) : ('Stores' | t)) } }}
+            {{
+              '{p0} this person works in'
+                | t: { p0: placeKind() === 'warehouse' ? ('Warehouses' | t) : ('Stores' | t) }
+            }}
           </span>
           <div class="chip-list">
             @for (place of places(); track place.id) {
@@ -324,7 +366,12 @@
                 {{ place.name }}
               </label>
             } @empty {
-              <span class="field-hint">{{ (placeKind() === 'store' ? 'You don\'t manage any stores yet.' : 'You don\'t manage any warehouses yet.') | t }}</span>
+              <span class="field-hint">{{
+                (placeKind() === 'store'
+                  ? "You don't manage any stores yet."
+                  : "You don't manage any warehouses yet."
+                ) | t
+              }}</span>
             }
           </div>
         </div>
@@ -353,7 +400,9 @@
       </div>
 
       <div class="field">
-        <label for="endDate">{{ 'End date' | t }} <span class="label-hint">{{ '(optional)' | t }}</span></label>
+        <label for="endDate"
+          >{{ 'End date' | t }} <span class="label-hint">{{ '(optional)' | t }}</span></label
+        >
         <input id="endDate" class="text-input" type="date" formControlName="endDate" />
         @if (endDateError(); as message) {
           <span class="field-error">{{ message | t }}</span>

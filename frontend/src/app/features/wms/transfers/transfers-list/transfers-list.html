@@ -56,53 +56,67 @@
         }
       </div>
 
+      <app-column-tools [columnOrder]="columnOrder" [alone]="true" />
       <div class="table-scroll">
-        <table class="data-table">
+        <table class="data-table" [appColumns]="columnOrder">
           <thead>
             <tr>
-              <th>{{ 'Number' | t }}</th>
-              <th>{{ 'Date' | t }}</th>
-              <th>{{ 'From' | t }}</th>
-              <th></th>
-              <th>{{ 'To' | t }}</th>
-              <th>{{ 'Lines' | t }}</th>
-              <th>{{ 'Status' | t }}</th>
-              <th>{{ 'Created by' | t }}</th>
+              @for (column of columnOrder.columns(); track column.key) {
+                <th [appColumn]="column.key" [columnOrder]="columnOrder">{{ column.label | t }}</th>
+              }
               <th>{{ 'Actions' | t }}</th>
             </tr>
           </thead>
           <tbody>
             @for (transfer of pages.items(); track transfer.id) {
               <tr>
-                <td class="cell-strong">
-                  <a [routerLink]="['/wms/transfers', transfer.id]">{{ transfer.code }}</a>
-                  @if (transfer.rsWaybillId) {
-                    <span class="chip chip--rs" [title]="'Made from an RS waybill' | t">{{ 'RS' | t }}</span>
+                @for (column of columnOrder.columns(); track column.key) {
+                  @switch (column.key) {
+                    @case ('number') {
+                      <td class="cell-strong">
+                      <a [routerLink]="['/wms/transfers', transfer.id]">{{ transfer.code }}</a>
+                      @if (transfer.rsWaybillId) {
+                        <span class="chip chip--rs" [title]="'Made from an RS waybill' | t">{{ 'RS' | t }}</span>
+                      }
+                    </td>
+                    }
+                    @case ('date') {
+                      <td class="cell-figure">{{ transfer.date | date: 'dd.MM.yyyy' }}</td>
+                    }
+                    @case ('from') {
+                      <td class="cell-nowrap">
+                      <code class="code-tag">{{ transfer.fromWarehouse.code }}</code>
+                      {{ transfer.fromWarehouse.name }}
+                      <lucide-icon class="cell-arrow" [img]="ArrowIcon" [size]="14"></lucide-icon>
+                    </td>
+                    }
+                    @case ('to') {
+                      <td class="cell-nowrap">
+                      <code class="code-tag">{{ transfer.toWarehouse.code }}</code>
+                      {{ transfer.toWarehouse.name }}
+                    </td>
+                    }
+                    @case ('lines') {
+                      <td class="cell-figure">{{ transfer.lineCount }}</td>
+                    }
+                    @case ('status') {
+                      <td>
+                      <span
+                        class="badge"
+                        [class.badge--draft]="transfer.status === 'draft'"
+                        [class.badge--transit]="transfer.status === 'in_transit'"
+                        [class.badge--done]="transfer.status === 'received'"
+                        [class.badge--cancelled]="transfer.status === 'cancelled'"
+                      >
+                        {{ statusLabels[transfer.status] | t }}
+                      </span>
+                    </td>
+                    }
+                    @case ('createdBy') {
+                      <td class="cell-nowrap">{{ transfer.createdByName }}</td>
+                    }
                   }
-                </td>
-                <td class="cell-figure">{{ transfer.date | date: 'dd.MM.yyyy' }}</td>
-                <td class="cell-nowrap">
-                  <code class="code-tag">{{ transfer.fromWarehouse.code }}</code>
-                  {{ transfer.fromWarehouse.name }}
-                </td>
-                <td class="muted"><lucide-icon [img]="ArrowIcon" [size]="16"></lucide-icon></td>
-                <td class="cell-nowrap">
-                  <code class="code-tag">{{ transfer.toWarehouse.code }}</code>
-                  {{ transfer.toWarehouse.name }}
-                </td>
-                <td class="cell-figure">{{ transfer.lineCount }}</td>
-                <td>
-                  <span
-                    class="badge"
-                    [class.badge--draft]="transfer.status === 'draft'"
-                    [class.badge--transit]="transfer.status === 'in_transit'"
-                    [class.badge--done]="transfer.status === 'received'"
-                    [class.badge--cancelled]="transfer.status === 'cancelled'"
-                  >
-                    {{ statusLabels[transfer.status] | t }}
-                  </span>
-                </td>
-                <td class="cell-nowrap">{{ transfer.createdByName }}</td>
+                }
                 <td>
                   <div class="icon-actions">
                     <a class="icon-action" [routerLink]="['/wms/transfers', transfer.id]" [title]="'View' | t">

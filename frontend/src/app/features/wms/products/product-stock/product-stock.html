@@ -18,48 +18,62 @@
   @if (product.stocks.length === 0) {
     <p class="page-description">{{ 'Not in any warehouse yet. Stock comes in through a receipt.' | t }}</p>
   } @else {
+    <app-column-tools [columnOrder]="columnOrder" [alone]="true" [hint]="false" />
     <div class="table-scroll">
-      <table class="data-table">
+      <table class="data-table" [appColumns]="columnOrder">
         <thead>
           <tr>
-            <th>{{ 'Warehouse' | t }}</th>
-            <th>{{ 'Type' | t }}</th>
-            <th>{{ 'Quantity' | t }}</th>
-            <th>{{ 'Share' | t }}</th>
-            <th>{{ 'Value' | t }}</th>
-            <th>{{ 'Last change' | t }}</th>
+            @for (column of columnOrder.columns(); track column.key) {
+              <th [appColumn]="column.key" [columnOrder]="columnOrder">{{ column.label | t }}</th>
+            }
           </tr>
         </thead>
         <tbody>
           @for (row of rows(); track row.warehouseId) {
             <tr>
-              <td class="cell-nowrap">
-                <a [routerLink]="['/wms/warehouses', row.warehouseId]">
-                  <code class="code-tag">{{ row.warehouse.code }}</code>
-                </a>
-                {{ row.warehouse.name }}
-                @if (row.warehouse.status === 'inactive') {
-                  <span class="muted">{{ '(inactive)' | t }}</span>
+              @for (column of columnOrder.columns(); track column.key) {
+                @switch (column.key) {
+                  @case ('warehouse') {
+                    <td class="cell-nowrap">
+                    <a [routerLink]="['/wms/warehouses', row.warehouseId]">
+                      <code class="code-tag">{{ row.warehouse.code }}</code>
+                    </a>
+                    {{ row.warehouse.name }}
+                    @if (row.warehouse.status === 'inactive') {
+                      <span class="muted">{{ '(inactive)' | t }}</span>
+                    }
+                  </td>
+                  }
+                  @case ('type') {
+                    <td>{{ row.warehouse.type === 'main' ? ('Main' | t) : ('Sales' | t) }}</td>
+                  }
+                  @case ('quantity') {
+                    <td class="cell-figure">
+                    <strong>{{ row.quantity | number: '1.0-3' }}</strong> {{ product.unit | t }}
+                  </td>
+                  }
+                  @case ('share') {
+                    <td class="cell-figure">
+                    <div class="share">
+                      <span class="share__bar"><span [style.width.%]="row.share * 100"></span></span>
+                      {{ row.share * 100 | number: '1.0-0' }}%
+                    </div>
+                  </td>
+                  }
+                  @case ('value') {
+                    <td class="cell-figure">₾{{ row.value | number: '1.2-2' }}</td>
+                  }
+                  @case ('lastChange') {
+                    <td class="cell-figure">
+                    @if (movements() === null) {
+                      <span class="muted">…</span>
+                    } @else {
+                      {{ row.lastChange | date: 'dd.MM.yyyy' }}
+                    }
+                  </td>
+                  }
                 }
-              </td>
-              <td>{{ row.warehouse.type === 'main' ? ('Main' | t) : ('Sales' | t) }}</td>
-              <td class="cell-figure">
-                <strong>{{ row.quantity | number: '1.0-3' }}</strong> {{ product.unit | t }}
-              </td>
-              <td class="cell-figure">
-                <div class="share">
-                  <span class="share__bar"><span [style.width.%]="row.share * 100"></span></span>
-                  {{ row.share * 100 | number: '1.0-0' }}%
-                </div>
-              </td>
-              <td class="cell-figure">₾{{ row.value | number: '1.2-2' }}</td>
-              <td class="cell-figure">
-                @if (movements() === null) {
-                  <span class="muted">…</span>
-                } @else {
-                  {{ row.lastChange | date: 'dd.MM.yyyy' }}
-                }
-              </td>
+              }
             </tr>
           }
         </tbody>

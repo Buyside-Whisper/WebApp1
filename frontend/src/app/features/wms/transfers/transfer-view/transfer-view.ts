@@ -11,10 +11,13 @@ import { TRANSFER_STATUS_LABELS, Transfer } from '../transfer.model';
 import { TransferService } from '../transfer.service';
 import { TranslatePipe } from '../../../../core/i18n/t.pipe';
 import { I18nService } from '../../../../core/i18n/i18n.service';
+import { ColumnHeader, ColumnTable } from '../../../../shared/column-order/column-header';
+import { ColumnTools } from '../../../../shared/column-order/column-tools';
+import { ColumnOrder } from '../../../../shared/column-order/column-order';
 
 @Component({
   selector: 'app-transfer-view',
-  imports: [TranslatePipe, DatePipe, DecimalPipe, FormsModule, RouterLink],
+  imports: [ColumnHeader, ColumnTable, ColumnTools, TranslatePipe, DatePipe, DecimalPipe, FormsModule, RouterLink],
   templateUrl: './transfer-view.html',
 })
 export class TransferView implements OnInit {
@@ -44,6 +47,18 @@ export class TransferView implements OnInit {
     return role === 'system_admin' || role === 'module_admin';
   });
   private readonly mine = computed(() => new Set(this.warehouses().filter((w) => w.mine).map((w) => w.id)));
+  protected readonly columnOrder = new ColumnOrder(
+    'wms-transfer-lines',
+    [
+      { key: 'product', label: 'Product' },
+      { key: 'barcode', label: 'Barcode' },
+      { key: 'sent', label: 'Sent' },
+      { key: 'received', label: 'Received' },
+      { key: 'missing', label: 'Missing' },
+      { key: 'unit', label: 'Unit' },
+    ],
+    (key) => (key !== 'received' && key !== 'missing') || this.receiving() || this.transfer()?.status === 'received',
+  );
   protected readonly actsForSource = computed(
     () => this.canWrite() && this.mine().has(this.transfer()?.fromWarehouseId ?? ''),
   );

@@ -67,62 +67,74 @@
         <span class="card-title__note">{{ 'all linked' | t }}</span>
       }
     </h2>
+    <app-column-tools [columnOrder]="rsColumns" [alone]="true" [hint]="false" />
     <div class="table-scroll">
-      <table class="data-table">
+      <table class="data-table" [appColumns]="rsColumns">
         <thead>
           <tr>
-            <th>{{ 'On the waybill' | t }}</th>
-            <th>{{ 'Your product' | t }}</th>
-            <th>{{ 'Available in source' | t }}</th>
-            <th>{{ 'Quantity' | t }}</th>
+            @for (column of rsColumns.columns(); track column.key) {
+              <th [appColumn]="column.key" [columnOrder]="rsColumns">{{ column.label | t }}</th>
+            }
           </tr>
         </thead>
         <tbody>
           @for (line of lines(); track $index; let i = $index) {
             <tr>
-              <td>
-                <div class="cell-strong">{{ line.rs?.name }}</div>
-                <div class="muted">
-                  @if (line.rs?.barcode; as rsBarcode) {
-                    <code class="code-tag">{{ rsBarcode }}</code>
-                  }
-                  {{ line.rs?.unit }}
-                </div>
-              </td>
-              <td class="rs-product-cell">
-                @if (line.productId) {
-                  <div class="cell-strong">{{ line.name }}</div>
-                  <div class="muted">
-                    <code class="code-tag">{{ line.barcode }}</code> {{ line.unit | t }}
-                    <button type="button" class="link-button" (click)="unlinkProduct(i)">{{ 'Change' | t }}</button>
-                  </div>
-                  @if (unitProblem(line); as problem) {
-                    <div class="field-error">{{ problem | t }}</div>
-                  } @else if (line.quantity > (available().get(line.productId) ?? 0)) {
-                    <div class="field-error">
-                      {{ 'The source warehouse has only {available} {unit}. Bring the rest in with a receipt before sending.' | t: { available: (available().get(line.productId) ?? 0 | number: '1.0-3'), unit: (line.unit | t) } }}
+              @for (column of rsColumns.columns(); track column.key) {
+                @switch (column.key) {
+                  @case ('onTheWaybill') {
+                    <td>
+                    <div class="cell-strong">{{ line.rs?.name }}</div>
+                    <div class="muted">
+                      @if (line.rs?.barcode; as rsBarcode) {
+                        <code class="code-tag">{{ rsBarcode }}</code>
+                      }
+                      {{ line.rs?.unit }}
                     </div>
+                  </td>
                   }
-                } @else if (!fromWarehouseId()) {
-                  <span class="muted">{{ 'Choose the source warehouse first.' | t }}</span>
-                } @else {
-                  <app-product-picker
-                    [products]="linkable()"
-                    [placeholder]="'Find your product: name or barcode' | t"
-                    (picked)="linkProduct(i, $event)"
-                  />
-                  @if (canCreateProducts()) {
-                    <button type="button" class="link-button" (click)="openProductForm(i)">{{ '+ New product' | t }}</button>
+                  @case ('yourProduct') {
+                    <td class="rs-product-cell">
+                    @if (line.productId) {
+                      <div class="cell-strong">{{ line.name }}</div>
+                      <div class="muted">
+                        <code class="code-tag">{{ line.barcode }}</code> {{ line.unit | t }}
+                        <button type="button" class="link-button" (click)="unlinkProduct(i)">{{ 'Change' | t }}</button>
+                      </div>
+                      @if (unitProblem(line); as problem) {
+                        <div class="field-error">{{ problem | t }}</div>
+                      } @else if (line.quantity > (available().get(line.productId) ?? 0)) {
+                        <div class="field-error">
+                          {{ 'The source warehouse has only {available} {unit}. Bring the rest in with a receipt before sending.' | t: { available: (available().get(line.productId) ?? 0 | number: '1.0-3'), unit: (line.unit | t) } }}
+                        </div>
+                      }
+                    } @else if (!fromWarehouseId()) {
+                      <span class="muted">{{ 'Choose the source warehouse first.' | t }}</span>
+                    } @else {
+                      <app-product-picker
+                        [products]="linkable()"
+                        [placeholder]="'Find your product: name or barcode' | t"
+                        (picked)="linkProduct(i, $event)"
+                      />
+                      @if (canCreateProducts()) {
+                        <button type="button" class="link-button" (click)="openProductForm(i)">{{ '+ New product' | t }}</button>
+                      }
+                    }
+                  </td>
+                  }
+                  @case ('availableInSource') {
+                    <td
+                    class="cell-figure"
+                    [class.short]="!!line.productId && line.quantity > (available().get(line.productId) ?? 0)"
+                  >
+                    {{ line.productId ? (available().get(line.productId) ?? 0 | number: '1.0-3') : '—' }}
+                  </td>
+                  }
+                  @case ('quantity') {
+                    <td class="cell-figure">{{ line.quantity | number: '1.0-3' }} <span class="muted">{{ line.rs?.unit }}</span></td>
                   }
                 }
-              </td>
-              <td
-                class="cell-figure"
-                [class.short]="!!line.productId && line.quantity > (available().get(line.productId) ?? 0)"
-              >
-                {{ line.productId ? (available().get(line.productId) ?? 0 | number: '1.0-3') : '—' }}
-              </td>
-              <td class="cell-figure">{{ line.quantity | number: '1.0-3' }} <span class="muted">{{ line.rs?.unit }}</span></td>
+              }
             </tr>
           }
         </tbody>
@@ -150,41 +162,54 @@
       @if (lines().length === 0) {
         <p class="page-description">{{ 'No products yet.' | t }}</p>
       } @else {
+        <app-column-tools [columnOrder]="lineColumns" [alone]="true" [hint]="false" />
         <div class="table-scroll">
-          <table class="data-table">
+          <table class="data-table" [appColumns]="lineColumns">
             <thead>
               <tr>
-                <th>{{ 'Product' | t }}</th>
-                <th>{{ 'Barcode' | t }}</th>
-                <th>{{ 'Available' | t }}</th>
-                <th>{{ 'Quantity to send' | t }}</th>
-                <th>{{ 'Unit' | t }}</th>
+                @for (column of lineColumns.columns(); track column.key) {
+                  <th [appColumn]="column.key" [columnOrder]="lineColumns">{{ column.label | t }}</th>
+                }
                 <th></th>
               </tr>
             </thead>
             <tbody>
               @for (line of lines(); track line.productId; let i = $index) {
                 <tr>
-                  <td class="cell-strong">{{ line.name }}</td>
-                  <td><code class="code-tag">{{ line.barcode }}</code></td>
-                  <td
-                    class="cell-figure"
-                    [class.short]="(line.quantity || 0) > (available().get(line.productId ?? '') ?? 0)"
-                  >
-                    {{ available().get(line.productId ?? '') ?? 0 | number: '1.0-3' }}
-                  </td>
-                  <td>
-                    <input
-                      class="text-input line-input"
-                      type="number"
-                      min="0"
-                      [step]="line.unit === 'kg' ? 0.001 : 1"
-                      [attr.aria-label]="'Quantity of {name}' | t: { name: line.name }"
-                      [ngModel]="line.quantity"
-                      (ngModelChange)="updateQuantity(i, $event)"
-                    />
-                  </td>
-                  <td>{{ line.unit | t }}</td>
+                  @for (column of lineColumns.columns(); track column.key) {
+                    @switch (column.key) {
+                      @case ('product') {
+                        <td class="cell-strong">{{ line.name }}</td>
+                      }
+                      @case ('barcode') {
+                        <td><code class="code-tag">{{ line.barcode }}</code></td>
+                      }
+                      @case ('available') {
+                        <td
+                        class="cell-figure"
+                        [class.short]="(line.quantity || 0) > (available().get(line.productId ?? '') ?? 0)"
+                      >
+                        {{ available().get(line.productId ?? '') ?? 0 | number: '1.0-3' }}
+                      </td>
+                      }
+                      @case ('quantityToSend') {
+                        <td>
+                        <input
+                          class="text-input line-input"
+                          type="number"
+                          min="0"
+                          [step]="line.unit === 'kg' ? 0.001 : 1"
+                          [attr.aria-label]="'Quantity of {name}' | t: { name: line.name }"
+                          [ngModel]="line.quantity"
+                          (ngModelChange)="updateQuantity(i, $event)"
+                        />
+                      </td>
+                      }
+                      @case ('unit') {
+                        <td>{{ line.unit | t }}</td>
+                      }
+                    }
+                  }
                   <td>
                     <button
                       type="button"

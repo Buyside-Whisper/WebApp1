@@ -105,7 +105,11 @@
           <option value="pos">{{ 'Available at POS' | t }}</option>
           <option value="storage">{{ 'Storage only' | t }}</option>
         </select>
-        <select class="text-select" [aria-label]="'Production status' | t" [(ngModel)]="statusFilter">
+        <select
+          class="text-select"
+          [aria-label]="'Production status' | t"
+          [(ngModel)]="statusFilter"
+        >
           <option value="all">{{ 'Any production status' | t }}</option>
           <option value="active">{{ 'Active' | t }}</option>
           <option value="inactive">{{ 'Not active' | t }}</option>
@@ -121,7 +125,9 @@
           <option value="out">{{ 'Out of stock' | t }}</option>
         </select>
         @if (hasFilters()) {
-          <button type="button" class="link-button" (click)="clearFilters()">{{ 'Clear' | t }}</button>
+          <button type="button" class="link-button" (click)="clearFilters()">
+            {{ 'Clear' | t }}
+          </button>
         }
       </div>
 
@@ -133,33 +139,14 @@
             {{ '{p0} products' | t: { p0: products().length } }}
           }
         </span>
-        <div class="table-toolbar__hint">
-          <span>{{ 'Drag a column header to move it.' | t }}</span>
-          @if (columnOrder.isCustom()) {
-            <button type="button" class="link-button" (click)="columnOrder.reset()">
-              {{ 'Reset column order' | t }}
-            </button>
-          }
-        </div>
+        <app-column-tools [columnOrder]="columnOrder" />
       </div>
       <div class="table-scroll">
-        <table class="data-table">
+        <table class="data-table" [appColumns]="columnOrder">
           <thead>
             <tr>
               @for (column of columnOrder.columns(); track column.key) {
-                <th
-                  class="th-draggable"
-                  draggable="true"
-                  [class.th-dragging]="columnOrder.dragging() === column.key"
-                  [class.th-drop-before]="columnOrder.dropSide(column.key) === 'before'"
-                  [class.th-drop-after]="columnOrder.dropSide(column.key) === 'after'"
-                  (dragstart)="columnOrder.dragStart($event, column.key)"
-                  (dragover)="columnOrder.dragOver($event, column.key)"
-                  (drop)="columnOrder.drop($event, column.key)"
-                  (dragend)="columnOrder.dragEnd()"
-                >
-                  {{ column.label | t }}
-                </th>
+                <th [appColumn]="column.key" [columnOrder]="columnOrder">{{ column.label | t }}</th>
               }
               <th>{{ 'Actions' | t }}</th>
             </tr>
@@ -296,13 +283,20 @@
   }
 </app-modal>
 
-<app-modal [open]="isImportOpen()" [title]="'Import products' | t" (closed)="isImportOpen.set(false)">
+<app-modal
+  [open]="isImportOpen()"
+  [title]="'Import products' | t"
+  (closed)="isImportOpen.set(false)"
+>
   @if (isImportOpen()) {
     <app-xlsx-import
       [source]="productService.importSource"
       [columns]="importColumns"
       [noun]="{ one: 'product', many: 'products' }"
-      [description]="'Add many products to the catalogue at once from an Excel file (.xlsx), one product per row. Start from the template: it has the right columns and dropdowns for unit, use and statuses. Quantities are not imported: stock comes in through a receipt.' | t"
+      [description]="
+        'Add many products to the catalogue at once from an Excel file (.xlsx), one product per row. Start from the template: it has the right columns and dropdowns for unit, use and statuses. Quantities are not imported: stock comes in through a receipt.'
+          | t
+      "
       templateName="products-template.xlsx"
       [codeLabel]="'Barcode' | t"
       (imported)="loadProducts()"

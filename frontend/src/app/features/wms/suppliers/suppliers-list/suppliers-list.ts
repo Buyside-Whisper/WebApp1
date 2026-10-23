@@ -12,14 +12,27 @@ import { SupplierForm } from '../supplier-form/supplier-form';
 import { SupplierService } from '../supplier.service';
 import { TranslatePipe } from '../../../../core/i18n/t.pipe';
 import { I18nService } from '../../../../core/i18n/i18n.service';
+import { ColumnHeader, ColumnTable } from '../../../../shared/column-order/column-header';
+import { ColumnTools } from '../../../../shared/column-order/column-tools';
+import { ColumnOrder } from '../../../../shared/column-order/column-order';
 
 @Component({
   selector: 'app-suppliers-list',
-  imports: [TranslatePipe, FormsModule, LucideAngularModule, Modal, Pager, ProductTabs, SupplierForm],
+  imports: [ColumnHeader, ColumnTable, ColumnTools, TranslatePipe, FormsModule, LucideAngularModule, Modal, Pager, ProductTabs, SupplierForm],
   templateUrl: './suppliers-list.html',
 })
 export class SuppliersList implements OnInit {
   private readonly i18n = inject(I18nService);
+  protected readonly columnOrder = new ColumnOrder('wms-suppliers', [
+    { key: 'supplier', label: 'Supplier' },
+    { key: 'type', label: 'Type' },
+    { key: 'idCode', label: 'ID code' },
+    { key: 'vat', label: 'VAT' },
+    { key: 'contact', label: 'Contact' },
+    { key: 'email', label: 'Email' },
+    { key: 'products', label: 'Products' },
+    { key: 'status', label: 'Status' },
+  ]);
   private readonly supplierService = inject(SupplierService);
   private readonly auth = inject(AuthService);
 

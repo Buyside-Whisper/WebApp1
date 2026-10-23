@@ -31,7 +31,9 @@
     <div class="stat-row">
       <div class="stat">
         <div class="stat__label">{{ 'In stock' | t }}</div>
-        <div class="stat__value">{{ product.quantity | number: '1.0-3' }} {{ product.unit | t }}</div>
+        <div class="stat__value">
+          {{ product.quantity | number: '1.0-3' }} {{ product.unit | t }}
+        </div>
       </div>
       <div class="stat">
         <div class="stat__label">{{ 'Warehouses' | t }}</div>
@@ -46,14 +48,38 @@
     <div class="page-card">
       <h2 class="card-title">{{ 'Details' | t }}</h2>
       <dl class="detail-grid">
-        <div><dt>{{ 'Category' | t }}</dt><dd>{{ product.category.name }}</dd></div>
-        <div><dt>{{ 'Group' | t }}</dt><dd>{{ product.group }}</dd></div>
-        <div><dt>{{ 'Supplier' | t }}</dt><dd>{{ product.supplier.name }}</dd></div>
-        <div><dt>{{ 'Unit' | t }}</dt><dd>{{ product.unit | t }}</dd></div>
-        <div><dt>{{ 'Use' | t }}</dt><dd>{{ usageLabels[product.usage] | t }}</dd></div>
-        <div><dt>{{ 'POS status' | t }}</dt><dd>{{ posStatusLabels[product.posStatus] | t }}</dd></div>
-        <div><dt>{{ 'Cost price' | t }}</dt><dd>₾{{ product.costPrice | number: '1.2-2' }}</dd></div>
-        <div><dt>{{ 'Sale price' | t }}</dt><dd>₾{{ product.salePrice | number: '1.2-2' }}</dd></div>
+        <div>
+          <dt>{{ 'Category' | t }}</dt>
+          <dd>{{ product.category.name }}</dd>
+        </div>
+        <div>
+          <dt>{{ 'Group' | t }}</dt>
+          <dd>{{ product.group }}</dd>
+        </div>
+        <div>
+          <dt>{{ 'Supplier' | t }}</dt>
+          <dd>{{ product.supplier.name }}</dd>
+        </div>
+        <div>
+          <dt>{{ 'Unit' | t }}</dt>
+          <dd>{{ product.unit | t }}</dd>
+        </div>
+        <div>
+          <dt>{{ 'Use' | t }}</dt>
+          <dd>{{ usageLabels[product.usage] | t }}</dd>
+        </div>
+        <div>
+          <dt>{{ 'POS status' | t }}</dt>
+          <dd>{{ posStatusLabels[product.posStatus] | t }}</dd>
+        </div>
+        <div>
+          <dt>{{ 'Cost price' | t }}</dt>
+          <dd>₾{{ product.costPrice | number: '1.2-2' }}</dd>
+        </div>
+        <div>
+          <dt>{{ 'Sale price' | t }}</dt>
+          <dd>₾{{ product.salePrice | number: '1.2-2' }}</dd>
+        </div>
       </dl>
     </div>
 
@@ -62,27 +88,48 @@
       @if (product.stocks.length === 0) {
         <p class="page-description">{{ 'Not in any warehouse yet.' | t }}</p>
       } @else {
+        <app-column-tools [columnOrder]="columnOrder" [alone]="true" [hint]="false" />
         <div class="table-scroll">
-          <table class="data-table">
+          <table class="data-table" [appColumns]="columnOrder">
             <thead>
               <tr>
-                <th>{{ 'Warehouse' | t }}</th>
-                <th>{{ 'Code' | t }}</th>
-                <th>{{ 'Type' | t }}</th>
-                <th>{{ 'Quantity' | t }}</th>
-                <th>{{ 'Value (at cost)' | t }}</th>
+                @for (column of columnOrder.columns(); track column.key) {
+                  <th [appColumn]="column.key" [columnOrder]="columnOrder">{{ column.label | t }}</th>
+                }
               </tr>
             </thead>
             <tbody>
               @for (stock of product.stocks; track stock.warehouseId) {
                 <tr>
-                  <td class="cell-strong">
-                    <a [routerLink]="['/wms/warehouses', stock.warehouseId]">{{ stock.warehouse.name }}</a>
-                  </td>
-                  <td><code class="code-tag">{{ stock.warehouse.code }}</code></td>
-                  <td>{{ stock.warehouse.type === 'main' ? ('Main' | t) : ('Sales' | t) }}</td>
-                  <td class="cell-figure">{{ stock.quantity | number: '1.0-3' }} {{ product.unit | t }}</td>
-                  <td class="cell-figure">₾{{ stock.quantity * product.costPrice | number: '1.2-2' }}</td>
+                  @for (column of columnOrder.columns(); track column.key) {
+                    @switch (column.key) {
+                      @case ('warehouse') {
+                        <td class="cell-strong">
+                        <a [routerLink]="['/wms/warehouses', stock.warehouseId]">{{
+                          stock.warehouse.name
+                        }}</a>
+                      </td>
+                      }
+                      @case ('code') {
+                        <td>
+                        <code class="code-tag">{{ stock.warehouse.code }}</code>
+                      </td>
+                      }
+                      @case ('type') {
+                        <td>{{ stock.warehouse.type === 'main' ? ('Main' | t) : ('Sales' | t) }}</td>
+                      }
+                      @case ('quantity') {
+                        <td class="cell-figure">
+                        {{ stock.quantity | number: '1.0-3' }} {{ product.unit | t }}
+                      </td>
+                      }
+                      @case ('valueAtCost') {
+                        <td class="cell-figure">
+                        ₾{{ stock.quantity * product.costPrice | number: '1.2-2' }}
+                      </td>
+                      }
+                    }
+                  }
                 </tr>
               }
             </tbody>

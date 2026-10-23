@@ -12,6 +12,7 @@ import {
   addTableSheet,
   addTemplateSheet,
   choiceKey,
+  choiceKeys,
   readImportFile,
   rowIssues,
   addListDropdown,
@@ -51,7 +52,13 @@ const COLUMNS: SheetColumn<Field>[] = [
 
 const EXPORT_ONLY = ['Code', 'Products', 'Stock', 'Total price'];
 
+const labelKeys = <T extends string>(labels: Record<T, string>) =>
+  Object.fromEntries(
+    (Object.entries(labels) as [T, string][]).flatMap(([value, label]) => choiceKeys(label).map((key) => [key, value])),
+  ) as Record<string, T>;
+
 const TYPES: Record<string, WarehouseType> = {
+  ...labelKeys(TYPE_LABELS),
   main: WarehouseType.MAIN,
   'main warehouse': WarehouseType.MAIN,
   'მთავარი': WarehouseType.MAIN,
@@ -64,6 +71,7 @@ const TYPES: Record<string, WarehouseType> = {
 };
 
 const STATUSES: Record<string, WarehouseStatus> = {
+  ...labelKeys(STATUS_LABELS),
   active: WarehouseStatus.ACTIVE,
   'აქტიური': WarehouseStatus.ACTIVE,
   inactive: WarehouseStatus.INACTIVE,

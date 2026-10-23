@@ -11,14 +11,26 @@ import { TRANSFER_STATUS_LABELS, Transfer, TransferStatus } from '../transfer.mo
 import { TransferService } from '../transfer.service';
 import { TranslatePipe } from '../../../../core/i18n/t.pipe';
 import { I18nService } from '../../../../core/i18n/i18n.service';
+import { ColumnHeader, ColumnTable } from '../../../../shared/column-order/column-header';
+import { ColumnTools } from '../../../../shared/column-order/column-tools';
+import { ColumnOrder } from '../../../../shared/column-order/column-order';
 
 @Component({
   selector: 'app-transfers-list',
-  imports: [TranslatePipe, DatePipe, FormsModule, RouterLink, LucideAngularModule, Pager],
+  imports: [ColumnHeader, ColumnTable, ColumnTools, TranslatePipe, DatePipe, FormsModule, RouterLink, LucideAngularModule, Pager],
   templateUrl: './transfers-list.html',
 })
 export class TransfersList implements OnInit {
   private readonly i18n = inject(I18nService);
+  protected readonly columnOrder = new ColumnOrder('wms-transfers', [
+    { key: 'number', label: 'Number' },
+    { key: 'date', label: 'Date' },
+    { key: 'from', label: 'From' },
+    { key: 'to', label: 'To' },
+    { key: 'lines', label: 'Lines' },
+    { key: 'status', label: 'Status' },
+    { key: 'createdBy', label: 'Created by' },
+  ]);
   private readonly transferService = inject(TransferService);
   private readonly auth = inject(AuthService);
 

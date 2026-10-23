@@ -20,6 +20,9 @@ import { ReceiptService } from '../receipt.service';
 import { Combobox } from '../../../../shared/combobox/combobox';
 import { TranslatePipe } from '../../../../core/i18n/t.pipe';
 import { I18nService } from '../../../../core/i18n/i18n.service';
+import { ColumnHeader, ColumnTable } from '../../../../shared/column-order/column-header';
+import { ColumnTools } from '../../../../shared/column-order/column-tools';
+import { ColumnOrder } from '../../../../shared/column-order/column-order';
 
 interface EditableLine {
   productId: string | null;
@@ -41,12 +44,27 @@ const today = () => new Date().toLocaleDateString('sv-SE');
 
 @Component({
   selector: 'app-receipt-editor',
-  imports: [TranslatePipe, Combobox, DecimalPipe, FormsModule, RouterLink, LucideAngularModule, ProductPicker, Modal, ProductForm, SupplierForm],
+  imports: [ColumnHeader, ColumnTable, ColumnTools, TranslatePipe, Combobox, DecimalPipe, FormsModule, RouterLink, LucideAngularModule, ProductPicker, Modal, ProductForm, SupplierForm],
   templateUrl: './receipt-editor.html',
   styleUrl: './receipt-editor.css',
 })
 export class ReceiptEditor implements OnInit {
   private readonly i18n = inject(I18nService);
+  protected readonly lineColumns = new ColumnOrder('wms-receipt-lines-edit', [
+    { key: 'product', label: 'Product' },
+    { key: 'barcode', label: 'Barcode' },
+    { key: 'quantity', label: 'Quantity' },
+    { key: 'unit', label: 'Unit' },
+    { key: 'pricePerUnit', label: 'Price per unit (₾)' },
+    { key: 'lineTotal', label: 'Line total' },
+  ]);
+  protected readonly rsColumns = new ColumnOrder('wms-receipt-rs-lines', [
+    { key: 'onTheWaybill', label: 'On the waybill' },
+    { key: 'yourProduct', label: 'Your product' },
+    { key: 'quantity', label: 'Quantity' },
+    { key: 'pricePerUnit', label: 'Price per unit (₾)' },
+    { key: 'lineTotal', label: 'Line total' },
+  ]);
   private readonly receiptService = inject(ReceiptService);
   private readonly productService = inject(ProductService);
   private readonly warehouseService = inject(WarehouseService);

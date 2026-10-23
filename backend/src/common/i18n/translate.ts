@@ -1,12 +1,19 @@
 import { ExecutionContext, createParamDecorator } from '@nestjs/common';
 import type { Request } from 'express';
 import { KA } from './ka.js';
+import { RU } from './ru.js';
 
-export type Language = 'en' | 'ka';
+export type Language = 'en' | 'ka' | 'ru';
+
+export const LANGUAGES: Language[] = ['en', 'ka', 'ru'];
+
+const DICTIONARIES: Record<Exclude<Language, 'en'>, Record<string, string>> = { ka: KA, ru: RU };
 export type Translate = (text: string) => string;
 
-export const languageOf = (header: string | string[] | undefined): Language =>
-  (Array.isArray(header) ? header[0] : header)?.trim().toLowerCase().startsWith('ka') ? 'ka' : 'en';
+export const languageOf = (header: string | string[] | undefined): Language => {
+  const code = (Array.isArray(header) ? header[0] : header)?.trim().toLowerCase().slice(0, 2);
+  return code === 'ka' || code === 'ru' ? code : 'en';
+};
 
 export const Lang = createParamDecorator(
   (_: unknown, context: ExecutionContext): Language =>
@@ -15,34 +22,37 @@ export const Lang = createParamDecorator(
 
 const escape = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-const PATTERNS = Object.entries(KA)
-  .filter(([english]) => /\{\w+\}/.test(english))
-  .map(([english, georgian]) => ({
-    regex: new RegExp(
-      '^' +
-        english
-          .split(/(\{\w+\})/)
-          .map((part) => (/^\{\w+\}$/.test(part) ? `(?<${part.slice(1, -1)}>[\\s\\S]+?)` : escape(part)))
-          .join('') +
-        '$',
-    ),
-    georgian,
-    fixed: english.replace(/\{\w+\}/g, '').length,
-  }))
-  .sort((a, b) => b.fixed - a.fixed);
+const compile = (dictionary: Record<string, string>) =>
+  Object.entries(dictionary)
+    .filter(([english]) => /\{\w+\}/.test(english))
+    .map(([english, translated]) => ({
+      regex: new RegExp(
+        '^' +
+          english
+            .split(/(\{\w+\})/)
+            .map((part) => (/^\{\w+\}$/.test(part) ? `(?<${part.slice(1, -1)}>[\\s\\S]+?)` : escape(part)))
+            .join('') +
+          '$',
+      ),
+      translated,
+      fixed: english.replace(/\{\w+\}/g, '').length,
+    }))
+    .sort((a, b) => b.fixed - a.fixed);
+
+const PATTERNS = { ka: compile(KA), ru: compile(RU) };
 
 export function translate(text: string, language: Language): string {
-  if (language !== 'ka' || !text) {
+  if (language === 'en' || !text) {
     return text;
   }
-  const exact = KA[text];
+  const exact = DICTIONARIES[language][text];
   if (exact !== undefined) {
     return exact;
   }
-  for (const { regex, georgian } of PATTERNS) {
+  for (const { regex, translated } of PATTERNS[language]) {
     const match = regex.exec(text);
     if (match) {
-      return georgian.replace(/\{(\w+)\}/g, (_, name: string) => translate(match.groups![name], language));
+      return translated.replace(/\{(\w+)\}/g, (_, name: string) => translate(match.groups![name], language));
     }
   }
   return text;

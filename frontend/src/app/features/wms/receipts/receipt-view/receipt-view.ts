@@ -8,14 +8,25 @@ import { RECEIPT_STATUS_LABELS, Receipt } from '../receipt.model';
 import { ReceiptService } from '../receipt.service';
 import { TranslatePipe } from '../../../../core/i18n/t.pipe';
 import { I18nService } from '../../../../core/i18n/i18n.service';
+import { ColumnHeader, ColumnTable } from '../../../../shared/column-order/column-header';
+import { ColumnTools } from '../../../../shared/column-order/column-tools';
+import { ColumnOrder } from '../../../../shared/column-order/column-order';
 
 @Component({
   selector: 'app-receipt-view',
-  imports: [TranslatePipe, DatePipe, DecimalPipe, RouterLink],
+  imports: [ColumnHeader, ColumnTable, ColumnTools, TranslatePipe, DatePipe, DecimalPipe, RouterLink],
   templateUrl: './receipt-view.html',
 })
 export class ReceiptView implements OnInit {
   private readonly i18n = inject(I18nService);
+  protected readonly columnOrder = new ColumnOrder('wms-receipt-lines', [
+    { key: 'product', label: 'Product' },
+    { key: 'barcode', label: 'Barcode' },
+    { key: 'quantity', label: 'Quantity' },
+    { key: 'unit', label: 'Unit' },
+    { key: 'pricePerUnit', label: 'Price per unit' },
+    { key: 'lineTotal', label: 'Line total' },
+  ]);
   private readonly receiptService = inject(ReceiptService);
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);

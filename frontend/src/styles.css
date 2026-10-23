@@ -1215,3 +1215,58 @@ lucide-icon.search-input__icon {
   width: 14px;
   height: 14px;
 }
+
+.data-table th.th-draggable {
+  position: relative;
+}
+
+.th-resize {
+  position: absolute;
+  top: 0;
+  right: -4px;
+  z-index: 1;
+  width: 8px;
+  height: 100%;
+  cursor: col-resize;
+  touch-action: none;
+}
+
+.th-resize::after {
+  content: '';
+  position: absolute;
+  top: 20%;
+  bottom: 20%;
+  left: 3px;
+  width: 2px;
+  border-radius: 1px;
+  background: transparent;
+  transition: background-color 120ms ease;
+}
+
+.th-resize:hover::after,
+.th-resize--active::after {
+  background: var(--accent);
+}
+
+.data-table--sized {
+  width: auto;
+  table-layout: fixed;
+}
+
+.data-table--sized th,
+.data-table--sized td {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.column-tools--alone {
+  justify-content: flex-end;
+  margin-bottom: 6px;
+}
+
+lucide-icon.cell-arrow {
+  display: inline-flex;
+  margin-left: 6px;
+  vertical-align: middle;
+  color: var(--ink-faint);
+}

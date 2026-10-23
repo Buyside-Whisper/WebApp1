@@ -22,7 +22,7 @@ export class TranslateReportInterceptor implements NestInterceptor {
     const language = languageOf(context.switchToHttp().getRequest<Request>().headers['accept-language']);
     return next.handle().pipe(
       map((body: unknown) =>
-        language === 'ka' && isImportReport(body)
+        language !== 'en' && isImportReport(body)
           ? {
               ...body,
               errors: body.errors.map((issue) => translateIssue(issue, language)),

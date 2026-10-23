@@ -88,37 +88,53 @@
             />
           </div>
         </div>
+        <app-column-tools [columnOrder]="columnOrder" [alone]="true" [hint]="false" />
         <div class="table-scroll">
-          <table class="data-table">
+          <table class="data-table" [appColumns]="columnOrder">
             <thead>
               <tr>
-                <th>{{ 'Product' | t }}</th>
-                <th>{{ 'Barcode' | t }}</th>
-                <th>{{ 'Category' | t }}</th>
-                <th>{{ 'Group' | t }}</th>
-                <th>{{ 'Quantity' | t }}</th>
-                <th>{{ 'Unit' | t }}</th>
-                <th>{{ 'Cost price' | t }}</th>
-                <th>{{ 'Value' | t }}</th>
+                @for (column of columnOrder.columns(); track column.key) {
+                  <th [appColumn]="column.key" [columnOrder]="columnOrder">{{ column.label | t }}</th>
+                }
               </tr>
             </thead>
             <tbody>
               @for (row of pages.items(); track row.productId) {
                 <tr>
-                  <td class="cell-strong">
-                    @if (canOpenProducts()) {
-                      <a [routerLink]="['/wms/products', row.productId]">{{ row.product.name }}</a>
-                    } @else {
-                      {{ row.product.name }}
+                  @for (column of columnOrder.columns(); track column.key) {
+                    @switch (column.key) {
+                      @case ('product') {
+                        <td class="cell-strong">
+                        @if (canOpenProducts()) {
+                          <a [routerLink]="['/wms/products', row.productId]">{{ row.product.name }}</a>
+                        } @else {
+                          {{ row.product.name }}
+                        }
+                      </td>
+                      }
+                      @case ('barcode') {
+                        <td><code class="code-tag">{{ row.product.barcode }}</code></td>
+                      }
+                      @case ('category') {
+                        <td>{{ row.product.category.name }}</td>
+                      }
+                      @case ('group') {
+                        <td>{{ row.product.group }}</td>
+                      }
+                      @case ('quantity') {
+                        <td class="cell-figure">{{ row.quantity | number: '1.0-3' }}</td>
+                      }
+                      @case ('unit') {
+                        <td>{{ row.product.unit | t }}</td>
+                      }
+                      @case ('costPrice') {
+                        <td class="cell-figure">₾{{ row.product.costPrice | number: '1.2-2' }}</td>
+                      }
+                      @case ('value') {
+                        <td class="cell-figure">₾{{ row.quantity * row.product.costPrice | number: '1.2-2' }}</td>
+                      }
                     }
-                  </td>
-                  <td><code class="code-tag">{{ row.product.barcode }}</code></td>
-                  <td>{{ row.product.category.name }}</td>
-                  <td>{{ row.product.group }}</td>
-                  <td class="cell-figure">{{ row.quantity | number: '1.0-3' }}</td>
-                  <td>{{ row.product.unit | t }}</td>
-                  <td class="cell-figure">₾{{ row.product.costPrice | number: '1.2-2' }}</td>
-                  <td class="cell-figure">₾{{ row.quantity * row.product.costPrice | number: '1.2-2' }}</td>
+                  }
                 </tr>
               } @empty {
                 <tr>

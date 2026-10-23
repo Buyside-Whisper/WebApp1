@@ -12,13 +12,26 @@ import { StockService } from '../../stock/stock.service';
 import { Warehouse } from '../warehouse.model';
 import { WarehouseService } from '../warehouse.service';
 import { TranslatePipe } from '../../../../core/i18n/t.pipe';
+import { ColumnHeader, ColumnTable } from '../../../../shared/column-order/column-header';
+import { ColumnTools } from '../../../../shared/column-order/column-tools';
+import { ColumnOrder } from '../../../../shared/column-order/column-order';
 
 @Component({
   selector: 'app-warehouse-view',
-  imports: [TranslatePipe, DecimalPipe, FormsModule, RouterLink, LucideAngularModule, Pager, MovementHistory],
+  imports: [ColumnHeader, ColumnTable, ColumnTools, TranslatePipe, DecimalPipe, FormsModule, RouterLink, LucideAngularModule, Pager, MovementHistory],
   templateUrl: './warehouse-view.html',
 })
 export class WarehouseView implements OnInit {
+  protected readonly columnOrder = new ColumnOrder('wms-warehouse-stock', [
+    { key: 'product', label: 'Product' },
+    { key: 'barcode', label: 'Barcode' },
+    { key: 'category', label: 'Category' },
+    { key: 'group', label: 'Group' },
+    { key: 'quantity', label: 'Quantity' },
+    { key: 'unit', label: 'Unit' },
+    { key: 'costPrice', label: 'Cost price' },
+    { key: 'value', label: 'Value' },
+  ]);
   private readonly warehouseService = inject(WarehouseService);
   private readonly stockService = inject(StockService);
   private readonly auth = inject(AuthService);

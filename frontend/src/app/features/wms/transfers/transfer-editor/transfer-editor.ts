@@ -19,6 +19,9 @@ import { Transfer, TransferPayload } from '../transfer.model';
 import { TransferService } from '../transfer.service';
 import { TranslatePipe } from '../../../../core/i18n/t.pipe';
 import { I18nService } from '../../../../core/i18n/i18n.service';
+import { ColumnHeader, ColumnTable } from '../../../../shared/column-order/column-header';
+import { ColumnTools } from '../../../../shared/column-order/column-tools';
+import { ColumnOrder } from '../../../../shared/column-order/column-order';
 
 interface EditableLine {
   productId: string | null;
@@ -33,12 +36,25 @@ const today = () => new Date().toLocaleDateString('sv-SE');
 
 @Component({
   selector: 'app-transfer-editor',
-  imports: [TranslatePipe, DecimalPipe, FormsModule, RouterLink, LucideAngularModule, ProductPicker, Modal, ProductForm],
+  imports: [ColumnHeader, ColumnTable, ColumnTools, TranslatePipe, DecimalPipe, FormsModule, RouterLink, LucideAngularModule, ProductPicker, Modal, ProductForm],
   templateUrl: './transfer-editor.html',
   styleUrl: './transfer-editor.css',
 })
 export class TransferEditor implements OnInit {
   private readonly i18n = inject(I18nService);
+  protected readonly lineColumns = new ColumnOrder('wms-transfer-lines-edit', [
+    { key: 'product', label: 'Product' },
+    { key: 'barcode', label: 'Barcode' },
+    { key: 'available', label: 'Available' },
+    { key: 'quantityToSend', label: 'Quantity to send' },
+    { key: 'unit', label: 'Unit' },
+  ]);
+  protected readonly rsColumns = new ColumnOrder('wms-transfer-rs-lines', [
+    { key: 'onTheWaybill', label: 'On the waybill' },
+    { key: 'yourProduct', label: 'Your product' },
+    { key: 'availableInSource', label: 'Available in source' },
+    { key: 'quantity', label: 'Quantity' },
+  ]);
   private readonly transferService = inject(TransferService);
   private readonly stockService = inject(StockService);
   private readonly warehouseService = inject(WarehouseService);

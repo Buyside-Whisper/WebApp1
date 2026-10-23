@@ -66,35 +66,47 @@
             {{ '{p0} categories' | t: { p0: categories().length } }}
           }
         </span>
+        <app-column-tools [columnOrder]="columnOrder" />
       </div>
       <div class="table-scroll">
-        <table class="data-table">
+        <table class="data-table" [appColumns]="columnOrder">
           <thead>
             <tr>
-              <th>{{ 'Category' | t }}</th>
-              <th>{{ 'Description' | t }}</th>
-              <th>{{ 'Products' | t }}</th>
-              <th>{{ 'Status' | t }}</th>
+              @for (column of columnOrder.columns(); track column.key) {
+                <th [appColumn]="column.key" [columnOrder]="columnOrder">{{ column.label | t }}</th>
+              }
               <th>{{ 'Actions' | t }}</th>
             </tr>
           </thead>
           <tbody>
             @for (category of pages.items(); track category.id) {
               <tr>
-                <td class="cell-strong">{{ category.name }}</td>
-                <td>
-                  @if (category.description) {
-                    {{ category.description }}
-                  } @else {
-                    <span class="muted">—</span>
+              @for (column of columnOrder.columns(); track column.key) {
+                  @switch (column.key) {
+                    @case ('category') {
+                      <td class="cell-strong">{{ category.name }}</td>
+                    }
+                    @case ('description') {
+                      <td>
+                      @if (category.description) {
+                        {{ category.description }}
+                      } @else {
+                        <span class="muted">—</span>
+                      }
+                    </td>
+                    }
+                    @case ('products') {
+                      <td class="cell-figure">{{ category.productCount }}</td>
+                    }
+                    @case ('status') {
+                      <td>
+                      <span class="badge" [class]="category.status === 'active' ? 'badge--active' : 'badge--inactive'">
+                        {{ category.status === 'active' ? ('Active' | t) : ('Inactive' | t) }}
+                      </span>
+                    </td>
+                    }
                   }
-                </td>
-                <td class="cell-figure">{{ category.productCount }}</td>
-                <td>
-                  <span class="badge" [class]="category.status === 'active' ? 'badge--active' : 'badge--inactive'">
-                    {{ category.status === 'active' ? ('Active' | t) : ('Inactive' | t) }}
-                  </span>
-                </td>
+                }
                 <td>
                   <div class="icon-actions">
                     <button

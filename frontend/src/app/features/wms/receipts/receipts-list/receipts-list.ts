@@ -11,14 +11,28 @@ import { RECEIPT_STATUS_LABELS, Receipt, ReceiptStatus } from '../receipt.model'
 import { ReceiptService } from '../receipt.service';
 import { TranslatePipe } from '../../../../core/i18n/t.pipe';
 import { I18nService } from '../../../../core/i18n/i18n.service';
+import { ColumnHeader, ColumnTable } from '../../../../shared/column-order/column-header';
+import { ColumnTools } from '../../../../shared/column-order/column-tools';
+import { ColumnOrder } from '../../../../shared/column-order/column-order';
 
 @Component({
   selector: 'app-receipts-list',
-  imports: [TranslatePipe, DatePipe, DecimalPipe, FormsModule, RouterLink, LucideAngularModule, Pager],
+  imports: [ColumnHeader, ColumnTable, ColumnTools, TranslatePipe, DatePipe, DecimalPipe, FormsModule, RouterLink, LucideAngularModule, Pager],
   templateUrl: './receipts-list.html',
 })
 export class ReceiptsList implements OnInit {
   private readonly i18n = inject(I18nService);
+  protected readonly columnOrder = new ColumnOrder('wms-receipts', [
+    { key: 'number', label: 'Number' },
+    { key: 'date', label: 'Date' },
+    { key: 'warehouse', label: 'Warehouse' },
+    { key: 'supplier', label: 'Supplier' },
+    { key: 'waybill', label: 'Waybill' },
+    { key: 'lines', label: 'Lines' },
+    { key: 'total', label: 'Total' },
+    { key: 'status', label: 'Status' },
+    { key: 'createdBy', label: 'Created by' },
+  ]);
   private readonly receiptService = inject(ReceiptService);
   private readonly auth = inject(AuthService);
 

@@ -1,6 +1,6 @@
 import { BadRequestException } from '@nestjs/common';
 import ExcelJS from 'exceljs';
-import { Language, translate } from './i18n/translate.js';
+import { LANGUAGES, Language, translate } from './i18n/translate.js';
 
 export const XLSX_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 export const XLSX_UPLOAD = { limits: { fileSize: 5 * 1024 * 1024, files: 1 } };
@@ -47,9 +47,9 @@ export const choiceKey = (text: string) => tidy(text).toLowerCase();
 
 const headerKey = (text: string) => choiceKey(text.replace(/\*/g, ''));
 
-const headerKeys = (header: string) => [headerKey(header), headerKey(translate(header, 'ka'))];
+const headerKeys = (header: string) => LANGUAGES.map((language) => headerKey(translate(header, language)));
 
-export const choiceKeys = (label: string) => [choiceKey(label), choiceKey(translate(label, 'ka'))];
+export const choiceKeys = (label: string) => LANGUAGES.map((language) => choiceKey(translate(label, language)));
 
 const INSTRUCTIONS_SHEET = 'Instructions';
 
@@ -128,7 +128,8 @@ export async function readImportFile<F extends string, P>(
     return { report, rows: [] };
   };
   const sheet =
-    workbook.getWorksheet(sheetName) ?? workbook.getWorksheet(translate(sheetName, 'ka')) ?? workbook.worksheets[0];
+    LANGUAGES.map((language) => workbook.getWorksheet(translate(sheetName, language))).find(Boolean) ??
+    workbook.worksheets[0];
   if (!sheet) {
     return fileError('The workbook has no sheets');
   }

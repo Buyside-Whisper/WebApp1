@@ -109,62 +109,77 @@
       @if (!transfer.lines?.length) {
         <p class="page-description">{{ 'No products on this draft yet.' | t }}</p>
       } @else {
+        <app-column-tools [columnOrder]="columnOrder" [alone]="true" [hint]="false" />
         <div class="table-scroll">
-          <table class="data-table">
+          <table class="data-table" [appColumns]="columnOrder">
             <thead>
               <tr>
-                <th>{{ 'Product' | t }}</th>
-                <th>{{ 'Barcode' | t }}</th>
-                <th>{{ 'Sent' | t }}</th>
-                @if (receiving() || transfer.status === 'received') {
-                  <th>{{ 'Received' | t }}</th>
-                  <th>{{ 'Missing' | t }}</th>
+                @for (column of columnOrder.columns(); track column.key) {
+                  <th [appColumn]="column.key" [columnOrder]="columnOrder">{{ column.label | t }}</th>
                 }
-                <th>{{ 'Unit' | t }}</th>
               </tr>
             </thead>
             <tbody>
               @for (line of transfer.lines; track line.id) {
                 <tr>
-                  <td class="cell-strong">
-                    @if (line.product; as product) {
-                      @if (canOpenProducts()) {
-                        <a [routerLink]="['/wms/products', product.id]">{{ product.name }}</a>
-                      } @else {
-                        {{ product.name }}
+                  @for (column of columnOrder.columns(); track column.key) {
+                    @switch (column.key) {
+                      @case ('product') {
+                        <td class="cell-strong">
+                          @if (line.product; as product) {
+                            @if (canOpenProducts()) {
+                              <a [routerLink]="['/wms/products', product.id]">{{ product.name }}</a>
+                            } @else {
+                              {{ product.name }}
+                            }
+                          } @else {
+                            <span class="short">{{ 'Not linked yet' | t }}</span>
+                          }
+                          @if (line.rsName && line.rsName !== line.product?.name) {
+                            <div class="muted">{{ 'RS: {p0}' | t: { p0: line.rsName } }}</div>
+                          }
+                        </td>
                       }
-                    } @else {
-                      <span class="short">{{ 'Not linked yet' | t }}</span>
+                      @case ('barcode') {
+                        <td><code class="code-tag">{{ line.product?.barcode ?? line.rsBarcode ?? '—' }}</code></td>
+                      }
+                      @case ('sent') {
+                        <td class="cell-figure">{{ line.quantity | number: '1.0-3' }}</td>
+                      }
+                      @case ('received') {
+                        @if (receiving()) {
+                          <td>
+                            <input
+                              class="text-input line-input"
+                              type="number"
+                              min="0"
+                              [max]="line.quantity"
+                              [step]="line.product?.unit === 'kg' ? 0.001 : 1"
+                              [attr.aria-label]="'Received {name}' | t: { name: line.product?.name ?? line.rsName }"
+                              [ngModel]="received()[line.id]"
+                              (ngModelChange)="setReceived(line.id, $event)"
+                            />
+                          </td>
+                        } @else {
+                          <td class="cell-figure">{{ line.receivedQuantity | number: '1.0-3' }}</td>
+                        }
+                      }
+                      @case ('missing') {
+                        @if (receiving()) {
+                          <td class="cell-figure" [class.short]="received()[line.id] < line.quantity">
+                            {{ line.quantity - received()[line.id] | number: '1.0-3' }}
+                          </td>
+                        } @else {
+                          <td class="cell-figure" [class.short]="(line.receivedQuantity ?? 0) < line.quantity">
+                            {{ line.quantity - (line.receivedQuantity ?? 0) | number: '1.0-3' }}
+                          </td>
+                        }
+                      }
+                      @case ('unit') {
+                        <td>{{ (line.product?.unit ?? line.rsUnit) | t }}</td>
+                      }
                     }
-                    @if (line.rsName && line.rsName !== line.product?.name) {
-                      <div class="muted">{{ 'RS: {p0}' | t: { p0: line.rsName } }}</div>
-                    }
-                  </td>
-                  <td><code class="code-tag">{{ line.product?.barcode ?? line.rsBarcode ?? '—' }}</code></td>
-                  <td class="cell-figure">{{ line.quantity | number: '1.0-3' }}</td>
-                  @if (receiving()) {
-                    <td>
-                      <input
-                        class="text-input line-input"
-                        type="number"
-                        min="0"
-                        [max]="line.quantity"
-                        [step]="line.product?.unit === 'kg' ? 0.001 : 1"
-                        [attr.aria-label]="'Received {name}' | t: { name: line.product?.name ?? line.rsName }"
-                        [ngModel]="received()[line.id]"
-                        (ngModelChange)="setReceived(line.id, $event)"
-                      />
-                    </td>
-                    <td class="cell-figure" [class.short]="received()[line.id] < line.quantity">
-                      {{ line.quantity - received()[line.id] | number: '1.0-3' }}
-                    </td>
-                  } @else if (transfer.status === 'received') {
-                    <td class="cell-figure">{{ line.receivedQuantity | number: '1.0-3' }}</td>
-                    <td class="cell-figure" [class.short]="(line.receivedQuantity ?? 0) < line.quantity">
-                      {{ line.quantity - (line.receivedQuantity ?? 0) | number: '1.0-3' }}
-                    </td>
                   }
-                  <td>{{ (line.product?.unit ?? line.rsUnit) | t }}</td>
                 </tr>
               }
             </tbody>

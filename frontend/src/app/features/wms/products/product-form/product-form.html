@@ -45,7 +45,9 @@
         <span class="field-error">{{ message | t }}</span>
       }
       @if (allCategories() !== null && categories().length === 0) {
-        <span class="field-hint">{{ 'No active categories yet. Add one in Products → Categories.' | t }}</span>
+        <span class="field-hint">{{
+          'No active categories yet. Add one in Products → Categories.' | t
+        }}</span>
       }
     </div>
 
@@ -84,7 +86,9 @@
         <span class="field-error">{{ message | t }}</span>
       }
       @if (allSuppliers() !== null && suppliers().length === 0) {
-        <span class="field-hint">{{ 'No active suppliers yet. Add one in Products → Suppliers.' | t }}</span>
+        <span class="field-hint">{{
+          'No active suppliers yet. Add one in Products → Suppliers.' | t
+        }}</span>
       }
     </div>
 
@@ -115,8 +119,13 @@
 
     <div class="field">
       <label for="productUnit">{{ 'Unit' | t }}</label>
-      <select id="productUnit" class="text-select" name="unit" [(ngModel)]="unit"
-        [disabled]="unitLocked()">
+      <select
+        id="productUnit"
+        class="text-select"
+        name="unit"
+        [(ngModel)]="unit"
+        [disabled]="unitLocked()"
+      >
         <option value="pcs">{{ 'pcs' | t }}</option>
         <option value="kg">{{ 'kg' | t }}</option>
       </select>
@@ -172,6 +181,8 @@
         {{ isSaving() ? ('Adding…' | t) : ('Add product' | t) }}
       }
     </button>
-    <button type="button" class="button button--secondary" (click)="cancelled.emit()">{{ 'Cancel' | t }}</button>
+    <button type="button" class="button button--secondary" (click)="cancelled.emit()">
+      {{ 'Cancel' | t }}
+    </button>
   </div>
 </form>

@@ -69,14 +69,65 @@ const STATUS_LABELS: Record<ProductStatus, string> = {
 };
 
 const COLUMNS: SheetColumn<Field>[] = [
-  { field: 'name', header: 'Name', aliases: ['product', 'product name', 'სახელი', 'დასახელება', 'პროდუქტი'], width: 30, required: true },
-  { field: 'barcode', header: 'Barcode', aliases: ['შტრიხკოდი'], width: 18, required: true, text: true },
-  { field: 'category', header: 'Category', aliases: ['კატეგორია'], width: 18, required: true },
-  { field: 'group', header: 'Group', aliases: ['ჯგუფი'], width: 18, required: true },
-  { field: 'supplier', header: 'Supplier', aliases: ['მომწოდებელი'], width: 22, required: true },
-  { field: 'unit', header: 'Unit', aliases: ['ერთეული'], width: 8, required: true, choices: Object.values(UNIT_LABELS) },
-  { field: 'usage', header: 'Use', aliases: ['usage', 'გამოყენება'], width: 12, required: true, choices: Object.values(USAGE_LABELS) },
-  { field: 'posStatus', header: 'POS status', aliases: ['pos', 'pos სტატუსი'], width: 18, choices: Object.values(POS_LABELS) },
+  {
+    field: 'name',
+    header: 'Name',
+    aliases: ['product', 'product name', 'სახელი', 'დასახელება', 'პროდუქტი'],
+    width: 30,
+    required: true,
+  },
+  {
+    field: 'barcode',
+    header: 'Barcode',
+    aliases: ['შტრიხკოდი'],
+    width: 18,
+    required: true,
+    text: true,
+  },
+  {
+    field: 'category',
+    header: 'Category',
+    aliases: ['კატეგორია'],
+    width: 18,
+    required: true,
+  },
+  {
+    field: 'group',
+    header: 'Group',
+    aliases: ['ჯგუფი'],
+    width: 18,
+    required: true,
+  },
+  {
+    field: 'supplier',
+    header: 'Supplier',
+    aliases: ['მომწოდებელი'],
+    width: 22,
+    required: true,
+  },
+  {
+    field: 'unit',
+    header: 'Unit',
+    aliases: ['ერთეული'],
+    width: 8,
+    required: true,
+    choices: Object.values(UNIT_LABELS),
+  },
+  {
+    field: 'usage',
+    header: 'Use',
+    aliases: ['usage', 'გამოყენება'],
+    width: 12,
+    required: true,
+    choices: Object.values(USAGE_LABELS),
+  },
+  {
+    field: 'posStatus',
+    header: 'POS status',
+    aliases: ['pos', 'pos სტატუსი'],
+    width: 18,
+    choices: Object.values(POS_LABELS),
+  },
   {
     field: 'status',
     header: 'Production status',
@@ -84,17 +135,36 @@ const COLUMNS: SheetColumn<Field>[] = [
     width: 18,
     choices: Object.values(STATUS_LABELS),
   },
-  { field: 'costPrice', header: 'Cost price', aliases: ['cost', 'თვითღირებულება'], width: 12, required: true, numFmt: '0.00' },
-  { field: 'salePrice', header: 'Sale price', aliases: ['price', 'გასაყიდი ფასი', 'ფასი'], width: 12, required: true, numFmt: '0.00' },
+  {
+    field: 'costPrice',
+    header: 'Cost price',
+    aliases: ['cost', 'თვითღირებულება'],
+    width: 12,
+    required: true,
+    numFmt: '0.00',
+  },
+  {
+    field: 'salePrice',
+    header: 'Sale price',
+    aliases: ['price', 'გასაყიდი ფასი', 'ფასი'],
+    width: 12,
+    required: true,
+    numFmt: '0.00',
+  },
 ];
 
 const EXPORT_ONLY = ['In stock', 'Warehouses', 'Value at cost'];
 
-const choices = <T>(labels: Record<string, string>, extra: Record<string, T>): Record<string, T> => ({
-  ...Object.fromEntries(Object.entries(labels).flatMap(([value, label]) => [
-    [choiceKey(value), value as T],
-    ...choiceKeys(label).map((key) => [key, value as T]),
-  ])),
+const choices = <T>(
+  labels: Record<string, string>,
+  extra: Record<string, T>,
+): Record<string, T> => ({
+  ...Object.fromEntries(
+    Object.entries(labels).flatMap(([value, label]) => [
+      [choiceKey(value), value as T],
+      ...choiceKeys(label).map((key) => [key, value as T]),
+    ]),
+  ),
   ...extra,
 });
 
@@ -102,30 +172,30 @@ const UNITS = choices<ProductUnit>(UNIT_LABELS, {
   pc: ProductUnit.PCS,
   piece: ProductUnit.PCS,
   pieces: ProductUnit.PCS,
-  'ცალი': ProductUnit.PCS,
-  'ც': ProductUnit.PCS,
+  ცალი: ProductUnit.PCS,
+  ც: ProductUnit.PCS,
   kilogram: ProductUnit.KG,
-  'კგ': ProductUnit.KG,
-  'კილოგრამი': ProductUnit.KG,
+  კგ: ProductUnit.KG,
+  კილოგრამი: ProductUnit.KG,
 });
 
 const USAGES = choices<ProductUsage>(USAGE_LABELS, {
-  'გასაყიდი': ProductUsage.SALE,
-  'გაყიდვა': ProductUsage.SALE,
-  'ინგრედიენტი': ProductUsage.INGREDIENT,
-  'ორივე': ProductUsage.BOTH,
+  გასაყიდი: ProductUsage.SALE,
+  გაყიდვა: ProductUsage.SALE,
+  ინგრედიენტი: ProductUsage.INGREDIENT,
+  ორივე: ProductUsage.BOTH,
 });
 
 const POS_STATUSES = choices<ProductPosStatus>(POS_LABELS, {
   storage: ProductPosStatus.STORAGE,
-  'საწყობი': ProductPosStatus.STORAGE,
+  საწყობი: ProductPosStatus.STORAGE,
   'available at pos': ProductPosStatus.POS,
 });
 
 const STATUSES = choices<ProductStatus>(STATUS_LABELS, {
   inactive: ProductStatus.INACTIVE,
-  'აქტიური': ProductStatus.ACTIVE,
-  'არააქტიური': ProductStatus.INACTIVE,
+  აქტიური: ProductStatus.ACTIVE,
+  არააქტიური: ProductStatus.INACTIVE,
 });
 
 export interface ProductPreviewRow {
@@ -145,13 +215,20 @@ export interface ProductPreviewRow {
 
 export type ProductImportReport = ImportReport<ProductPreviewRow>;
 
-function priceOf({ values, numbers }: SheetRow<Field>, field: 'costPrice' | 'salePrice'): number | null {
-  const number = numbers[field] ?? Number((values[field] ?? '').replace(/[₾\s]/g, '').replace(',', '.'));
+function priceOf(
+  { values, numbers }: SheetRow<Field>,
+  field: 'costPrice' | 'salePrice',
+): number | null {
+  const number =
+    numbers[field] ??
+    Number((values[field] ?? '').replace(/[₾\s]/g, '').replace(',', '.'));
   if (!Number.isFinite(number) || number < 0 || number > MAX_PRICE) {
     return null;
   }
   const cents = number * 100;
-  return Math.abs(cents - Math.round(cents)) < 1e-6 ? Math.round(cents) / 100 : null;
+  return Math.abs(cents - Math.round(cents)) < 1e-6
+    ? Math.round(cents) / 100
+    : null;
 }
 
 @Injectable()
@@ -173,7 +250,13 @@ export class ProductExcelService {
       workbook,
       SHEET_NAME,
       [
-        ...COLUMNS.map(({ header, width, text, numFmt, choices }) => ({ header, width, text, numFmt, translated: !!choices })),
+        ...COLUMNS.map(({ header, width, text, numFmt, choices }) => ({
+          header,
+          width,
+          text,
+          numFmt,
+          translated: !!choices,
+        })),
         { header: 'In stock', width: 12, numFmt: '#,##0.###' },
         { header: 'Warehouses', width: 12 },
         { header: 'Value at cost', width: 14, numFmt: '#,##0.00' },
@@ -202,23 +285,81 @@ export class ProductExcelService {
     const { categories, suppliers } = await this.activeLists(actor);
     const workbook = new ExcelJS.Workbook();
     const sheet = addTemplateSheet(workbook, SHEET_NAME, COLUMNS);
-    const columnOf = (field: Field) => COLUMNS.findIndex((column) => column.field === field) + 1;
-    addListDropdown(sheet, columnOf('category'), 'Categories', categories.length, 'Choose a category from the list (see the Categories sheet)');
-    addListDropdown(sheet, columnOf('supplier'), 'Suppliers', suppliers.length, 'Choose a supplier from the list (see the Suppliers sheet)');
+    const columnOf = (field: Field) =>
+      COLUMNS.findIndex((column) => column.field === field) + 1;
+    addListDropdown(
+      sheet,
+      columnOf('category'),
+      'Categories',
+      categories.length,
+      'Choose a category from the list (see the Categories sheet)',
+    );
+    addListDropdown(
+      sheet,
+      columnOf('supplier'),
+      'Suppliers',
+      suppliers.length,
+      'Choose a supplier from the list (see the Suppliers sheet)',
+    );
     addInstructionsSheet(
       workbook,
       [
-        ['Name', 'Yes', 'Must not repeat an existing product or another row (capitals and extra spaces are ignored).', 'Milk chocolate 100 g'],
-        ['Barcode', 'Yes', 'Must not repeat an existing product or another row. Keep the column as Text so leading zeros stay.', '4860001234567'],
-        ['Category', 'Yes', 'An active category, as on the Categories sheet (pick it from the dropdown).', 'Sweets'],
-        ['Group', 'Yes', 'Narrower group inside the category, free text.', 'Chocolate'],
-        ['Supplier', 'Yes', 'An active supplier, as on the Suppliers sheet (pick it from the dropdown).', 'Barambo'],
+        [
+          'Name',
+          'Yes',
+          'Must not repeat an existing product or another row (capitals and extra spaces are ignored).',
+          'Milk chocolate 100 g',
+        ],
+        [
+          'Barcode',
+          'Yes',
+          'Must not repeat an existing product or another row. Keep the column as Text so leading zeros stay.',
+          '4860001234567',
+        ],
+        [
+          'Category',
+          'Yes',
+          'An active category, as on the Categories sheet (pick it from the dropdown).',
+          'Sweets',
+        ],
+        [
+          'Group',
+          'Yes',
+          'Narrower group inside the category, free text.',
+          'Chocolate',
+        ],
+        [
+          'Supplier',
+          'Yes',
+          'An active supplier, as on the Suppliers sheet (pick it from the dropdown).',
+          'Barambo',
+        ],
         ['Unit', 'Yes', 'pcs or kg.', 'pcs'],
         ['Use', 'Yes', 'For sale, Ingredient or Both.', 'For sale'],
-        ['POS status', 'No', 'Storage only or Available at POS. Empty means Storage only.', 'Available at POS'],
-        ['Production status', 'No', 'Active or Not active. Empty means Active.', 'Active'],
-        ['Cost price', 'Yes', 'Price per unit in ₾, at most 2 decimals. Receipts update it later.', '2.35'],
-        ['Sale price', 'Yes', 'Price per unit in ₾, at most 2 decimals.', '3.90'],
+        [
+          'POS status',
+          'No',
+          'Storage only or Available at POS. Empty means Storage only.',
+          'Available at POS',
+        ],
+        [
+          'Production status',
+          'No',
+          'Active or Not active. Empty means Active.',
+          'Active',
+        ],
+        [
+          'Cost price',
+          'Yes',
+          'Price per unit in ₾, at most 2 decimals. Receipts update it later.',
+          '2.35',
+        ],
+        [
+          'Sale price',
+          'Yes',
+          'Price per unit in ₾, at most 2 decimals.',
+          '3.90',
+        ],
       ],
       [
         'This adds products to the catalogue only: quantities come in through a receipt.',
@@ -232,35 +373,61 @@ export class ProductExcelService {
       workbook,
       'Categories',
       [{ header: 'Category', width: 30, translated: categories.length === 0 }],
-      categories.length ? categories.map((c) => [c.name]) : [['No active categories yet. Add them in Products → Categories first.']],
+      categories.length
+        ? categories.map((c) => [c.name])
+        : [
+            [
+              'No active categories yet. Add them in Products → Categories first.',
+            ],
+          ],
     );
     addTableSheet(
       workbook,
       'Suppliers',
       [{ header: 'Supplier', width: 34, translated: suppliers.length === 0 }],
-      suppliers.length ? suppliers.map((s) => [s.name]) : [['No active suppliers yet. Add them in Products → Suppliers first.']],
+      suppliers.length
+        ? suppliers.map((s) => [s.name])
+        : [
+            [
+              'No active suppliers yet. Add them in Products → Suppliers first.',
+            ],
+          ],
     );
     return workbookBuffer(workbook, language);
   }
 
-  async check(actor: AuthUser, file: Express.Multer.File | undefined): Promise<ProductImportReport> {
+  async check(
+    actor: AuthUser,
+    file: Express.Multer.File | undefined,
+  ): Promise<ProductImportReport> {
     return (await this.validate(actor, file)).report;
   }
 
-  async import(actor: AuthUser, file: Express.Multer.File | undefined): Promise<ProductImportReport> {
+  async import(
+    actor: AuthUser,
+    file: Express.Multer.File | undefined,
+  ): Promise<ProductImportReport> {
     const { report, products } = await this.validate(actor, file);
     if (report.errors.length || products.length === 0) {
       return report;
     }
     const saved = await this.productsService.createMany(actor, products);
-    return { ...report, imported: saved.map(({ barcode, name }) => ({ code: barcode, name })) };
+    return {
+      ...report,
+      imported: saved.map(({ barcode, name }) => ({ code: barcode, name })),
+    };
   }
 
   private async validate(
     actor: AuthUser,
     file: Express.Multer.File | undefined,
   ): Promise<{ report: ProductImportReport; products: CreateProductDto[] }> {
-    const { report, rows } = await readImportFile<Field, ProductPreviewRow>(file, SHEET_NAME, COLUMNS, EXPORT_ONLY);
+    const { report, rows } = await readImportFile<Field, ProductPreviewRow>(
+      file,
+      SHEET_NAME,
+      COLUMNS,
+      EXPORT_ONLY,
+    );
     if (report.errors.length) {
       return { report, products: [] };
     }
@@ -279,8 +446,16 @@ export class ProductExcelService {
         : names.length <= 10
           ? `Active ${kind}: ${names.join(', ')}.`
           : `See the ${sheet} sheet of the template.`;
-    const categoryList = listed(categories.map((c) => c.name), 'Categories', 'categories');
-    const supplierList = listed(suppliers.map((s) => s.name), 'Suppliers', 'suppliers');
+    const categoryList = listed(
+      categories.map((c) => c.name),
+      'Categories',
+      'categories',
+    );
+    const supplierList = listed(
+      suppliers.map((s) => s.name),
+      'Suppliers',
+      'suppliers',
+    );
     const byBarcode = new Map(existing.map((p) => [p.barcode, p]));
     const firstRowByName = new Map<string, number>();
     const firstRowByBarcode = new Map<string, number>();
@@ -297,7 +472,12 @@ export class ProductExcelService {
         }
         return value;
       };
-      const choice = <T>(field: Field, map: Record<string, T>, allowed: string, fallback?: T): T | undefined => {
+      const choice = <T>(
+        field: Field,
+        map: Record<string, T>,
+        allowed: string,
+        fallback?: T,
+      ): T | undefined => {
         const text = values[field] ?? '';
         if (!text) {
           if (fallback === undefined) {
@@ -318,9 +498,15 @@ export class ProductExcelService {
         const taken = byName.get(key);
         const firstRow = firstRowByName.get(key);
         if (taken) {
-          error('name', `A product named "${taken.name}" already exists (barcode ${taken.barcode})`);
+          error(
+            'name',
+            `A product named "${taken.name}" already exists (barcode ${taken.barcode})`,
+          );
         } else if (firstRow !== undefined) {
-          error('name', `Same name as row ${firstRow}; product names must be unique`);
+          error(
+            'name',
+            `Same name as row ${firstRow}; product names must be unique`,
+          );
         } else {
           firstRowByName.set(key, row);
         }
@@ -331,7 +517,10 @@ export class ProductExcelService {
         const taken = byBarcode.get(barcode);
         const firstRow = firstRowByBarcode.get(barcode);
         if (sheetRow.numbers.barcode !== undefined && /e/i.test(barcode)) {
-          error('barcode', 'Excel turned this barcode into a number in scientific notation. Format the column as Text and type it again.');
+          error(
+            'barcode',
+            'Excel turned this barcode into a number in scientific notation. Format the column as Text and type it again.',
+          );
         } else if (taken) {
           error('barcode', `Barcode already used by "${taken.name}"`);
         } else if (firstRow !== undefined) {
@@ -342,20 +531,34 @@ export class ProductExcelService {
       }
 
       const categoryName = required('category', 'Category');
-      const category = categoryName ? categoryByName.get(nameKey(categoryName)) : undefined;
+      const category = categoryName
+        ? categoryByName.get(nameKey(categoryName))
+        : undefined;
       if (categoryName && !category) {
         error('category', `Not an active category. ${categoryList}`);
       }
       const group = required('group', 'Group');
       const supplierName = required('supplier', 'Supplier');
-      const supplier = supplierName ? supplierByName.get(nameKey(supplierName)) : undefined;
+      const supplier = supplierName
+        ? supplierByName.get(nameKey(supplierName))
+        : undefined;
       if (supplierName && !supplier) {
         error('supplier', `Not an active supplier. ${supplierList}`);
       }
       const unit = choice('unit', UNITS, 'pcs or kg');
       const usage = choice('usage', USAGES, 'For sale, Ingredient or Both');
-      const posStatus = choice('posStatus', POS_STATUSES, 'Storage only or Available at POS', ProductPosStatus.STORAGE);
-      const status = choice('status', STATUSES, 'Active or Not active', ProductStatus.ACTIVE);
+      const posStatus = choice(
+        'posStatus',
+        POS_STATUSES,
+        'Storage only or Available at POS',
+        ProductPosStatus.STORAGE,
+      );
+      const status = choice(
+        'status',
+        STATUSES,
+        'Active or Not active',
+        ProductStatus.ACTIVE,
+      );
 
       const prices = (['costPrice', 'salePrice'] as const).map((field) => {
         const label = field === 'costPrice' ? 'Cost price' : 'Sale price';
@@ -365,7 +568,10 @@ export class ProductExcelService {
         }
         const price = priceOf(sheetRow, field);
         if (price === null) {
-          error(field, `${label} must be a number of 0 or more with at most 2 decimals`);
+          error(
+            field,
+            `${label} must be a number of 0 or more with at most 2 decimals`,
+          );
         }
         return price;
       });
@@ -382,8 +588,17 @@ export class ProductExcelService {
           costPrice: prices[0]!,
           salePrice: prices[1]!,
         };
-        products.push({ ...product, categoryId: category!.id, supplierId: supplier!.id });
-        report.rows.push({ row, ...product, category: category!.name, supplier: supplier!.name });
+        products.push({
+          ...product,
+          categoryId: category!.id,
+          supplierId: supplier!.id,
+        });
+        report.rows.push({
+          row,
+          ...product,
+          category: category!.name,
+          supplier: supplier!.name,
+        });
       }
     }
 
@@ -391,7 +606,9 @@ export class ProductExcelService {
     return { report, products };
   }
 
-  private async activeLists(actor: AuthUser): Promise<{ categories: Category[]; suppliers: Supplier[] }> {
+  private async activeLists(
+    actor: AuthUser,
+  ): Promise<{ categories: Category[]; suppliers: Supplier[] }> {
     const [categories, suppliers] = await Promise.all([
       this.categoriesRepository.find({
         where: { companyId: actor.companyId!, status: CategoryStatus.ACTIVE },

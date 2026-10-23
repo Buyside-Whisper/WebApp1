@@ -81,40 +81,54 @@
       @if (!receipt.lines?.length) {
         <p class="page-description">{{ 'No products on this draft yet.' | t }}</p>
       } @else {
+        <app-column-tools [columnOrder]="columnOrder" [alone]="true" [hint]="false" />
         <div class="table-scroll">
-          <table class="data-table">
+          <table class="data-table" [appColumns]="columnOrder">
             <thead>
               <tr>
-                <th>{{ 'Product' | t }}</th>
-                <th>{{ 'Barcode' | t }}</th>
-                <th>{{ 'Quantity' | t }}</th>
-                <th>{{ 'Unit' | t }}</th>
-                <th>{{ 'Price per unit' | t }}</th>
-                <th>{{ 'Line total' | t }}</th>
+                @for (column of columnOrder.columns(); track column.key) {
+                  <th [appColumn]="column.key" [columnOrder]="columnOrder">{{ column.label | t }}</th>
+                }
               </tr>
             </thead>
             <tbody>
               @for (line of receipt.lines; track line.id) {
                 <tr>
-                  <td class="cell-strong">
-                    @if (line.product; as product) {
-                      @if (canOpenProducts()) {
-                        <a [routerLink]="['/wms/products', product.id]">{{ product.name }}</a>
-                      } @else {
-                        {{ product.name }}
+                  @for (column of columnOrder.columns(); track column.key) {
+                    @switch (column.key) {
+                      @case ('product') {
+                        <td class="cell-strong">
+                        @if (line.product; as product) {
+                          @if (canOpenProducts()) {
+                            <a [routerLink]="['/wms/products', product.id]">{{ product.name }}</a>
+                          } @else {
+                            {{ product.name }}
+                          }
+                        } @else {
+                          <span class="short">{{ 'Not linked yet' | t }}</span>
+                        }
+                        @if (line.rsName && line.rsName !== line.product?.name) {
+                          <div class="muted">{{ 'RS: {p0}' | t: { p0: line.rsName } }}</div>
+                        }
+                      </td>
                       }
-                    } @else {
-                      <span class="short">{{ 'Not linked yet' | t }}</span>
+                      @case ('barcode') {
+                        <td><code class="code-tag">{{ line.product?.barcode ?? line.rsBarcode ?? '—' }}</code></td>
+                      }
+                      @case ('quantity') {
+                        <td class="cell-figure">{{ line.quantity | number: '1.0-3' }}</td>
+                      }
+                      @case ('unit') {
+                        <td>{{ (line.product?.unit ?? line.rsUnit) | t }}</td>
+                      }
+                      @case ('pricePerUnit') {
+                        <td class="cell-figure">₾{{ line.unitCost | number: '1.2-2' }}</td>
+                      }
+                      @case ('lineTotal') {
+                        <td class="cell-figure">₾{{ line.quantity * line.unitCost | number: '1.2-2' }}</td>
+                      }
                     }
-                    @if (line.rsName && line.rsName !== line.product?.name) {
-                      <div class="muted">{{ 'RS: {p0}' | t: { p0: line.rsName } }}</div>
-                    }
-                  </td>
-                  <td><code class="code-tag">{{ line.product?.barcode ?? line.rsBarcode ?? '—' }}</code></td>
-                  <td class="cell-figure">{{ line.quantity | number: '1.0-3' }}</td>
-                  <td>{{ (line.product?.unit ?? line.rsUnit) | t }}</td>
-                  <td class="cell-figure">₾{{ line.unitCost | number: '1.2-2' }}</td>
-                  <td class="cell-figure">₾{{ line.quantity * line.unitCost | number: '1.2-2' }}</td>
+                  }
                 </tr>
               }
             </tbody>

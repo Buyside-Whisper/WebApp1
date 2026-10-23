@@ -20,6 +20,9 @@ import { EMPLOYEE_ROLE_LABELS, Employee, EmployeeRole, EmployeeStatus } from '..
 import { EmployeeService } from '../employee.service';
 import { TranslatePipe } from '../../../../core/i18n/t.pipe';
 import { I18nService } from '../../../../core/i18n/i18n.service';
+import { ColumnHeader, ColumnTable } from '../../../../shared/column-order/column-header';
+import { ColumnTools } from '../../../../shared/column-order/column-tools';
+import { ColumnOrder } from '../../../../shared/column-order/column-order';
 
 type FieldName =
   | 'firstName'
@@ -55,7 +58,7 @@ const ERROR_MESSAGES: Record<string, string> = {
 
 @Component({
   selector: 'app-employees-list',
-  imports: [TranslatePipe, 
+  imports: [ColumnHeader, ColumnTable, ColumnTools, TranslatePipe, 
     CredentialsModal,
     DatePipe,
     FormsModule,
@@ -68,6 +71,17 @@ const ERROR_MESSAGES: Record<string, string> = {
 })
 export class EmployeesList implements OnInit {
   private readonly i18n = inject(I18nService);
+  protected readonly columnOrder = new ColumnOrder('hr-employees', [
+    { key: 'employee', label: 'Employee' },
+    { key: 'position', label: 'Position' },
+    { key: 'personalId', label: 'Personal ID' },
+    { key: 'email', label: 'Email' },
+    { key: 'phone', label: 'Phone' },
+    { key: 'role', label: 'Role' },
+    { key: 'login', label: 'Login' },
+    { key: 'status', label: 'Status' },
+    { key: 'hireDate', label: 'Hire date' },
+  ]);
   private readonly employeeService = inject(EmployeeService);
   private readonly fb = inject(FormBuilder).nonNullable;
   private readonly auth = inject(AuthService);

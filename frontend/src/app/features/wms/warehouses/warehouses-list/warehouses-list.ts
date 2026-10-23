@@ -21,10 +21,12 @@ import {
 import { WarehouseService } from '../warehouse.service';
 import { TranslatePipe } from '../../../../core/i18n/t.pipe';
 import { I18nService } from '../../../../core/i18n/i18n.service';
+import { ColumnHeader, ColumnTable } from '../../../../shared/column-order/column-header';
+import { ColumnTools } from '../../../../shared/column-order/column-tools';
 
 @Component({
   selector: 'app-warehouses-list',
-  imports: [TranslatePipe, DecimalPipe, FormsModule, RouterLink, LucideAngularModule, Modal, Pager, XlsxImport],
+  imports: [ColumnHeader, ColumnTable, ColumnTools, TranslatePipe, DecimalPipe, FormsModule, RouterLink, LucideAngularModule, Modal, Pager, XlsxImport],
   templateUrl: './warehouses-list.html',
   styleUrl: './warehouses-list.css',
 })

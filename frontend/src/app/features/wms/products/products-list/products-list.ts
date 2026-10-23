@@ -37,10 +37,13 @@ import {
 import { ProductService } from '../product.service';
 import { TranslatePipe } from '../../../../core/i18n/t.pipe';
 import { I18nService } from '../../../../core/i18n/i18n.service';
+import { ColumnHeader, ColumnTable } from '../../../../shared/column-order/column-header';
+import { ColumnTools } from '../../../../shared/column-order/column-tools';
 
 @Component({
   selector: 'app-products-list',
-  imports: [TranslatePipe, 
+  imports: [ColumnHeader, ColumnTable, ColumnTools, 
+    TranslatePipe,
     DecimalPipe,
     FormsModule,
     RouterLink,
@@ -207,8 +210,12 @@ export class ProductsList implements OnInit {
     { label: 'Sale', value: (row) => `₾${row.salePrice.toFixed(2)}`, figure: true },
   ];
 
-  protected readonly categories = computed(() => this.uniqueById(this.products().map((p) => p.category)));
-  protected readonly suppliers = computed(() => this.uniqueById(this.products().map((p) => p.supplier)));
+  protected readonly categories = computed(() =>
+    this.uniqueById(this.products().map((p) => p.category)),
+  );
+  protected readonly suppliers = computed(() =>
+    this.uniqueById(this.products().map((p) => p.supplier)),
+  );
 
   protected readonly stockOf = signal<Product | null>(null);
 
@@ -266,7 +273,11 @@ export class ProductsList implements OnInit {
   }
 
   deleteProduct(product: Product): void {
-    if (!this.i18n.confirm(this.i18n.t('Delete {name} ({barcode})?', { name: product.name, barcode: product.barcode }))) {
+    if (
+      !this.i18n.confirm(
+        this.i18n.t('Delete {name} ({barcode})?', { name: product.name, barcode: product.barcode }),
+      )
+    ) {
       return;
     }
 

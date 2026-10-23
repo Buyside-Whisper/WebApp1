@@ -55,53 +55,70 @@
         }
       </div>
 
+      <app-column-tools [columnOrder]="columnOrder" [alone]="true" />
       <div class="table-scroll">
-        <table class="data-table">
+        <table class="data-table" [appColumns]="columnOrder">
           <thead>
             <tr>
-              <th>{{ 'Number' | t }}</th>
-              <th>{{ 'Date' | t }}</th>
-              <th>{{ 'Warehouse' | t }}</th>
-              <th>{{ 'Supplier' | t }}</th>
-              <th>{{ 'Waybill' | t }}</th>
-              <th>{{ 'Lines' | t }}</th>
-              <th>{{ 'Total' | t }}</th>
-              <th>{{ 'Status' | t }}</th>
-              <th>{{ 'Created by' | t }}</th>
+              @for (column of columnOrder.columns(); track column.key) {
+                <th [appColumn]="column.key" [columnOrder]="columnOrder">{{ column.label | t }}</th>
+              }
               <th>{{ 'Actions' | t }}</th>
             </tr>
           </thead>
           <tbody>
             @for (receipt of pages.items(); track receipt.id) {
               <tr>
-                <td class="cell-strong">
-                  <a [routerLink]="['/wms/receipts', receipt.id]">{{ receipt.code }}</a>
-                </td>
-                <td class="cell-figure">{{ receipt.date | date: 'dd.MM.yyyy' }}</td>
-                <td class="cell-nowrap">
-                  <code class="code-tag">{{ receipt.warehouse.code }}</code>
-                  {{ receipt.warehouse.name }}
-                </td>
-                <td>
-                  {{ receipt.supplier?.name ?? receipt.rsSellerName ?? '—' }}
-                  @if (receipt.rsWaybillId) {
-                    <span class="chip chip--rs" [title]="'Made from an RS waybill' | t">{{ 'RS' | t }}</span>
+                @for (column of columnOrder.columns(); track column.key) {
+                  @switch (column.key) {
+                    @case ('number') {
+                      <td class="cell-strong">
+                      <a [routerLink]="['/wms/receipts', receipt.id]">{{ receipt.code }}</a>
+                    </td>
+                    }
+                    @case ('date') {
+                      <td class="cell-figure">{{ receipt.date | date: 'dd.MM.yyyy' }}</td>
+                    }
+                    @case ('warehouse') {
+                      <td class="cell-nowrap">
+                      <code class="code-tag">{{ receipt.warehouse.code }}</code>
+                      {{ receipt.warehouse.name }}
+                    </td>
+                    }
+                    @case ('supplier') {
+                      <td>
+                      {{ receipt.supplier?.name ?? receipt.rsSellerName ?? '—' }}
+                      @if (receipt.rsWaybillId) {
+                        <span class="chip chip--rs" [title]="'Made from an RS waybill' | t">{{ 'RS' | t }}</span>
+                      }
+                    </td>
+                    }
+                    @case ('waybill') {
+                      <td>{{ receipt.waybillNumber ?? '–' }}</td>
+                    }
+                    @case ('lines') {
+                      <td class="cell-figure">{{ receipt.lineCount }}</td>
+                    }
+                    @case ('total') {
+                      <td class="cell-figure">₾{{ receipt.total | number: '1.2-2' }}</td>
+                    }
+                    @case ('status') {
+                      <td>
+                      <span
+                        class="badge"
+                        [class.badge--draft]="receipt.status === 'draft'"
+                        [class.badge--done]="receipt.status === 'posted'"
+                        [class.badge--cancelled]="receipt.status === 'cancelled'"
+                      >
+                        {{ statusLabels[receipt.status] | t }}
+                      </span>
+                    </td>
+                    }
+                    @case ('createdBy') {
+                      <td class="cell-nowrap">{{ receipt.createdByName }}</td>
+                    }
                   }
-                </td>
-                <td>{{ receipt.waybillNumber ?? '–' }}</td>
-                <td class="cell-figure">{{ receipt.lineCount }}</td>
-                <td class="cell-figure">₾{{ receipt.total | number: '1.2-2' }}</td>
-                <td>
-                  <span
-                    class="badge"
-                    [class.badge--draft]="receipt.status === 'draft'"
-                    [class.badge--done]="receipt.status === 'posted'"
-                    [class.badge--cancelled]="receipt.status === 'cancelled'"
-                  >
-                    {{ statusLabels[receipt.status] | t }}
-                  </span>
-                </td>
-                <td class="cell-nowrap">{{ receipt.createdByName }}</td>
+                }
                 <td>
                   <div class="icon-actions">
                     <a class="icon-action" [routerLink]="['/wms/receipts', receipt.id]" [title]="'View' | t">

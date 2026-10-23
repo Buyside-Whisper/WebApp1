@@ -7,13 +7,23 @@ import { StockService } from '../../stock/stock.service';
 import { PRODUCT_POS_STATUS_LABELS, PRODUCT_USAGE_LABELS, Product } from '../product.model';
 import { ProductService } from '../product.service';
 import { TranslatePipe } from '../../../../core/i18n/t.pipe';
+import { ColumnHeader, ColumnTable } from '../../../../shared/column-order/column-header';
+import { ColumnTools } from '../../../../shared/column-order/column-tools';
+import { ColumnOrder } from '../../../../shared/column-order/column-order';
 
 @Component({
   selector: 'app-product-view',
-  imports: [TranslatePipe, DecimalPipe, RouterLink, MovementHistory],
+  imports: [ColumnHeader, ColumnTable, ColumnTools, TranslatePipe, DecimalPipe, RouterLink, MovementHistory],
   templateUrl: './product-view.html',
 })
 export class ProductView implements OnInit {
+  protected readonly columnOrder = new ColumnOrder('wms-product-warehouses', [
+    { key: 'warehouse', label: 'Warehouse' },
+    { key: 'code', label: 'Code' },
+    { key: 'type', label: 'Type' },
+    { key: 'quantity', label: 'Quantity' },
+    { key: 'valueAtCost', label: 'Value (at cost)' },
+  ]);
   private readonly productService = inject(ProductService);
   private readonly stockService = inject(StockService);
 

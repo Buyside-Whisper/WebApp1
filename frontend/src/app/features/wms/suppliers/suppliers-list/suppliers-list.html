@@ -76,61 +76,77 @@
             {{ '{p0} suppliers' | t: { p0: suppliers().length } }}
           }
         </span>
+        <app-column-tools [columnOrder]="columnOrder" />
       </div>
       <div class="table-scroll">
-        <table class="data-table">
+        <table class="data-table" [appColumns]="columnOrder">
           <thead>
             <tr>
-              <th>{{ 'Supplier' | t }}</th>
-              <th>{{ 'Type' | t }}</th>
-              <th>{{ 'ID code' | t }}</th>
-              <th>{{ 'VAT' | t }}</th>
-              <th>{{ 'Contact' | t }}</th>
-              <th>{{ 'Email' | t }}</th>
-              <th>{{ 'Products' | t }}</th>
-              <th>{{ 'Status' | t }}</th>
+              @for (column of columnOrder.columns(); track column.key) {
+                <th [appColumn]="column.key" [columnOrder]="columnOrder">{{ column.label | t }}</th>
+              }
               <th>{{ 'Actions' | t }}</th>
             </tr>
           </thead>
           <tbody>
             @for (supplier of pages.items(); track supplier.id) {
               <tr>
-                <td>
-                  <div class="cell-strong">{{ supplier.name }}</div>
-                  @if (supplier.address) {
-                    <div class="muted">{{ supplier.address }}</div>
+                @for (column of columnOrder.columns(); track column.key) {
+                  @switch (column.key) {
+                    @case ('supplier') {
+                      <td>
+                      <div class="cell-strong">{{ supplier.name }}</div>
+                      @if (supplier.address) {
+                        <div class="muted">{{ supplier.address }}</div>
+                      }
+                    </td>
+                    }
+                    @case ('type') {
+                      <td>{{ typeLabels[supplier.type] | t }}</td>
+                    }
+                    @case ('idCode') {
+                      <td>
+                      @if (supplier.identificationCode) {
+                        <code class="code-tag">{{ supplier.identificationCode }}</code>
+                      } @else {
+                        <span class="muted">—</span>
+                      }
+                    </td>
+                    }
+                    @case ('vat') {
+                      <td>{{ supplier.vatPayer ? ('VAT payer' | t) : ('No' | t) }}</td>
+                    }
+                    @case ('contact') {
+                      <td>
+                      @if (supplier.contactPerson || supplier.phone) {
+                        <div>{{ supplier.contactPerson }}</div>
+                        <div class="muted">{{ supplier.phone }}</div>
+                      } @else {
+                        <span class="muted">—</span>
+                      }
+                    </td>
+                    }
+                    @case ('email') {
+                      <td>
+                      @if (supplier.email) {
+                        {{ supplier.email }}
+                      } @else {
+                        <span class="muted">—</span>
+                      }
+                    </td>
+                    }
+                    @case ('products') {
+                      <td class="cell-figure">{{ supplier.productCount }}</td>
+                    }
+                    @case ('status') {
+                      <td>
+                      <span class="badge" [class]="supplier.status === 'active' ? 'badge--active' : 'badge--inactive'">
+                        {{ supplier.status === 'active' ? ('Active' | t) : ('Inactive' | t) }}
+                      </span>
+                    </td>
+                    }
                   }
-                </td>
-                <td>{{ typeLabels[supplier.type] | t }}</td>
-                <td>
-                  @if (supplier.identificationCode) {
-                    <code class="code-tag">{{ supplier.identificationCode }}</code>
-                  } @else {
-                    <span class="muted">—</span>
-                  }
-                </td>
-                <td>{{ supplier.vatPayer ? ('VAT payer' | t) : ('No' | t) }}</td>
-                <td>
-                  @if (supplier.contactPerson || supplier.phone) {
-                    <div>{{ supplier.contactPerson }}</div>
-                    <div class="muted">{{ supplier.phone }}</div>
-                  } @else {
-                    <span class="muted">—</span>
-                  }
-                </td>
-                <td>
-                  @if (supplier.email) {
-                    {{ supplier.email }}
-                  } @else {
-                    <span class="muted">—</span>
-                  }
-                </td>
-                <td class="cell-figure">{{ supplier.productCount }}</td>
-                <td>
-                  <span class="badge" [class]="supplier.status === 'active' ? 'badge--active' : 'badge--inactive'">
-                    {{ supplier.status === 'active' ? ('Active' | t) : ('Inactive' | t) }}
-                  </span>
-                </td>
+                }
                 <td>
                   <div class="icon-actions">
                     <button

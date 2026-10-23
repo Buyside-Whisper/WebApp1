@@ -139,10 +139,10 @@
                 <a
                   class="shell-nav__subitem"
                   routerLink="/wms/products"
-                routerLinkActive="shell-nav__subitem--active"
-              >
-                {{ 'Products' | t }}
-              </a>
+                  routerLinkActive="shell-nav__subitem--active"
+                >
+                  {{ 'Products' | t }}
+                </a>
               }
               <a
                 class="shell-nav__subitem"
@@ -210,10 +210,10 @@
                 <a
                   class="shell-nav__subitem"
                   routerLink="/store/pos"
-                routerLinkActive="shell-nav__subitem--active"
-              >
-                {{ 'POS' | t }}
-              </a>
+                  routerLinkActive="shell-nav__subitem--active"
+                >
+                  {{ 'POS' | t }}
+                </a>
               }
               <a
                 class="shell-nav__subitem"
@@ -295,7 +295,13 @@
           <div class="shell-user__meta">{{ roleLabel() | t }} · {{ user()?.companyName }}</div>
         </div>
       }
-      <button type="button" class="shell-icon-button" [aria-label]="'Sign out' | t" [title]="'Sign out' | t" (click)="auth.logout()">
+      <button
+        type="button"
+        class="shell-icon-button"
+        [aria-label]="'Sign out' | t"
+        [title]="'Sign out' | t"
+        (click)="auth.logout()"
+      >
         <lucide-icon [img]="LogOutIcon" [size]="18"></lucide-icon>
       </button>
     </div>

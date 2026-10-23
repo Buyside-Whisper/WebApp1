@@ -5,6 +5,9 @@ import { StockMovement } from '../../stock/stock.model';
 import { StockService } from '../../stock/stock.service';
 import { Product } from '../product.model';
 import { TranslatePipe } from '../../../../core/i18n/t.pipe';
+import { ColumnHeader, ColumnTable } from '../../../../shared/column-order/column-header';
+import { ColumnTools } from '../../../../shared/column-order/column-tools';
+import { ColumnOrder } from '../../../../shared/column-order/column-order';
 
 interface InTransit {
   documentId: string;
@@ -16,10 +19,18 @@ interface InTransit {
 
 @Component({
   selector: 'app-product-stock',
-  imports: [TranslatePipe, DatePipe, DecimalPipe, RouterLink],
+  imports: [ColumnHeader, ColumnTable, ColumnTools, TranslatePipe, DatePipe, DecimalPipe, RouterLink],
   templateUrl: './product-stock.html',
 })
 export class ProductStock implements OnInit {
+  protected readonly columnOrder = new ColumnOrder('wms-product-stock', [
+    { key: 'warehouse', label: 'Warehouse' },
+    { key: 'type', label: 'Type' },
+    { key: 'quantity', label: 'Quantity' },
+    { key: 'share', label: 'Share' },
+    { key: 'value', label: 'Value' },
+    { key: 'lastChange', label: 'Last change' },
+  ]);
   private readonly stockService = inject(StockService);
 
   readonly product = input.required<Product>();

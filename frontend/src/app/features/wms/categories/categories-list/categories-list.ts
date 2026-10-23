@@ -11,14 +11,23 @@ import { Category, CategoryStatus } from '../category.model';
 import { CategoryService } from '../category.service';
 import { TranslatePipe } from '../../../../core/i18n/t.pipe';
 import { I18nService } from '../../../../core/i18n/i18n.service';
+import { ColumnHeader, ColumnTable } from '../../../../shared/column-order/column-header';
+import { ColumnTools } from '../../../../shared/column-order/column-tools';
+import { ColumnOrder } from '../../../../shared/column-order/column-order';
 
 @Component({
   selector: 'app-categories-list',
-  imports: [TranslatePipe, FormsModule, LucideAngularModule, Modal, Pager, ProductTabs],
+  imports: [ColumnHeader, ColumnTable, ColumnTools, TranslatePipe, FormsModule, LucideAngularModule, Modal, Pager, ProductTabs],
   templateUrl: './categories-list.html',
 })
 export class CategoriesList implements OnInit {
   private readonly i18n = inject(I18nService);
+  protected readonly columnOrder = new ColumnOrder('wms-categories', [
+    { key: 'category', label: 'Category' },
+    { key: 'description', label: 'Description' },
+    { key: 'products', label: 'Products' },
+    { key: 'status', label: 'Status' },
+  ]);
   private readonly categoryService = inject(CategoryService);
   private readonly auth = inject(AuthService);
 
