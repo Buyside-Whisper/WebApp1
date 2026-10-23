@@ -3,10 +3,10 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  margin-top: 16px;
-  font-size: 0.84rem;
-  color: #64748b;
+  gap: 10px;
+  margin-top: 10px;
+  font-size: 0.92rem;
+  color: var(--ink-muted);
 }
 
 .pager__info {
@@ -24,40 +24,41 @@
 
 .pager__size .text-select {
   width: auto;
-  min-height: 34px;
-  padding: 4px 30px 4px 12px;
-  font-size: 0.84rem;
+  min-height: 28px;
+  padding: 2px 26px 2px 8px;
+  font-size: 0.92rem;
 }
 
 .pager__pages {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
 }
 
 .pager__button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 34px;
-  height: 34px;
+  min-width: 28px;
+  height: 28px;
   padding: 0 8px;
-  border: none;
-  border-radius: 10px;
-  background: transparent;
-  color: #334155;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--ink);
   font: inherit;
   font-weight: 600;
   cursor: pointer;
 }
 
 .pager__button:hover:not(:disabled) {
-  background: #f1f5f9;
+  background: var(--surface-muted);
 }
 
 .pager__button--current,
 .pager__button--current:hover:not(:disabled) {
-  background: #0f172a;
+  background: var(--accent);
+  border-color: var(--accent);
   color: #ffffff;
 }
 
@@ -68,5 +69,5 @@
 
 .pager__gap {
   padding: 0 4px;
-  color: #94a3b8;
+  color: var(--ink-faint);
 }

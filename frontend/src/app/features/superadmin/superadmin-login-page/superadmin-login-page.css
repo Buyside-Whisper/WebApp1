@@ -3,29 +3,29 @@
   display: grid;
   place-items: center;
   padding: 24px;
-  background: #0f172a;
+  background: var(--dark);
 }
 
 .sa-login__card {
   width: min(400px, 100%);
   display: grid;
   gap: 16px;
-  padding: 32px;
+  padding: 24px;
   background: #ffffff;
-  border-radius: 24px;
+  border-radius: var(--radius);
 }
 
 .sa-login__brand {
   font-weight: 700;
   font-size: 1.05rem;
-  color: #111827;
+  color: var(--ink-strong);
 }
 
 .sa-login__brand span {
   margin-left: 6px;
   padding: 2px 8px;
-  border-radius: 999px;
-  background: #0f172a;
+  border-radius: var(--radius-sm);
+  background: var(--dark);
   color: #ffffff;
   font-size: 0.7rem;
   letter-spacing: 0.08em;
@@ -35,11 +35,11 @@
 .sa-login__title {
   margin: 0;
   font-size: 1.4rem;
-  color: #111827;
+  color: var(--ink-strong);
 }
 
 .sa-login__link {
   justify-self: center;
-  color: #64748b;
+  color: var(--ink-muted);
   font-size: 0.82rem;
 }

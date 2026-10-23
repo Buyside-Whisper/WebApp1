@@ -25,26 +25,28 @@ import { TranslatePipe } from '../../core/i18n/t.pipe';
   styles: `
     .language-switch {
       display: inline-flex;
-      gap: 2px;
-      padding: 3px;
-      border: 1px solid #e2e8f0;
-      border-radius: 999px;
-      background: #ffffff;
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius-sm);
+      background: var(--surface);
+      overflow: hidden;
     }
     .language-switch__option {
-      padding: 3px 10px;
+      padding: 3px 9px;
       border: none;
-      border-radius: 999px;
+      border-radius: 0;
       background: transparent;
-      color: #64748b;
+      color: var(--ink-muted);
       font: inherit;
-      font-size: 0.78rem;
+      font-size: 0.86rem;
       font-weight: 700;
       cursor: pointer;
     }
+    .language-switch__option + .language-switch__option {
+      border-left: 1px solid var(--line-strong);
+    }
     .language-switch__option--on {
-      background: #eef2ff;
-      color: #4338ca;
+      background: var(--accent);
+      color: #ffffff;
     }
     .language-switch--dark {
       border-color: rgba(255, 255, 255, 0.25);
@@ -53,8 +55,11 @@ import { TranslatePipe } from '../../core/i18n/t.pipe';
     .language-switch--dark .language-switch__option {
       color: #cbd5e1;
     }
+    .language-switch--dark .language-switch__option + .language-switch__option {
+      border-left-color: rgba(255, 255, 255, 0.25);
+    }
     .language-switch--dark .language-switch__option--on {
-      background: rgba(255, 255, 255, 0.16);
+      background: var(--accent);
       color: #ffffff;
     }
   `,

@@ -36,7 +36,7 @@
 
 .session-caret {
   width: 24px;
-  color: #94a3b8;
+  color: var(--ink-faint);
 }
 
 .session-detail > td {

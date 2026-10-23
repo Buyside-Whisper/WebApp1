@@ -40,18 +40,18 @@
 .cell-sub {
   margin-top: 2px;
   font-size: 0.78rem;
-  color: #64748b;
+  color: var(--ink-muted);
 }
 
 .label-hint {
   font-weight: 400;
-  color: #94a3b8;
+  color: var(--ink-faint);
 }
 
 .field-label {
   font-size: 0.84rem;
   font-weight: 600;
-  color: #334155;
+  color: var(--ink);
 }
 
 .status-preview {

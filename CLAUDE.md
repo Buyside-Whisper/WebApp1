@@ -6,9 +6,13 @@ Guidance for Claude Code when working in this repository.
 
 A new internal app, built from scratch: Angular 20 (frontend) + NestJS (backend) + PostgreSQL.
 
-Visually, the app copies the CSS/look of `/home/david/Desktop/Job/RetailApp/retailapp-frontend`
-(`src/App.css`) — indigo `#4f46e5` accent, white 292px collapsible sidebar, Noto Sans Georgian
-font, rounded-pill buttons, 12-24px border radii. **Only the visual styling was copied — no
+Visually, the app started from the look of `/home/david/Desktop/Job/RetailApp/retailapp-frontend`
+(`src/App.css`); on 2026-10-23 it was restyled from the user's mockups to a **compact, rectangular**
+look: 13px base text, 3-4px corners, blue accent `#1a9bd7`, white page-header bar, grid tables
+(grey header row, lines between rows and columns), small bordered square row actions, Noto Sans
+Georgian font, white 292px collapsible sidebar. All colours, corners and greys are CSS variables
+on `:root` in `src/styles.css` (`--accent`, `--radius`, `--line`, `--ink`, ...): use them in every
+new style instead of literal values. **Only the visual styling was copied — no
 RetailApp functionality, business logic, or code was reused.** RetailApp is a separate, unrelated
 project (a full POS/WMS/restaurant management system) — do not pull in its features or assume
 this app should grow in that direction.

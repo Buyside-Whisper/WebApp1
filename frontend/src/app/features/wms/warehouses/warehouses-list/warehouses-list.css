@@ -1,6 +1,6 @@
 .badge--main {
-  background: rgba(79, 70, 229, 0.1);
-  color: #4338ca;
+  background: var(--accent-soft);
+  color: var(--accent-strong);
 }
 
 .badge--sales {

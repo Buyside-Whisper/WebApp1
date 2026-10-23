@@ -39,12 +39,12 @@
   position: fixed;
   z-index: 1000;
   margin: 0;
-  padding: 6px;
+  padding: 3px;
   list-style: none;
   background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 14px;
-  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.12);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.12);
   overflow-y: auto;
 }
 
@@ -53,23 +53,23 @@
   align-items: center;
   gap: 10px;
   width: 100%;
-  padding: 8px 10px;
+  padding: 5px 8px;
   border: none;
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   background: transparent;
   font: inherit;
-  font-size: 0.88rem;
+  font-size: 0.96rem;
   color: #0f172a;
   text-align: left;
   cursor: pointer;
 }
 
 .combobox__option--active {
-  background: #f1f5f9;
+  background: var(--accent-soft);
 }
 
 .combobox__option--selected {
-  color: #4f46e5;
+  color: var(--accent-strong);
   font-weight: 600;
 }
 
@@ -78,12 +78,12 @@
 }
 
 .combobox__hint {
-  font-size: 0.8rem;
+  font-size: 0.88rem;
   color: #64748b;
 }
 
 .combobox__empty {
   padding: 10px;
-  font-size: 0.86rem;
+  font-size: 0.92rem;
   color: #94a3b8;
 }

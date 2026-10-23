@@ -9,14 +9,14 @@
   align-content: start;
   gap: 12px;
   padding: 16px;
-  border: 1px solid #e2e8f0;
-  border-radius: 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
   background: #ffffff;
 }
 
 .module-price--on {
-  border-color: #4f46e5;
-  background: rgba(79, 70, 229, 0.04);
+  border-color: var(--accent);
+  background: var(--accent-soft);
 }
 
 .module-price--included {
@@ -37,7 +37,7 @@
 
 .module-price__amount {
   font-weight: 700;
-  color: #0f172a;
+  color: var(--ink-strong);
 }
 
 .price-input {
