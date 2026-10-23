@@ -65,11 +65,8 @@ export class RsService {
     return this.http.get<RsWarehouseChoice[]>(`${API_BASE_URL}/wms/warehouses/options`);
   }
 
-  createReceipt(waybillId: string, warehouseId: string, createSupplier: boolean): Observable<{ id: string; code: string }> {
-    return this.http.post<{ id: string; code: string }>(`${RECEIPTS_URL}/from-rs/${waybillId}`, {
-      warehouseId,
-      createSupplier,
-    });
+  createReceipt(waybillId: string, warehouseId: string): Observable<{ id: string; code: string }> {
+    return this.http.post<{ id: string; code: string }>(`${RECEIPTS_URL}/from-rs/${waybillId}`, { warehouseId });
   }
 
   reject(waybillId: string): Observable<void> {

@@ -34,12 +34,13 @@
 
     <div class="field">
       <label for="productCategory">{{ 'Category' | t }}</label>
-      <select id="productCategory" class="text-select" name="categoryId" [(ngModel)]="categoryId" required>
-        <option value="" disabled>{{ allCategories() === null ? ('Loading…' | t) : ('— Choose a category —' | t) }}</option>
-        @for (option of categories(); track option.id) {
-          <option [value]="option.id">{{ option.label | t }}</option>
-        }
-      </select>
+      <app-combobox
+        inputId="productCategory"
+        [options]="categories()"
+        [(value)]="categoryId"
+        [placeholder]="allCategories() === null ? 'Loading…' : '— Choose a category —'"
+        [invalid]="!!shownErrors().categoryId"
+      />
       @if (shownErrors().categoryId; as message) {
         <span class="field-error">{{ message | t }}</span>
       }
@@ -72,12 +73,13 @@
 
     <div class="field">
       <label for="productSupplier">{{ 'Supplier' | t }}</label>
-      <select id="productSupplier" class="text-select" name="supplierId" [(ngModel)]="supplierId" required>
-        <option value="" disabled>{{ allSuppliers() === null ? ('Loading…' | t) : ('— Choose a supplier —' | t) }}</option>
-        @for (option of suppliers(); track option.id) {
-          <option [value]="option.id">{{ option.label | t }}</option>
-        }
-      </select>
+      <app-combobox
+        inputId="productSupplier"
+        [options]="suppliers()"
+        [(value)]="supplierId"
+        [placeholder]="allSuppliers() === null ? 'Loading…' : '— Choose a supplier —'"
+        [invalid]="!!shownErrors().supplierId"
+      />
       @if (shownErrors().supplierId; as message) {
         <span class="field-error">{{ message | t }}</span>
       }

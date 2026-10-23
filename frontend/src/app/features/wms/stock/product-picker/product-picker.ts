@@ -4,8 +4,7 @@ import { LucideAngularModule, ScanBarcode } from 'lucide-angular';
 import { ProductUnit } from '../../products/product.model';
 import { TranslatePipe } from '../../../../core/i18n/t.pipe';
 import { I18nService } from '../../../../core/i18n/i18n.service';
-
-const WORD_SPLIT = /[\s,.;:()\[\]\/\\+&-]+/;
+import { wordMatch } from '../../../../shared/word-search';
 
 export interface PickableProduct {
   id: string;
@@ -51,22 +50,16 @@ export class ProductPicker {
 
   protected readonly matches = computed(() => {
     const query = this.query().trim().toLowerCase();
-    if (!query) {
-      return [];
-    }
-    const queryWords = query.split(WORD_SPLIT).filter(Boolean);
     return this.products()
       .flatMap((p) => {
-        const name = p.name.toLowerCase();
-        const words = name.split(WORD_SPLIT);
-        const byName = queryWords.length > 0 && queryWords.every((q) => words.some((word) => word.startsWith(q)));
-        if (!byName && !p.barcode.toLowerCase().includes(query)) {
+        const byName = wordMatch(p.name, query);
+        if (byName === null && !p.barcode.toLowerCase().includes(query)) {
           return [];
         }
-        return [{ product: p, rank: name.startsWith(query) ? 0 : byName ? 1 : 2 }];
+        return [{ product: p, rank: byName ?? 2 }];
       })
       .sort((a, b) => a.rank - b.rank || a.product.name.localeCompare(b.product.name))
-      .slice(0, 50)
+      .slice(0, query ? 50 : 200)
       .map(({ product }) => product);
   });
 

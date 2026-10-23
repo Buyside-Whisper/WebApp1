@@ -17,7 +17,7 @@
       </div>
       @if (receipt(); as receipt) {
         <p class="page-description">
-          {{ receipt.supplier.name }} → {{ receipt.warehouse.code }} {{ receipt.warehouse.name }}
+          {{ receipt.supplier?.name ?? receipt.rsSellerName }} → {{ receipt.warehouse.code }} {{ receipt.warehouse.name }}
         </p>
       }
     </div>
@@ -55,7 +55,7 @@
             {{ receipt.warehouse.name }}
           </dd>
         </div>
-        <div><dt>{{ 'Supplier' | t }}</dt><dd>{{ receipt.supplier.name }}@if (receipt.supplier.identificationCode) {<br /><span class="muted">{{ receipt.supplier.identificationCode }}</span>}</dd></div>
+        <div><dt>{{ 'Supplier' | t }}</dt><dd>@if (receipt.supplier; as supplier) {{{ supplier.name }}@if (supplier.identificationCode) {<br /><span class="muted">{{ supplier.identificationCode }}</span>}} @else {<span class="muted">{{ 'Not chosen yet (on the waybill: {p0})' | t: { p0: receipt.rsSellerName ?? receipt.rsSellerTin ?? '—' } }}</span>}</dd></div>
         @if (receipt.rsWaybillId) {
           <div><dt>{{ 'RS waybill' | t }}</dt><dd>{{ receipt.waybillNumber }}<br /><span class="muted">{{ receipt.rsConfirmedAt ? ('Confirmed in RS {date}' | t: { date: receipt.rsConfirmedAt | date: 'dd.MM.yyyy HH:mm' }) : ('Not confirmed in RS yet' | t) }}</span></dd></div>
         }

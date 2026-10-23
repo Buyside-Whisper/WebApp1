@@ -1,0 +1,117 @@
+<form class="page-stack" (ngSubmit)="save()">
+  <div class="form-grid">
+    <div class="field">
+      <label for="supplierName">{{ 'Supplier' | t }}</label>
+      <input
+        id="supplierName"
+        class="text-input"
+        type="text"
+        name="name"
+        [(ngModel)]="name"
+        [placeholder]="'e.g. Mars Georgia' | t"
+        required
+      />
+    </div>
+
+    <div class="field">
+      <label for="supplierType">{{ 'Type' | t }}</label>
+      <select id="supplierType" class="text-select" name="type" [(ngModel)]="type">
+        <option value="company">{{ 'Company' | t }}</option>
+        <option value="individual">{{ 'Individual' | t }}</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="supplierCode">{{ 'Identification code (optional)' | t }}</label>
+      <input
+        id="supplierCode"
+        class="text-input"
+        type="text"
+        inputmode="numeric"
+        name="identificationCode"
+        [(ngModel)]="identificationCode"
+        [placeholder]="type() === 'company' ? ('9 digits, e.g. 405123456' | t) : ('Personal ID, 11 digits' | t)"
+      />
+    </div>
+
+    <div class="field">
+      <label for="supplierVat">{{ 'VAT' | t }}</label>
+      <select id="supplierVat" class="text-select" name="vatPayer" [(ngModel)]="vatPayer">
+        <option [ngValue]="true">{{ 'VAT payer' | t }}</option>
+        <option [ngValue]="false">{{ 'Not a VAT payer' | t }}</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="supplierContact">{{ 'Contact person (optional)' | t }}</label>
+      <input
+        id="supplierContact"
+        class="text-input"
+        type="text"
+        name="contactPerson"
+        [(ngModel)]="contactPerson"
+        [placeholder]="'e.g. Nino Beridze' | t"
+      />
+    </div>
+
+    <div class="field">
+      <label for="supplierPhone">{{ 'Phone (optional)' | t }}</label>
+      <input
+        id="supplierPhone"
+        class="text-input"
+        type="tel"
+        name="phone"
+        [(ngModel)]="phone"
+        [placeholder]="'e.g. +995 555 12 34 56' | t"
+      />
+    </div>
+
+    <div class="field">
+      <label for="supplierEmail">{{ 'Email (optional)' | t }}</label>
+      <input
+        id="supplierEmail"
+        class="text-input"
+        type="email"
+        name="email"
+        [(ngModel)]="email"
+        [placeholder]="'e.g. orders@supplier.ge' | t"
+      />
+    </div>
+
+    <div class="field">
+      <label for="supplierAddress">{{ 'Address (optional)' | t }}</label>
+      <input
+        id="supplierAddress"
+        class="text-input"
+        type="text"
+        name="address"
+        [(ngModel)]="address"
+        [placeholder]="'e.g. 12 Tsereteli Ave, Tbilisi' | t"
+      />
+    </div>
+
+    <div class="field">
+      <label for="supplierStatus">{{ 'Status' | t }}</label>
+      <select id="supplierStatus" class="text-select" name="status" [(ngModel)]="status">
+        <option value="active">{{ 'Active' | t }}</option>
+        <option value="inactive">{{ 'Inactive' | t }}</option>
+      </select>
+      <span class="field-hint">{{ 'Inactive suppliers can\'t be chosen for new products.' | t }}</span>
+    </div>
+  </div>
+
+  @if (formError()) {
+    <p class="field-error">{{ formError() | t }}</p>
+  }
+
+  <div class="button-row">
+    <button type="submit" class="button button--dark" [disabled]="isSaving()">
+      @if (supplier()) {
+        {{ isSaving() ? ('Saving…' | t) : ('Save changes' | t) }}
+      } @else {
+        {{ isSaving() ? ('Adding…' | t) : ('Add supplier' | t) }}
+      }
+    </button>
+    <button type="button" class="button button--secondary" (click)="cancelled.emit()">{{ 'Cancel' | t }}</button>
+  </div>
+</form>

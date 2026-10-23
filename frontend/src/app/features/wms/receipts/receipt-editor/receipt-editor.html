@@ -31,19 +31,40 @@
       <div class="field">
         <label for="receiptSupplier">{{ 'Supplier' | t }}</label>
         @if (rsWaybillId()) {
-          <div class="read-only-value read-only-value--stacked" id="receiptSupplier">
-            <span>{{ rsSupplier()?.name }}</span>
-            @if (rsSupplier()?.identificationCode) {
-              <span class="muted">{{ rsSupplier()?.identificationCode }}</span>
+          @if (linkedSupplier(); as supplier) {
+            <div class="read-only-value read-only-value--stacked" id="receiptSupplier">
+              <span>{{ supplier.name }}</span>
+              <span class="muted">
+                {{ supplier.identificationCode }}
+                <button type="button" class="link-button" (click)="supplierId.set('')">{{ 'Change' | t }}</button>
+              </span>
+            </div>
+          } @else {
+            <app-combobox
+              inputId="receiptSupplier"
+              [options]="supplierOptions()"
+              [(value)]="supplierId"
+              placeholder="Choose a supplier"
+            />
+            @if (rsSeller(); as seller) {
+              <span class="field-hint">
+                {{ 'On the waybill: {p0}' | t: { p0: (seller.name ?? '') + (seller.tin ? ' (' + seller.tin + ')' : '') } }}
+              </span>
             }
-          </div>
+            @if (canCreateProducts()) {
+              <button type="button" class="link-button" (click)="isSupplierFormOpen.set(true)">{{ '+ New supplier' | t }}</button>
+            }
+          }
+          @if (supplierNotice()) {
+            <span class="field-hint">{{ supplierNotice() | t }}</span>
+          }
         } @else {
-          <select id="receiptSupplier" class="text-select" [(ngModel)]="supplierId">
-            <option value="" disabled>{{ 'Choose a supplier' | t }}</option>
-            @for (supplier of suppliers(); track supplier.id) {
-              <option [value]="supplier.id">{{ supplier.name }}</option>
-            }
-          </select>
+          <app-combobox
+            inputId="receiptSupplier"
+            [options]="supplierOptions()"
+            [(value)]="supplierId"
+            placeholder="Choose a supplier"
+          />
           @if (suppliers().length === 0) {
             <span class="field-hint">{{ 'No active suppliers yet. The WMS admin adds them in Products → Suppliers.' | t }}</span>
           }
@@ -250,6 +271,17 @@
       [hint]="'It is added to Products and to this receipt. Its stock and cost come from the receipt when you post it.' | t"
       (saved)="onProductCreated($event)"
       (cancelled)="isProductFormOpen.set(false)"
+    />
+  }
+</app-modal>
+
+<app-modal [open]="isSupplierFormOpen()" [title]="'New supplier' | t" (closed)="isSupplierFormOpen.set(false)">
+  @if (isSupplierFormOpen()) {
+    <app-supplier-form
+      [initial]="newSupplierDraft()"
+      [hint]="'Filled in from the waybill\'s seller. It is added to Suppliers and chosen for this receipt; its identification code makes the next waybills from this seller find it by themselves.' | t"
+      (saved)="onSupplierCreated($event)"
+      (cancelled)="isSupplierFormOpen.set(false)"
     />
   }
 </app-modal>

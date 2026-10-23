@@ -61,12 +61,3 @@
   justify-content: flex-end;
 }
 
-.supplier-question {
-  padding: 14px 16px;
-  border-radius: 16px;
-  background: rgba(79, 70, 229, 0.06);
-}
-
-.supplier-question p {
-  margin: 0 0 12px;
-}

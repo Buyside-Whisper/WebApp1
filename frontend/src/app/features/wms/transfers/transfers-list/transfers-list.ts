@@ -3,7 +3,7 @@ import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { ArrowRight, LucideAngularModule, Package, PenLine, Plus, Search, Trash2 } from 'lucide-angular';
+import { ArrowRight, LucideAngularModule, Package, PenLine, Plus, Search, Trash2, Send } from 'lucide-angular';
 import { AuthService } from '../../../../core/auth/auth.service';
 import { Pager } from '../../../../shared/pager/pager';
 import { Pagination } from '../../../../shared/pager/pagination';
@@ -25,6 +25,8 @@ export class TransfersList implements OnInit {
   protected readonly ViewIcon = Package;
   protected readonly EditIcon = PenLine;
   protected readonly DeleteIcon = Trash2;
+  protected readonly SendIcon = Send;
+  protected readonly busyId = signal<string | null>(null);
   protected readonly PlusIcon = Plus;
   protected readonly SearchIcon = Search;
   protected readonly ArrowIcon = ArrowRight;
@@ -85,6 +87,30 @@ export class TransfersList implements OnInit {
       error: () => {
         this.errorMessage.set('Could not load transfers. Is the backend running?');
         this.isLoading.set(false);
+      },
+    });
+  }
+
+  sendDraft(transfer: Transfer): void {
+    const question = transfer.rsWaybillId
+      ? 'Send this transfer? The goods leave the source warehouse now. The RS waybill is already active, so nothing changes in RS.'
+      : 'Send this transfer? The goods leave the source warehouse now.';
+    if (!this.i18n.confirm(this.i18n.t('{code}: {question}', { code: transfer.code, question: this.i18n.t(question) }))) {
+      return;
+    }
+    this.busyId.set(transfer.id);
+    this.errorMessage.set('');
+    this.transferService.send(transfer.id).subscribe({
+      next: () => {
+        this.busyId.set(null);
+        this.load();
+      },
+      error: (error: HttpErrorResponse) => {
+        this.busyId.set(null);
+        const message = error.error?.message;
+        this.errorMessage.set(
+          `${transfer.code}: ${this.i18n.t(Array.isArray(message) ? message.join('. ') : (message ?? 'Could not send the transfer.'))}`,
+        );
       },
     });
   }

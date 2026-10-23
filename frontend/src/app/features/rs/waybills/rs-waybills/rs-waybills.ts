@@ -61,7 +61,6 @@ export class RsWaybills implements OnInit {
   protected readonly receiptFor = signal<RsWaybillSummary | null>(null);
   protected readonly warehouses = signal<RsWarehouseChoice[]>([]);
   protected readonly warehouseId = signal('');
-  protected readonly supplierQuestion = signal<{ name: string; identificationCode: string; existingSupplier: string | null } | null>(null);
   protected readonly isCreating = signal(false);
   protected readonly createError = signal('');
   protected readonly myWarehouses = computed(() => this.warehouses().filter((w) => w.mine && w.status === 'active'));
@@ -268,7 +267,6 @@ export class RsWaybills implements OnInit {
 
   startReceipt(waybill: RsWaybillSummary): void {
     this.receiptFor.set(waybill);
-    this.supplierQuestion.set(null);
     this.createError.set('');
     if (this.warehouses().length === 0) {
       this.rsService.warehouses().subscribe({
@@ -283,7 +281,7 @@ export class RsWaybills implements OnInit {
     }
   }
 
-  createReceipt(createSupplier = false): void {
+  createReceipt(): void {
     const waybill = this.receiptFor();
     if (!waybill || !this.warehouseId()) {
       this.createError.set('Choose the warehouse the goods arrive in.');
@@ -291,7 +289,7 @@ export class RsWaybills implements OnInit {
     }
     this.isCreating.set(true);
     this.createError.set('');
-    this.rsService.createReceipt(waybill.id, this.warehouseId(), createSupplier).subscribe({
+    this.rsService.createReceipt(waybill.id, this.warehouseId()).subscribe({
       next: (receipt) => {
         this.isCreating.set(false);
         void this.router.navigate(['/wms/receipts', receipt.id, 'edit']);
@@ -299,9 +297,7 @@ export class RsWaybills implements OnInit {
       error: (error: HttpErrorResponse) => {
         this.isCreating.set(false);
         const body = error.error ?? {};
-        if (error.status === 409 && body.code === 'SUPPLIER_MISSING') {
-          this.supplierQuestion.set(body.seller);
-        } else if (error.status === 409 && body.receiptId) {
+        if (error.status === 409 && body.receiptId) {
           void this.router.navigate(['/wms/receipts', body.receiptId]);
         } else {
           this.createError.set(typeof body.message === 'string' ? body.message : 'Could not create the receipt.');
@@ -315,7 +311,7 @@ export class RsWaybills implements OnInit {
     const question =
       this.i18n.t('Reject waybill {number} from {value} in RS (უარყოფილი)?', { number: waybill.number, value: waybill.sellerName ?? waybill.sellerTin }) +
       (link ? this.i18n.t(' The draft {code} is deleted.', { code: link.code }) : '') +
-      ' Do this only if the goods were not delivered or the waybill is wrong.';
+      this.i18n.t(' Do this only if the goods were not delivered or the waybill is wrong.');
     if (!this.i18n.confirm(question)) {
       return;
     }

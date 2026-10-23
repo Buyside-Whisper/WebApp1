@@ -1103,3 +1103,12 @@ lucide-icon.search-input__icon {
   color: #4338ca;
   font-size: 0.72rem;
 }
+
+.icon-action--go {
+  color: #15803d;
+}
+
+.icon-action--go:hover:not(:disabled) {
+  background: #f0fdf4;
+  color: #166534;
+}

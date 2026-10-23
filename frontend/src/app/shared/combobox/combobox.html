@@ -1,0 +1,54 @@
+<div class="combobox" [class.combobox--open]="open()">
+  <input
+    #field
+    class="text-select combobox__input"
+    type="text"
+    autocomplete="off"
+    role="combobox"
+    [attr.id]="inputId()"
+    [attr.aria-expanded]="open()"
+    [class.combobox__input--invalid]="invalid()"
+    [placeholder]="(selected()?.label ?? placeholder()) | t"
+    [value]="open() ? query() : (selected()?.label ?? '')"
+    (focus)="show()"
+    (click)="open() || show()"
+    (input)="onInput($any($event.target).value)"
+    (keydown)="onKey($event)"
+    (blur)="onBlur()"
+  />
+  <button type="button" class="combobox__toggle" tabindex="-1" (mousedown)="$event.preventDefault()" (click)="toggle()">
+    <lucide-icon [img]="ChevronIcon" [size]="16"></lucide-icon>
+  </button>
+  @if (open()) {
+    <ul
+      #list
+      class="combobox__list"
+      role="listbox"
+      [style.top.px]="position().top"
+      [style.left.px]="position().left"
+      [style.width.px]="position().width"
+      [style.max-height.px]="position().maxHeight"
+    >
+      @for (option of matches(); track option.value; let i = $index) {
+        <li>
+          <button
+            type="button"
+            class="combobox__option"
+            [class.combobox__option--active]="i === active()"
+            [class.combobox__option--selected]="option.value === value()"
+            (mousedown)="$event.preventDefault()"
+            (mouseenter)="active.set(i)"
+            (click)="choose(option)"
+          >
+            <span class="combobox__label">{{ option.label }}</span>
+            @if (option.hint) {
+              <span class="combobox__hint">{{ option.hint }}</span>
+            }
+          </button>
+        </li>
+      } @empty {
+        <li class="combobox__empty">{{ 'Nothing matches.' | t }}</li>
+      }
+    </ul>
+  }
+</div>

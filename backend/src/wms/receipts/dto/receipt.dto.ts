@@ -1,7 +1,6 @@
 import { Transform, Type } from 'class-transformer';
 import {
   IsArray,
-  IsBoolean,
   IsNumber,
   IsOptional,
   IsString,
@@ -32,8 +31,9 @@ export class SaveReceiptDto {
   @IsUUID()
   warehouseId!: string;
 
+  @IsOptional()
   @IsUUID()
-  supplierId!: string;
+  supplierId?: string | null;
 
   @IsOptional()
   @Transform(blankToNull)
@@ -57,8 +57,4 @@ export class SaveReceiptDto {
 export class CreateReceiptFromRsDto {
   @IsUUID()
   warehouseId!: string;
-
-  @IsOptional()
-  @IsBoolean()
-  createSupplier?: boolean;
 }

@@ -109,6 +109,15 @@
                       <lucide-icon [img]="ViewIcon" [size]="18"></lucide-icon>
                     </a>
                     @if (canWrite() && transfer.status === 'draft') {
+                      <button
+                        type="button"
+                        class="icon-action icon-action--go"
+                        [title]="'Send' | t"
+                        [disabled]="busyId() !== null"
+                        (click)="sendDraft(transfer)"
+                      >
+                        <lucide-icon [img]="SendIcon" [size]="18"></lucide-icon>
+                      </button>
                       <a
                         class="icon-action"
                         [routerLink]="['/wms/transfers', transfer.id, 'edit']"

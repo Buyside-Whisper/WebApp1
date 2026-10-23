@@ -48,10 +48,12 @@ export interface Receipt {
   status: ReceiptStatus;
   warehouseId: string;
   warehouse: { id: string; code: string; name: string };
-  supplierId: string;
-  supplier: { id: string; name: string; identificationCode: string | null; status: 'active' | 'inactive' };
+  supplierId: string | null;
+  supplier: { id: string; name: string; identificationCode: string | null; status: 'active' | 'inactive' } | null;
   waybillNumber: string | null;
   rsWaybillId: string | null;
+  rsSellerTin: string | null;
+  rsSellerName: string | null;
   rsConfirmedAt: string | null;
   date: string;
   note: string | null;
@@ -68,7 +70,7 @@ export interface Receipt {
 
 export interface ReceiptPayload {
   warehouseId: string;
-  supplierId: string;
+  supplierId: string | null;
   waybillNumber: string | null;
   date: string;
   note: string | null;

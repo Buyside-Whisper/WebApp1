@@ -157,15 +157,18 @@ submodules are planned, so keep to the structure below.
   4 = distribution: that is the seller's own document for a loaded van, the buyer receives its
   sub-waybill 6, so allowing both could bring the same goods in twice; agreed with the user),
   picks the warehouse, and `POST /wms/receipts/from-rs/:waybillId` makes a **draft** from the
-  waybill as RS returns it right then: supplier found by the seller's identification code
-  (unknown → 409 `SUPPLIER_MISSING`, the page asks, then `createSupplier: true` creates it, or adds
-  the code to a supplier with the same name and no code), waybill no. and date from RS, one line per
+  waybill as RS returns it right then: supplier found by the seller's identification code,
+  else left empty like an unlinked line (`receipts.supplier_id` is nullable only for RS drafts; the
+  seller is kept as `rs_seller_tin` / `rs_seller_name`; since 2026-10-23, before that a 409
+  `SUPPLIER_MISSING` question auto-created it). In the editor the WMS admin picks a supplier or
+  **+ New supplier** (the shared `suppliers/supplier-form/`, pre-filled from the seller); picking one
+  without a code gives it the seller's code, one with a different code is refused. Waybill no. and date from RS, one line per
   goods line with an RS snapshot (`rs_name`, `rs_barcode`, `rs_unit_id`, `rs_unit`) and the
   product matched by a remembered link (`rs_product_links`: seller code + barcode, or the name when
   there's no barcode) or by barcode, else left empty. `receipts.rs_waybill_id` links it; a partial
   unique index allows one non-cancelled receipt per waybill. On such a draft **quantities, prices,
-  lines, supplier, number and date are locked**; only the warehouse, note and each line's product
-  change, and every link made is remembered for that supplier. **Posting** first requires every
+  lines, number and date are locked**; only the warehouse, supplier, note and each line's product
+  change, and every link made is remembered for that seller. **Posting** first requires a supplier, every
   line linked and RS unit = product unit (ცალი = pcs, კგ = kg; RS's unit 99 "სხვა" counts too when the seller typed კგ / ცალი as its text, `rsProductUnit`; any other RS unit blocks it), then
   re-reads the waybill (refused if it changed in RS), **confirms it in RS** (`confirm_waybill`,
   skipped if already accepted; sets `rs_confirmed_at`), and only then posts stock; if RS refuses,
@@ -563,11 +566,13 @@ CORS on the backend is currently hardcoded to allow `http://localhost:4200` only
 
 ## Git
 
-One repo for the whole project (backend + frontend), pushed to the private GitHub repo
-`git@github.com:davidgogi/WebApp1.git`, branch `main`. Pushing works over SSH (key already set
-up). The GitHub CLI (`gh`) is not installed. `backend/.env` is git-ignored; never commit it.
-**Push gotcha**: this machine has several GitHub identities (`~/.ssh/config`). The default key logs
-in as `davidgogiS`, which cannot write to this repo, so plain `git push origin main` is refused.
-Push with the right alias instead: `git push git@github-davidgogi:davidgogi/WebApp1.git main`
-(or point `origin` at that URL). The repo root also holds a text file with the Apple test
+One repo for the whole project (backend + frontend). Since 2026-10-23 it lives in the private
+repo of the `webapp-software` organization: `git@github.com:webapp-software/WebappOne.git`, branch
+`main` (before that: `davidgogi/WebApp1`). Pushing works over SSH. The GitHub CLI (`gh`) is not
+installed. `backend/.env` is git-ignored; never commit it.
+**Push gotcha** (depends on the machine): on this laptop the key logs in as `davidgogi` and plain
+`git push` works (there is no `~/.ssh/config`). Another machine had several GitHub identities and a
+`github-davidgogi` alias in `~/.ssh/config`, because its default key (`davidgogiS`) can't write
+here; there, push with `git@github-davidgogi:webapp-software/WebappOne.git`. Check with
+`ssh -T git@github.com` (it says which account). The repo root also holds a text file with the Apple test
 accounts' logins; they are localhost dev passwords and the user chose to commit it.

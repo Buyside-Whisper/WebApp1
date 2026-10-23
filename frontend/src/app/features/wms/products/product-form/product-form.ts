@@ -7,11 +7,12 @@ import { Supplier } from '../../suppliers/supplier.model';
 import { SupplierService } from '../../suppliers/supplier.service';
 import { Product, ProductPosStatus, ProductStatus, ProductUnit, ProductUsage } from '../product.model';
 import { ProductService } from '../product.service';
+import { Combobox, ComboOption } from '../../../../shared/combobox/combobox';
 import { TranslatePipe } from '../../../../core/i18n/t.pipe';
 
 @Component({
   selector: 'app-product-form',
-  imports: [TranslatePipe, FormsModule],
+  imports: [TranslatePipe, Combobox, FormsModule],
   templateUrl: './product-form.html',
 })
 export class ProductForm implements OnInit {
@@ -148,10 +149,10 @@ export class ProductForm implements OnInit {
   private choosable<T extends { id: string; name: string; status: string }>(
     items: T[] | null,
     currentId: string | undefined,
-  ): { id: string; label: string }[] {
+  ): ComboOption[] {
     return (items ?? [])
       .filter((item) => item.status === 'active' || item.id === currentId)
-      .map((item) => ({ id: item.id, label: item.status === 'active' ? item.name : `${item.name} (inactive)` }));
+      .map((item) => ({ value: item.id, label: item.status === 'active' ? item.name : `${item.name} (inactive)` }));
   }
 
   private uniqueSorted(values: string[]): string[] {

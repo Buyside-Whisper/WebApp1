@@ -9,12 +9,15 @@ import { Modal } from '../../../../shared/modal/modal';
 import { ProductForm } from '../../products/product-form/product-form';
 import { Product, ProductOption, ProductUnit } from '../../products/product.model';
 import { ProductService } from '../../products/product.service';
+import { SupplierForm } from '../../suppliers/supplier-form/supplier-form';
+import { Supplier, SupplierPayload } from '../../suppliers/supplier.model';
 import { SupplierService } from '../../suppliers/supplier.service';
 import { PickableProduct, ProductPicker } from '../../stock/product-picker/product-picker';
 import { WarehouseOption } from '../../warehouses/warehouse.model';
 import { WarehouseService } from '../../warehouses/warehouse.service';
 import { Receipt, ReceiptPayload, rsProductUnit } from '../receipt.model';
 import { ReceiptService } from '../receipt.service';
+import { Combobox } from '../../../../shared/combobox/combobox';
 import { TranslatePipe } from '../../../../core/i18n/t.pipe';
 import { I18nService } from '../../../../core/i18n/i18n.service';
 
@@ -38,7 +41,7 @@ const today = () => new Date().toLocaleDateString('sv-SE');
 
 @Component({
   selector: 'app-receipt-editor',
-  imports: [TranslatePipe, DecimalPipe, FormsModule, RouterLink, LucideAngularModule, ProductPicker, Modal, ProductForm],
+  imports: [TranslatePipe, Combobox, DecimalPipe, FormsModule, RouterLink, LucideAngularModule, ProductPicker, Modal, ProductForm, SupplierForm],
   templateUrl: './receipt-editor.html',
   styleUrl: './receipt-editor.css',
 })
@@ -70,7 +73,25 @@ export class ReceiptEditor implements OnInit {
   protected readonly supplierId = signal('');
   protected readonly suppliers = signal<SupplierChoice[]>([]);
   protected readonly rsWaybillId = signal<string | null>(null);
-  protected readonly rsSupplier = signal<SupplierChoice | null>(null);
+  protected readonly rsSeller = signal<{ name: string | null; tin: string | null } | null>(null);
+  protected readonly isSupplierFormOpen = signal(false);
+  protected readonly supplierNotice = signal('');
+  protected readonly supplierOptions = computed(() =>
+    this.suppliers().map((supplier) => ({ value: supplier.id, label: supplier.name, hint: supplier.identificationCode })),
+  );
+  protected readonly linkedSupplier = computed(() => this.suppliers().find((s) => s.id === this.supplierId()) ?? null);
+  protected readonly newSupplierDraft = computed<Partial<SupplierPayload> | null>(() => {
+    const seller = this.rsSeller();
+    if (!seller) {
+      return null;
+    }
+    const tin = seller.tin ?? '';
+    return {
+      name: seller.name ?? tin,
+      type: tin.length === 11 ? 'individual' : 'company',
+      identificationCode: /^(\d{9}|\d{11})$/.test(tin) ? tin : null,
+    };
+  });
   protected readonly waybillNumber = signal('');
   protected readonly date = signal(today());
   protected readonly note = signal('');
@@ -169,6 +190,16 @@ export class ReceiptEditor implements OnInit {
       : null;
   });
 
+  onSupplierCreated(supplier: Supplier): void {
+    this.isSupplierFormOpen.set(false);
+    this.suppliers.update((list) => [
+      ...list,
+      { id: supplier.id, name: supplier.name, identificationCode: supplier.identificationCode },
+    ]);
+    this.supplierId.set(supplier.id);
+    this.supplierNotice.set(this.i18n.t('{name} was added to Suppliers and chosen for this receipt.', { name: supplier.name }));
+  }
+
   openProductForm(lineIndex: number | null): void {
     this.productNotice.set('');
     this.linkingIndex.set(lineIndex);
@@ -252,7 +283,7 @@ export class ReceiptEditor implements OnInit {
   private payload(): ReceiptPayload {
     return {
       warehouseId: this.warehouseId(),
-      supplierId: this.supplierId(),
+      supplierId: this.supplierId() || null,
       waybillNumber: this.waybillNumber().trim() || null,
       date: this.date(),
       note: this.note().trim() || null,
@@ -265,18 +296,24 @@ export class ReceiptEditor implements OnInit {
   }
 
   private validate(payload: ReceiptPayload, andPost: boolean): string {
-    if (!payload.warehouseId || !payload.supplierId || !payload.date) {
-      return 'Warehouse, supplier and date are required.';
-    }
     if (this.rsWaybillId()) {
+      if (!payload.warehouseId) {
+        return 'Choose the warehouse the goods arrive in.';
+      }
       if (!andPost) {
         return '';
+      }
+      if (!payload.supplierId) {
+        return 'Choose the supplier before posting.';
       }
       if (this.unlinkedCount()) {
         return this.i18n.t('Link every waybill line to one of your products first ({unlinkedCount} left).', { unlinkedCount: this.unlinkedCount() });
       }
       const problem = this.lines().find((line) => this.unitProblem(line));
       return problem ? `${problem.rs?.name}: ${this.unitProblem(problem)}` : '';
+    }
+    if (!payload.warehouseId || !payload.supplierId || !payload.date) {
+      return 'Warehouse, supplier and date are required.';
     }
     if (andPost && payload.lines.length === 0) {
       return 'Add at least one product before posting.';
@@ -303,15 +340,17 @@ export class ReceiptEditor implements OnInit {
     }
     this.code.set(receipt.code);
     this.warehouseId.set(receipt.warehouseId);
-    this.supplierId.set(receipt.supplierId);
+    this.supplierId.set(receipt.supplierId ?? '');
     this.rsWaybillId.set(receipt.rsWaybillId);
-    const supplier = {
-      id: receipt.supplier.id,
-      name: receipt.supplier.status === 'active' ? receipt.supplier.name : `${receipt.supplier.name} (inactive)`,
-      identificationCode: receipt.supplier.identificationCode,
-    };
-    this.rsSupplier.set(supplier);
-    this.suppliers.update((list) => (list.some((s) => s.id === supplier.id) ? list : [...list, supplier]));
+    this.rsSeller.set(receipt.rsWaybillId ? { name: receipt.rsSellerName, tin: receipt.rsSellerTin } : null);
+    if (receipt.supplier) {
+      const supplier = {
+        id: receipt.supplier.id,
+        name: receipt.supplier.status === 'active' ? receipt.supplier.name : `${receipt.supplier.name} (inactive)`,
+        identificationCode: receipt.supplier.identificationCode,
+      };
+      this.suppliers.update((list) => (list.some((s) => s.id === supplier.id) ? list : [...list, supplier]));
+    }
     this.waybillNumber.set(receipt.waybillNumber ?? '');
     this.date.set(receipt.date);
     this.note.set(receipt.note ?? '');

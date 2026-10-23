@@ -323,23 +323,6 @@
       <p class="page-description">
         {{ '{p0} ({p1}) · ₾{p2}. The app makes a' | t: { p0: waybill.sellerName, p1: waybill.sellerTin, p2: (waybill.amount | number: '1.2-2') } }} <strong>{{ 'draft' | t }}</strong> {{ 'receipt with the waybill\'s goods, quantities and prices. You link the goods to your products there; posting confirms the waybill in RS.' | t }}
       </p>
-      @if (supplierQuestion(); as seller) {
-        <div class="supplier-question">
-          <p>
-            @if (seller.existingSupplier) {
-              <strong>{{ seller.existingSupplier }}</strong> {{ 'is in your Suppliers without identification code {p0}. Add the code to it and continue?' | t: { p0: seller.identificationCode } }}
-            } @else {
-              <strong>{{ seller.name }}</strong> {{ '({p0}) is not in your Suppliers yet. Add it and continue?' | t: { p0: seller.identificationCode } }}
-            }
-          </p>
-          <div class="button-row">
-            <button type="button" class="button button--dark" [disabled]="isCreating()" (click)="createReceipt(true)">
-              {{ isCreating() ? ('Creating…' | t) : seller.existingSupplier ? ('Add the code and continue' | t) : ('Add supplier and continue' | t) }}
-            </button>
-            <button type="button" class="button button--secondary" (click)="receiptFor.set(null)">{{ 'Cancel' | t }}</button>
-          </div>
-        </div>
-      } @else {
         <div class="field">
           <label for="rsReceiptWarehouse">{{ 'Goods arrive in' | t }}</label>
           <select id="rsReceiptWarehouse" class="text-select" [(ngModel)]="warehouseId">
@@ -361,7 +344,6 @@
           </button>
           <button type="button" class="button button--secondary" (click)="receiptFor.set(null)">{{ 'Cancel' | t }}</button>
         </div>
-      }
     </div>
   }
 </app-modal>

@@ -40,8 +40,8 @@ export class Receipt extends TenantEntity {
   @JoinColumn({ name: 'warehouse_id' })
   warehouse?: Relation<Warehouse>;
 
-  @Column({ name: 'supplier_id', type: 'uuid' })
-  supplierId!: string;
+  @Column({ name: 'supplier_id', type: 'uuid', nullable: true })
+  supplierId!: string | null;
 
   @ManyToOne(() => Supplier, { onDelete: 'RESTRICT' })
   @JoinColumn({ name: 'supplier_id' })
@@ -49,6 +49,12 @@ export class Receipt extends TenantEntity {
 
   @Column({ name: 'rs_waybill_id', type: 'varchar', nullable: true })
   rsWaybillId!: string | null;
+
+  @Column({ name: 'rs_seller_tin', type: 'varchar', nullable: true })
+  rsSellerTin!: string | null;
+
+  @Column({ name: 'rs_seller_name', type: 'varchar', nullable: true })
+  rsSellerName!: string | null;
 
   @Column({ name: 'rs_confirmed_at', type: 'timestamptz', nullable: true })
   rsConfirmedAt!: Date | null;

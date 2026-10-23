@@ -357,4 +357,6 @@ export const KA: Record<string, string> = {
   "Only the manager of the receiving warehouse (or the WMS admin) can receive it": "მიღება მხოლოდ მიმღები საწყობის მენეჯერს (ან WMS ადმინს) შეუძლია",
   "RS returned {code}": "RS-მა დააბრუნა {code}",
   "nothing": "არაფერი",
+  "Choose the supplier before posting": "გატარებამდე აირჩიეთ მომწოდებელი",
+  "{name} has identification code {code}, but the seller on the waybill is {tin}": "{name}-ს საიდენტიფიკაციო კოდია {code}, ზედნადების გამყიდველი კი {tin}-ია",
 };

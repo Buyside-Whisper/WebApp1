@@ -83,7 +83,7 @@
                   {{ receipt.warehouse.name }}
                 </td>
                 <td>
-                  {{ receipt.supplier.name }}
+                  {{ receipt.supplier?.name ?? receipt.rsSellerName ?? '—' }}
                   @if (receipt.rsWaybillId) {
                     <span class="chip chip--rs" [title]="'Made from an RS waybill' | t">{{ 'RS' | t }}</span>
                   }
@@ -108,6 +108,15 @@
                       <lucide-icon [img]="ViewIcon" [size]="18"></lucide-icon>
                     </a>
                     @if (canWrite() && receipt.status === 'draft') {
+                      <button
+                        type="button"
+                        class="icon-action icon-action--go"
+                        [title]="(receipt.rsWaybillId ? 'Confirm in RS and post' : 'Post') | t"
+                        [disabled]="busyId() !== null"
+                        (click)="postDraft(receipt)"
+                      >
+                        <lucide-icon [img]="PostIcon" [size]="18"></lucide-icon>
+                      </button>
                       <a
                         class="icon-action"
                         [routerLink]="['/wms/receipts', receipt.id, 'edit']"

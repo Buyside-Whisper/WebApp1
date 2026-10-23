@@ -4,7 +4,6 @@ import { DataSource, EntityManager, In, IsNull, Not, Repository } from 'typeorm'
 import { AuditService } from '../../audit/audit.service.js';
 import { AuthUser } from '../../auth/auth-user.js';
 import { UserRole } from '../../auth/user-role.enum.js';
-import { nameKey } from '../../common/name-key.js';
 import { RsClient, RsWaybillDetail } from '../../rs/waybills/rs-client.js';
 import { RsWaybillsService } from '../../rs/waybills/waybills.service.js';
 import { Product } from '../products/product.entity.js';
@@ -17,7 +16,6 @@ import { matchRsProducts, rememberRsProducts, rsUnitProblem } from '../stock/rs-
 import { StockService } from '../stock/stock.service.js';
 import { Supplier } from '../suppliers/supplier.entity.js';
 import { SupplierStatus } from '../suppliers/supplier-status.enum.js';
-import { SupplierType } from '../suppliers/supplier-type.enum.js';
 import { SuppliersService } from '../suppliers/suppliers.service.js';
 import { Warehouse } from '../warehouses/warehouse.entity.js';
 import { WarehouseStatus } from '../warehouses/warehouse-status.enum.js';
@@ -38,7 +36,7 @@ export type ReceiptView = Omit<Receipt, 'warehouse' | 'lines' | 'supplier'> & {
   lineCount: number;
   total: number;
   warehouse: Pick<Warehouse, 'id' | 'code' | 'name'>;
-  supplier: Pick<Supplier, 'id' | 'name' | 'identificationCode' | 'status'>;
+  supplier: Pick<Supplier, 'id' | 'name' | 'identificationCode' | 'status'> | null;
   lines?: (Omit<ReceiptLine, 'product' | 'receipt'> & {
     product: Pick<Product, 'id' | 'name' | 'barcode' | 'unit'> | null;
   })[];
@@ -88,7 +86,7 @@ export class ReceiptsService {
 
   async create(actor: AuthUser, dto: SaveReceiptDto): Promise<ReceiptView> {
     await this.checkWarehouse(actor, dto.warehouseId);
-    await this.checkSupplier(actor, dto.supplierId, true);
+    await this.checkSupplier(actor, this.requireSupplier(dto), true);
     this.requireProducts(dto.lines);
     const id = await this.dataSource.transaction(async (manager) => {
       await this.checkProducts(manager, actor, dto, false);
@@ -122,8 +120,9 @@ export class ReceiptsService {
 
     const waybill = await this.rsClient.waybill(await this.rsWaybills.companyCredentials(actor), waybillId);
     this.assertReceivable(waybill);
-    const supplier = await this.supplierFor(actor, waybill, dto.createSupplier === true);
-    const products = await matchRsProducts(this.dataSource, actor.companyId!, supplier.identificationCode ?? waybill.sellerTin ?? '', waybill.goods);
+    const sellerTin = waybill.sellerTin?.trim() || null;
+    const supplier = await this.supplierFor(actor, sellerTin);
+    const products = await matchRsProducts(this.dataSource, actor.companyId!, sellerTin ?? '', waybill.goods);
 
     const id = await this.dataSource.transaction(async (manager) => {
       const receipt = manager.create(Receipt, {
@@ -131,7 +130,9 @@ export class ReceiptsService {
         number: await nextDocumentNumber(manager, Receipt, actor.companyId!, 'receipt'),
         status: ReceiptStatus.DRAFT,
         warehouseId: dto.warehouseId,
-        supplierId: supplier.id,
+        supplierId: supplier?.id ?? null,
+        rsSellerTin: sellerTin,
+        rsSellerName: waybill.sellerName?.trim() || null,
         waybillNumber: waybill.number,
         rsWaybillId: waybill.id,
         rsConfirmedAt: waybill.confirmation === 'accepted' ? new Date() : null,
@@ -197,7 +198,8 @@ export class ReceiptsService {
     if (receipt.rsWaybillId) {
       return this.updateFromRsDraft(actor, receipt, dto);
     }
-    await this.checkSupplier(actor, dto.supplierId, dto.supplierId !== receipt.supplierId);
+    const supplierId = this.requireSupplier(dto);
+    await this.checkSupplier(actor, supplierId, supplierId !== receipt.supplierId);
     this.requireProducts(dto.lines);
     await this.dataSource.transaction(async (manager) => {
       await this.checkProducts(manager, actor, dto, false);
@@ -224,6 +226,9 @@ export class ReceiptsService {
   async post(actor: AuthUser, id: string): Promise<ReceiptView> {
     const draft = await this.load(actor, id);
     this.assertDraft(draft);
+    if (!draft.supplierId) {
+      throw new BadRequestException('Choose the supplier before posting');
+    }
     if (draft.rsWaybillId) {
       await this.confirmInRs(actor, draft);
     }
@@ -290,6 +295,10 @@ export class ReceiptsService {
       throw new BadRequestException("A receipt from an RS waybill keeps the waybill's lines; only their products can change");
     }
     const productIds = dto.lines.map((line) => line.productId ?? null);
+    const supplierId = dto.supplierId ?? receipt.supplierId;
+    if (supplierId && supplierId !== receipt.supplierId) {
+      await this.linkRsSupplier(actor, supplierId, receipt.rsSellerTin);
+    }
     await this.dataSource.transaction(async (manager) => {
       await this.checkProducts(
         manager,
@@ -300,14 +309,20 @@ export class ReceiptsService {
       await manager.update(
         Receipt,
         { id: receipt.id, companyId: actor.companyId! },
-        { warehouseId: dto.warehouseId, note: dto.note ?? null },
+        { warehouseId: dto.warehouseId, supplierId, note: dto.note ?? null },
       );
       for (const [i, line] of receipt.lines.entries()) {
         if (line.productId !== productIds[i]) {
           await manager.update(ReceiptLine, { id: line.id }, { productId: productIds[i] });
         }
       }
-      await rememberRsProducts(manager, actor.companyId!, receipt.supplier?.identificationCode, receipt.lines, productIds);
+      await rememberRsProducts(
+        manager,
+        actor.companyId!,
+        receipt.rsSellerTin ?? receipt.supplier?.identificationCode,
+        receipt.lines,
+        productIds,
+      );
     });
     const view = await this.findOne(actor, receipt.id);
     await this.audit.record(actor, 'receipt.update', `Updated draft receipt ${view.code} (from RS)`);
@@ -372,40 +387,40 @@ export class ReceiptsService {
     }
   }
 
-  private async supplierFor(actor: AuthUser, waybill: RsWaybillDetail, create: boolean): Promise<Supplier> {
-    const tin = waybill.sellerTin?.trim() ?? '';
-    const suppliers = this.dataSource.getRepository(Supplier);
-    const byCode = tin ? await suppliers.findOneBy({ companyId: actor.companyId!, identificationCode: tin }) : null;
-    if (byCode) {
-      if (byCode.status !== SupplierStatus.ACTIVE) {
-        throw new BadRequestException(`The supplier ${byCode.name} (${tin}) is inactive. Reactivate it in Products → Suppliers first.`);
-      }
-      return byCode;
+  private async supplierFor(actor: AuthUser, sellerTin: string | null): Promise<Supplier | null> {
+    if (!sellerTin) {
+      return null;
     }
-    const name = waybill.sellerName?.trim() || tin;
-    const byName = (await suppliers.findBy({ companyId: actor.companyId! })).find(
-      (supplier) => nameKey(supplier.name) === nameKey(name),
-    );
-    if (!create) {
-      throw new ConflictException({
-        message: byName
-          ? `${byName.name} is in your Suppliers without identification code ${tin}.`
-          : `The seller ${name} (${tin}) is not in your Suppliers yet.`,
-        code: 'SUPPLIER_MISSING',
-        seller: { name, identificationCode: tin, existingSupplier: byName?.name ?? null },
-      });
+    const supplier = await this.dataSource
+      .getRepository(Supplier)
+      .findOneBy({ companyId: actor.companyId!, identificationCode: sellerTin });
+    if (supplier && supplier.status !== SupplierStatus.ACTIVE) {
+      throw new BadRequestException(`The supplier ${supplier.name} (${sellerTin}) is inactive. Reactivate it in Products → Suppliers first.`);
     }
-    const type = tin.length === 11 ? SupplierType.INDIVIDUAL : SupplierType.COMPANY;
-    if (byName && !byName.identificationCode) {
-      await this.suppliersService.update(actor, byName.id, { identificationCode: tin || null, type });
-      return (await suppliers.findOneBy({ id: byName.id }))!;
+    return supplier;
+  }
+
+  private async linkRsSupplier(actor: AuthUser, supplierId: string, sellerTin: string | null): Promise<void> {
+    await this.checkSupplier(actor, supplierId, true);
+    const supplier = (await this.dataSource.getRepository(Supplier).findOneBy({ id: supplierId, companyId: actor.companyId! }))!;
+    if (!sellerTin) {
+      return;
     }
-    const created = await this.suppliersService.create(actor, {
-      name: byName ? `${name} (${tin})` : name,
-      type,
-      identificationCode: /^(\d{9}|\d{11})$/.test(tin) ? tin : null,
-    });
-    return (await suppliers.findOneBy({ id: created.id }))!;
+    if (supplier.identificationCode && supplier.identificationCode !== sellerTin) {
+      throw new BadRequestException(
+        `${supplier.name} has identification code ${supplier.identificationCode}, but the seller on the waybill is ${sellerTin}`,
+      );
+    }
+    if (!supplier.identificationCode && /^(\d{9}|\d{11})$/.test(sellerTin)) {
+      await this.suppliersService.update(actor, supplier.id, { identificationCode: sellerTin });
+    }
+  }
+
+  private requireSupplier(dto: SaveReceiptDto): string {
+    if (!dto.supplierId) {
+      throw new BadRequestException('Choose a supplier from the list');
+    }
+    return dto.supplierId;
   }
 
   private activeReceiptFor(actor: AuthUser, waybillId: string): Promise<Receipt | null> {
@@ -578,12 +593,9 @@ export class ReceiptsService {
       lineCount: lines.length,
       total: round2(lines.reduce((sum, line) => sum + line.quantity * line.unitCost, 0)),
       warehouse: { id: warehouse!.id, code: warehouse!.code, name: warehouse!.name },
-      supplier: {
-        id: supplier?.id ?? receipt.supplierId,
-        name: supplier?.name ?? '',
-        identificationCode: supplier?.identificationCode ?? null,
-        status: supplier?.status ?? SupplierStatus.ACTIVE,
-      },
+      supplier: supplier
+        ? { id: supplier.id, name: supplier.name, identificationCode: supplier.identificationCode, status: supplier.status }
+        : null,
       ...(withLines
         ? {
             lines: lines.map(({ product, receipt: _receipt, ...line }) => ({
