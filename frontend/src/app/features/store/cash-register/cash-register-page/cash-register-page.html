@@ -1,11 +1,10 @@
 <div class="page-stack">
   <div class="page-header">
     <div>
-      <p class="page-eyebrow">Store</p>
-      <h1 class="page-title">Cash register</h1>
+      <p class="page-eyebrow">{{ 'Store' | t }}</p>
+      <h1 class="page-title">{{ 'Cash register' | t }}</h1>
       <p class="page-description">
-        Each time a register is opened it gets its own row, with the transactions rung up on it.
-        {{ sees() }}
+        {{ 'Each time a register is opened it gets its own row, with the transactions rung up on it. {p0}' | t: { p0: sees() | t } }}
       </p>
     </div>
   </div>
@@ -15,18 +14,17 @@
       @if (current(); as open) {
         <div class="register-open">
           <div>
-            <span class="badge badge--active">Open</span>
+            <span class="badge badge--active">{{ 'Open' | t }}</span>
             <div class="cell-strong register-open__title">
-              Register {{ open.registerNo }} · {{ open.storeName }}
+              {{ 'Register {p0} · {p1}' | t: { p0: open.registerNo, p1: open.storeName } }}
             </div>
             <div class="cell-sub">
-              Opened {{ open.openedAt | date: 'HH:mm' }} with ₾{{ open.openingCash | number: '1.2-2' }} ·
-              {{ open.salesCount }} sales · ₾{{ open.total | number: '1.2-2' }}
+              {{ 'Opened {p0} with ₾{p1} · {p2} sales · ₾{p3}' | t: { p0: (open.openedAt | date: 'HH:mm'), p1: (open.openingCash | number: '1.2-2'), p2: open.salesCount, p3: (open.total | number: '1.2-2') } }}
             </div>
           </div>
           <form class="register-form" (ngSubmit)="close(open)">
             <div class="field">
-              <label for="closingCash">Cash counted (₾)</label>
+              <label for="closingCash">{{ 'Cash counted (₾)' | t }}</label>
               <input
                 id="closingCash"
                 class="text-input"
@@ -37,14 +35,14 @@
                 [(ngModel)]="closingCash"
               />
             </div>
-            <button type="submit" class="button button--primary" [disabled]="isBusy()">Close register</button>
-            <a class="button button--secondary" routerLink="/store/pos">Go to POS</a>
+            <button type="submit" class="button button--primary" [disabled]="isBusy()">{{ 'Close register' | t }}</button>
+            <a class="button button--secondary" routerLink="/store/pos">{{ 'Go to POS' | t }}</a>
           </form>
         </div>
       } @else {
         <form class="register-form" (ngSubmit)="open()">
           <div class="field">
-            <label for="registerStore">Store</label>
+            <label for="registerStore">{{ 'Store' | t }}</label>
             <select
               id="registerStore"
               class="text-select"
@@ -52,14 +50,14 @@
               [ngModel]="storeId()"
               (ngModelChange)="chooseStore($event)"
             >
-              <option value="">Choose a store…</option>
+              <option value="">{{ 'Choose a store…' | t }}</option>
               @for (store of stores(); track store.id) {
                 <option [value]="store.id">{{ store.name }}</option>
               }
             </select>
           </div>
           <div class="field">
-            <label for="registerNumber">Register</label>
+            <label for="registerNumber">{{ 'Register' | t }}</label>
             <select
               id="registerNumber"
               class="text-select"
@@ -68,16 +66,16 @@
               (ngModelChange)="registerNo.set($event)"
               [disabled]="availability().length === 0"
             >
-              <option [ngValue]="0">Choose a register…</option>
+              <option [ngValue]="0">{{ 'Choose a register…' | t }}</option>
               @for (register of availability(); track register.no) {
                 <option [ngValue]="register.no" [disabled]="register.inUseBy !== null">
-                  Register {{ register.no }}{{ register.inUseBy ? ' (in use by ' + register.inUseBy + ')' : '' }}
+                  {{ 'Register {p0}{p1}' | t: { p0: register.no, p1: register.inUseBy ? ((' (in use by {name})' | t: { name: register.inUseBy })) : '' } }}
                 </option>
               }
             </select>
           </div>
           <div class="field">
-            <label for="openingCash">Opening cash (₾)</label>
+            <label for="openingCash">{{ 'Opening cash (₾)' | t }}</label>
             <input
               id="openingCash"
               class="text-input"
@@ -89,40 +87,40 @@
             />
           </div>
           <button type="submit" class="button button--primary" [disabled]="isBusy() || stores().length === 0">
-            Open register
+            {{ 'Open register' | t }}
           </button>
         </form>
         @if (stores().length === 0) {
-          <p class="field-hint">You are not assigned to a store yet. Ask your admin.</p>
+          <p class="field-hint">{{ 'You are not assigned to a store yet. Ask your admin.' | t }}</p>
         }
       }
       @if (errorMessage()) {
-        <p class="field-error register-error">{{ errorMessage() }}</p>
+        <p class="field-error register-error">{{ errorMessage() | t }}</p>
       }
     </div>
   } @else if (errorMessage()) {
-    <p class="field-error">{{ errorMessage() }}</p>
+    <p class="field-error">{{ errorMessage() | t }}</p>
   }
 
   <div class="page-card">
     @if (isLoading()) {
-      <p class="page-description">Loading…</p>
+      <p class="page-description">{{ 'Loading…' | t }}</p>
     } @else if (sessions().length === 0) {
-      <p class="page-description">No registers have been opened yet.</p>
+      <p class="page-description">{{ 'No registers have been opened yet.' | t }}</p>
     } @else {
       <div class="table-scroll">
         <table class="data-table">
           <thead>
             <tr>
               <th></th>
-              <th>Store</th>
-              <th>Register</th>
-              <th>Cashier</th>
-              <th>Opened</th>
-              <th>Closed</th>
-              <th>Status</th>
-              <th class="cell-number">Transactions</th>
-              <th class="cell-number">Total</th>
+              <th>{{ 'Store' | t }}</th>
+              <th>{{ 'Register' | t }}</th>
+              <th>{{ 'Cashier' | t }}</th>
+              <th>{{ 'Opened' | t }}</th>
+              <th>{{ 'Closed' | t }}</th>
+              <th>{{ 'Status' | t }}</th>
+              <th class="cell-number">{{ 'Transactions' | t }}</th>
+              <th class="cell-number">{{ 'Total' | t }}</th>
             </tr>
           </thead>
           <tbody>
@@ -132,9 +130,9 @@
                 <td class="cell-strong">{{ session.storeName }}</td>
                 <td>#{{ session.registerNo }}</td>
                 <td>{{ session.cashierName }}</td>
-                <td class="nowrap">{{ session.openedAt | date: 'MMM d, HH:mm' }}</td>
+                <td class="nowrap">{{ session.openedAt | date: 'dd.MM HH:mm' }}</td>
                 <td class="nowrap">
-                  {{ session.closedAt ? (session.closedAt | date: 'MMM d, HH:mm') : '–' }}
+                  {{ session.closedAt ? (session.closedAt | date: 'dd.MM HH:mm') : '–' }}
                 </td>
                 <td>
                   <span
@@ -142,7 +140,7 @@
                     [class.badge--active]="session.status === 'open'"
                     [class.badge--inactive]="session.status === 'closed'"
                   >
-                    {{ session.status === 'open' ? 'Open' : 'Closed' }}
+                    {{ session.status === 'open' ? ('Open' | t) : ('Closed' | t) }}
                   </span>
                 </td>
                 <td class="cell-number">{{ session.salesCount }}</td>
@@ -153,22 +151,22 @@
                   <td></td>
                   <td colspan="8">
                     <div class="cell-sub session-cash">
-                      Opening cash ₾{{ session.openingCash | number: '1.2-2' }}
+                      {{ 'Opening cash ₾{p0}' | t: { p0: (session.openingCash | number: '1.2-2') } }}
                       @if (session.closingCash !== null) {
-                        · counted at close ₾{{ session.closingCash | number: '1.2-2' }}
+                        {{ '· counted at close ₾{p0}' | t: { p0: (session.closingCash | number: '1.2-2') } }}
                       }
                     </div>
                     @if (details()[session.id]; as detail) {
                       @if (detail.sales.length === 0) {
-                        <p class="page-description">No transactions yet.</p>
+                        <p class="page-description">{{ 'No transactions yet.' | t }}</p>
                       } @else {
                         <table class="data-table data-table--nested">
                           <thead>
                             <tr>
                               <th>#</th>
-                              <th>Time</th>
-                              <th>Items</th>
-                              <th class="cell-number">Total</th>
+                              <th>{{ 'Time' | t }}</th>
+                              <th>{{ 'Items' | t }}</th>
+                              <th class="cell-number">{{ 'Total' | t }}</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -184,7 +182,7 @@
                         </table>
                       }
                     } @else {
-                      <p class="page-description">Loading…</p>
+                      <p class="page-description">{{ 'Loading…' | t }}</p>
                     }
                   </td>
                 </tr>

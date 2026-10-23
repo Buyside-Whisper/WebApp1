@@ -1,15 +1,10 @@
-class User {
-  sayHello() {
-    console.log("Hello!");
-  }
+function xxx() {
+  this.func = () => {
+    console.log("hi");
+  };
 }
 
-const original = User.prototype.sayHello;
+let something1 = xxx.prototype.func;
+let something2 = xxx.prototype.func;
 
-User.prototype.sayHello = function () {
-  console.log("Method called!");
-  original.call(this);
-};
-
-const user = new User();
-user.sayHello();
+console.log(something1 == something2);

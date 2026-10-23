@@ -1,38 +1,35 @@
 <div class="page-stack">
   <div class="page-header">
     <div>
-      <p class="page-eyebrow">WMS · Receipts</p>
-      <h1 class="page-title">{{ id() ? 'Edit ' + code() : 'New receipt' }}</h1>
+      <p class="page-eyebrow">{{ 'WMS · Receipts' | t }}</p>
+      <h1 class="page-title">{{ id() ? ('Edit {name}' | t: { name: code() }) : ('New receipt' | t) }}</h1>
       <p class="page-description">
         @if (rsWaybillId()) {
-          Made from RS waybill {{ waybillNumber() }}. Quantities and prices come from the waybill and
-          can't be changed; link each line to one of your products. Posting confirms the waybill in RS
-          and adds the goods to the warehouse.
+          {{ 'Made from RS waybill {p0}. Quantities and prices come from the waybill and can\'t be changed; link each line to one of your products. Posting confirms the waybill in RS and adds the goods to the warehouse.' | t: { p0: waybillNumber() } }}
         } @else {
-          Goods that arrived from a supplier. Save it as a draft while you check the delivery; post
-          it when everything matches.
+          {{ 'Goods that arrived from a supplier. Save it as a draft while you check the delivery; post it when everything matches.' | t }}
         }
       </p>
     </div>
     <a class="button button--secondary" [routerLink]="id() ? ['/wms/receipts', id()] : '/wms/receipts'">
-      Cancel
+      {{ 'Cancel' | t }}
     </a>
   </div>
 
   <div class="page-card">
-    <h2 class="card-title">Delivery</h2>
+    <h2 class="card-title">{{ 'Delivery' | t }}</h2>
     <div class="form-grid">
       <div class="field">
-        <label for="receiptWarehouse">Warehouse</label>
+        <label for="receiptWarehouse">{{ 'Warehouse' | t }}</label>
         <select id="receiptWarehouse" class="text-select" [(ngModel)]="warehouseId">
-          <option value="" disabled>Choose a warehouse</option>
+          <option value="" disabled>{{ 'Choose a warehouse' | t }}</option>
           @for (warehouse of myWarehouses(); track warehouse.id) {
             <option [value]="warehouse.id">{{ warehouse.code }} · {{ warehouse.name }}</option>
           }
         </select>
       </div>
       <div class="field">
-        <label for="receiptSupplier">Supplier</label>
+        <label for="receiptSupplier">{{ 'Supplier' | t }}</label>
         @if (rsWaybillId()) {
           <div class="read-only-value read-only-value--stacked" id="receiptSupplier">
             <span>{{ rsSupplier()?.name }}</span>
@@ -42,26 +39,26 @@
           </div>
         } @else {
           <select id="receiptSupplier" class="text-select" [(ngModel)]="supplierId">
-            <option value="" disabled>Choose a supplier</option>
+            <option value="" disabled>{{ 'Choose a supplier' | t }}</option>
             @for (supplier of suppliers(); track supplier.id) {
               <option [value]="supplier.id">{{ supplier.name }}</option>
             }
           </select>
           @if (suppliers().length === 0) {
-            <span class="field-hint">No active suppliers yet. The WMS admin adds them in Products → Suppliers.</span>
+            <span class="field-hint">{{ 'No active suppliers yet. The WMS admin adds them in Products → Suppliers.' | t }}</span>
           }
         }
       </div>
       <div class="field">
-        <label for="receiptWaybill">Waybill / invoice no.</label>
+        <label for="receiptWaybill">{{ 'Waybill / invoice no.' | t }}</label>
         @if (rsWaybillId()) {
-          <div class="read-only-value" id="receiptWaybill"><code class="code-tag">{{ waybillNumber() }}</code> <span class="muted">RS</span></div>
+          <div class="read-only-value" id="receiptWaybill"><code class="code-tag">{{ waybillNumber() }}</code> <span class="muted">{{ 'RS' | t }}</span></div>
         } @else {
-          <input id="receiptWaybill" class="text-input" type="text" [(ngModel)]="waybillNumber" placeholder="Optional" />
+          <input id="receiptWaybill" class="text-input" type="text" [(ngModel)]="waybillNumber" [placeholder]="'Optional' | t" />
         }
       </div>
       <div class="field">
-        <label for="receiptDate">Date</label>
+        <label for="receiptDate">{{ 'Date' | t }}</label>
         @if (rsWaybillId()) {
           <div class="read-only-value" id="receiptDate">{{ date() }}</div>
         } @else {
@@ -69,8 +66,8 @@
         }
       </div>
       <div class="field">
-        <label for="receiptNote">Note</label>
-        <input id="receiptNote" class="text-input" type="text" [(ngModel)]="note" placeholder="Optional" />
+        <label for="receiptNote">{{ 'Note' | t }}</label>
+        <input id="receiptNote" class="text-input" type="text" [(ngModel)]="note" [placeholder]="'Optional' | t" />
       </div>
     </div>
   </div>
@@ -78,25 +75,25 @@
   <div class="page-card">
     @if (rsWaybillId()) {
       <h2 class="card-title">
-        Goods on the waybill
+        {{ 'Goods on the waybill' | t }}
         @if (unlinkedCount()) {
-          <span class="card-title__note short">{{ unlinkedCount() }} not linked to a product yet</span>
+          <span class="card-title__note short">{{ '{p0} not linked to a product yet' | t: { p0: unlinkedCount() } }}</span>
         } @else {
-          <span class="card-title__note">all linked</span>
+          <span class="card-title__note">{{ 'all linked' | t }}</span>
         }
       </h2>
       @if (productNotice()) {
-        <p class="field-hint">{{ productNotice() }}</p>
+        <p class="field-hint">{{ productNotice() | t }}</p>
       }
       <div class="table-scroll">
         <table class="data-table">
           <thead>
             <tr>
-              <th>On the waybill</th>
-              <th>Your product</th>
-              <th>Quantity</th>
-              <th>Price per unit (₾)</th>
-              <th>Line total</th>
+              <th>{{ 'On the waybill' | t }}</th>
+              <th>{{ 'Your product' | t }}</th>
+              <th>{{ 'Quantity' | t }}</th>
+              <th>{{ 'Price per unit (₾)' | t }}</th>
+              <th>{{ 'Line total' | t }}</th>
             </tr>
           </thead>
           <tbody>
@@ -115,20 +112,20 @@
                   @if (line.productId) {
                     <div class="cell-strong">{{ line.name }}</div>
                     <div class="muted">
-                      <code class="code-tag">{{ line.barcode }}</code> {{ line.unit }}
-                      <button type="button" class="link-button" (click)="unlinkProduct(i)">Change</button>
+                      <code class="code-tag">{{ line.barcode }}</code> {{ line.unit | t }}
+                      <button type="button" class="link-button" (click)="unlinkProduct(i)">{{ 'Change' | t }}</button>
                     </div>
                     @if (unitProblem(line); as problem) {
-                      <div class="field-error">{{ problem }}</div>
+                      <div class="field-error">{{ problem | t }}</div>
                     }
                   } @else {
                     <app-product-picker
                       [products]="products()"
-                      placeholder="Find your product: name or barcode"
+                      [placeholder]="'Find your product: name or barcode' | t"
                       (picked)="linkProduct(i, $event)"
                     />
                     @if (canCreateProducts()) {
-                      <button type="button" class="link-button" (click)="openProductForm(i)">+ New product</button>
+                      <button type="button" class="link-button" (click)="openProductForm(i)">{{ '+ New product' | t }}</button>
                     }
                   }
                 </td>
@@ -141,41 +138,40 @@
         </table>
       </div>
       <p class="field-hint">
-        Lines are matched by barcode, or by a link you made before for this supplier. A line you link
-        now is remembered for this supplier's next waybills.
+        {{ 'Lines are matched by barcode, or by a link you made before for this supplier. A line you link now is remembered for this supplier\'s next waybills.' | t }}
       </p>
       <div class="doc-total">
-        <span>{{ lines().length }} lines</span>
-        <span>Total <strong>₾{{ total() | number: '1.2-2' }}</strong></span>
+        <span>{{ '{p0} lines' | t: { p0: lines().length } }}</span>
+        <span>{{ 'Total' | t }} <strong>₾{{ total() | number: '1.2-2' }}</strong></span>
       </div>
     } @else {
-      <h2 class="card-title">Products</h2>
+      <h2 class="card-title">{{ 'Products' | t }}</h2>
       <div class="picker-row">
         <app-product-picker [products]="products()" [taken]="takenIds()" (picked)="addProduct($event)" />
         @if (canCreateProducts()) {
           <button type="button" class="button button--outline" (click)="openProductForm(null)">
             <lucide-icon [img]="PlusIcon" [size]="16"></lucide-icon>
-            New product
+            {{ 'New product' | t }}
           </button>
         }
       </div>
       @if (productNotice()) {
-        <p class="field-hint">{{ productNotice() }}</p>
+        <p class="field-hint">{{ productNotice() | t }}</p>
       }
 
       @if (lines().length === 0) {
-        <p class="page-description">No products yet. Search above, or scan a barcode and press Enter.</p>
+        <p class="page-description">{{ 'No products yet. Search above, or scan a barcode and press Enter.' | t }}</p>
       } @else {
         <div class="table-scroll">
           <table class="data-table">
             <thead>
               <tr>
-                <th>Product</th>
-                <th>Barcode</th>
-                <th>Quantity</th>
-                <th>Unit</th>
-                <th>Price per unit (₾)</th>
-                <th>Line total</th>
+                <th>{{ 'Product' | t }}</th>
+                <th>{{ 'Barcode' | t }}</th>
+                <th>{{ 'Quantity' | t }}</th>
+                <th>{{ 'Unit' | t }}</th>
+                <th>{{ 'Price per unit (₾)' | t }}</th>
+                <th>{{ 'Line total' | t }}</th>
                 <th></th>
               </tr>
             </thead>
@@ -190,19 +186,19 @@
                       type="number"
                       min="0"
                       [step]="line.unit === 'kg' ? 0.001 : 1"
-                      [attr.aria-label]="'Quantity of ' + line.name"
+                      [attr.aria-label]="'Quantity of {name}' | t: { name: line.name }"
                       [ngModel]="line.quantity"
                       (ngModelChange)="updateLine(i, 'quantity', $event)"
                     />
                   </td>
-                  <td>{{ line.unit }}</td>
+                  <td>{{ line.unit | t }}</td>
                   <td>
                     <input
                       class="text-input line-input"
                       type="number"
                       min="0"
                       step="0.01"
-                      [attr.aria-label]="'Price of ' + line.name"
+                      [attr.aria-label]="'Price of {name}' | t: { name: line.name }"
                       [ngModel]="line.unitCost"
                       (ngModelChange)="updateLine(i, 'unitCost', $event)"
                     />
@@ -212,8 +208,8 @@
                     <button
                       type="button"
                       class="icon-action icon-action--danger"
-                      [attr.aria-label]="'Remove ' + line.name"
-                      title="Remove"
+                      [attr.aria-label]="'Remove {name}' | t: { name: line.name }"
+                      [title]="'Remove' | t"
                       (click)="removeLine(i)"
                     >
                       <lucide-icon [img]="DeleteIcon" [size]="18"></lucide-icon>
@@ -225,32 +221,33 @@
           </table>
         </div>
         <div class="doc-total">
-          <span>{{ lines().length }} products</span>
-          <span>Total <strong>₾{{ total() | number: '1.2-2' }}</strong></span>
+          <span>{{ '{p0} products' | t: { p0: lines().length } }}</span>
+          <span>{{ 'Total' | t }} <strong>₾{{ total() | number: '1.2-2' }}</strong></span>
         </div>
       }
     }
   </div>
 
   @if (errorMessage()) {
-    <p class="field-error">{{ errorMessage() }}</p>
+    <p class="field-error">{{ errorMessage() | t }}</p>
   }
 
   <div class="button-row">
     <button type="button" class="button button--secondary" [disabled]="isSaving()" (click)="save(false)">
-      Save draft
+      {{ 'Save draft' | t }}
     </button>
     <button type="button" class="button button--dark" [disabled]="isSaving()" (click)="save(true)">
-      {{ isSaving() ? 'Saving…' : rsWaybillId() ? 'Save, confirm in RS and post' : 'Save and post' }}
+      {{ isSaving() ? ('Saving…' | t) : rsWaybillId() ? ('Save, confirm in RS and post' | t) : ('Save and post' | t) }}
     </button>
   </div>
 </div>
 
-<app-modal [open]="isProductFormOpen()" title="New product" (closed)="isProductFormOpen.set(false)">
+<app-modal [open]="isProductFormOpen()" [title]="'New product' | t" (closed)="isProductFormOpen.set(false)">
   @if (isProductFormOpen()) {
     <app-product-form
       [known]="products()"
-      hint="It is added to Products and to this receipt. Its stock and cost come from the receipt when you post it."
+      [initial]="newProductDraft()"
+      [hint]="'It is added to Products and to this receipt. Its stock and cost come from the receipt when you post it.' | t"
       (saved)="onProductCreated($event)"
       (cancelled)="isProductFormOpen.set(false)"
     />

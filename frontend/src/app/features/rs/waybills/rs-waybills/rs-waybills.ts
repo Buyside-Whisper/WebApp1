@@ -26,17 +26,20 @@ import {
   RsWaybillSummary,
 } from '../rs.model';
 import { RsService } from '../rs.service';
+import { TranslatePipe } from '../../../../core/i18n/t.pipe';
+import { I18nService } from '../../../../core/i18n/i18n.service';
 
 const todayIso = () => new Date().toISOString().slice(0, 10);
 const daysAgo = (days: number) => new Date(Date.now() - days * 86_400_000).toISOString().slice(0, 10);
 
 @Component({
   selector: 'app-rs-waybills',
-  imports: [DatePipe, DecimalPipe, FormsModule, LucideAngularModule, Modal, Pager, RouterLink, RsTabs],
+  imports: [TranslatePipe, DatePipe, DecimalPipe, FormsModule, LucideAngularModule, Modal, Pager, RouterLink, RsTabs],
   templateUrl: './rs-waybills.html',
   styleUrl: './rs-waybills.css',
 })
 export class RsWaybills implements OnInit {
+  private readonly i18n = inject(I18nService);
   private readonly rsService = inject(RsService);
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
@@ -310,10 +313,10 @@ export class RsWaybills implements OnInit {
   reject(waybill: RsWaybillSummary): void {
     const link = this.linkFor(waybill);
     const question =
-      `Reject waybill ${waybill.number} from ${waybill.sellerName ?? waybill.sellerTin} in RS (უარყოფილი)?` +
-      (link ? ` The draft ${link.code} is deleted.` : '') +
+      this.i18n.t('Reject waybill {number} from {value} in RS (უარყოფილი)?', { number: waybill.number, value: waybill.sellerName ?? waybill.sellerTin }) +
+      (link ? this.i18n.t(' The draft {code} is deleted.', { code: link.code }) : '') +
       ' Do this only if the goods were not delivered or the waybill is wrong.';
-    if (!confirm(question)) {
+    if (!this.i18n.confirm(question)) {
       return;
     }
     this.rsService.reject(waybill.id).subscribe({
@@ -381,7 +384,7 @@ export class RsWaybills implements OnInit {
   }
 
   protected statusLabel(status: number | null): string {
-    return this.statusLabels[String(status)] ?? `Status ${status ?? '?'}`;
+    return this.statusLabels[String(status)] ?? this.i18n.t('Status {value}', { value: status ?? '?' });
   }
 
   protected statusBadge(status: number | null): string {

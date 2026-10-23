@@ -3,6 +3,7 @@ import { Injectable, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { Observable, tap } from 'rxjs';
 import { API_BASE_URL } from '../api';
+import { I18nService } from '../i18n/i18n.service';
 import { Session, SessionUser } from './auth.model';
 
 const STORAGE_KEY = 'webapp1.session';
@@ -11,6 +12,7 @@ const STORAGE_KEY = 'webapp1.session';
 export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
+  private readonly i18n = inject(I18nService);
 
   private readonly session = signal<Session | null>(loadSession());
 
@@ -29,6 +31,15 @@ export class AuthService {
       .pipe(tap((session) => this.setSession(session)));
   }
 
+  saveLanguage(language: string): void {
+    const session = this.session();
+    if (!session) {
+      return;
+    }
+    this.setSession({ ...session, user: { ...session.user, language } });
+    this.http.patch(`${API_BASE_URL}/auth/language`, { language }).subscribe({ error: () => undefined });
+  }
+
   logout(): void {
     const wasSuperuser = this.user()?.role === 'superuser';
     this.setSession(null);
@@ -37,6 +48,9 @@ export class AuthService {
 
   private setSession(session: Session | null): void {
     this.session.set(session);
+    if (session?.user.language) {
+      this.i18n.use(session.user.language);
+    }
     try {
       if (session) {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(session));

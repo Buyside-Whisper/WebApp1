@@ -6,13 +6,16 @@ import { Observable } from 'rxjs';
 import { AuthService } from '../../../../core/auth/auth.service';
 import { RECEIPT_STATUS_LABELS, Receipt } from '../receipt.model';
 import { ReceiptService } from '../receipt.service';
+import { TranslatePipe } from '../../../../core/i18n/t.pipe';
+import { I18nService } from '../../../../core/i18n/i18n.service';
 
 @Component({
   selector: 'app-receipt-view',
-  imports: [DatePipe, DecimalPipe, RouterLink],
+  imports: [TranslatePipe, DatePipe, DecimalPipe, RouterLink],
   templateUrl: './receipt-view.html',
 })
 export class ReceiptView implements OnInit {
+  private readonly i18n = inject(I18nService);
   private readonly receiptService = inject(ReceiptService);
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
@@ -41,19 +44,19 @@ export class ReceiptView implements OnInit {
   }
 
   post(): void {
-    if (confirm('Post this receipt? The goods go into the warehouse and the receipt is locked.')) {
+    if (this.i18n.confirm('Post this receipt? The goods go into the warehouse and the receipt is locked.')) {
       this.run(this.receiptService.post(this.id()));
     }
   }
 
   cancel(): void {
-    if (confirm('Cancel this receipt? Its goods are taken back out of the warehouse.')) {
+    if (this.i18n.confirm('Cancel this receipt? Its goods are taken back out of the warehouse.')) {
       this.run(this.receiptService.cancel(this.id()));
     }
   }
 
   remove(): void {
-    if (!confirm('Delete this draft?')) {
+    if (!this.i18n.confirm('Delete this draft?')) {
       return;
     }
     this.receiptService.remove(this.id()).subscribe({

@@ -153,7 +153,9 @@ submodules are planned, so keep to the structure below.
   invoice no., date, note; lines: product, quantity, price per unit. The editor's supplier dropdown
   uses `GET /wms/suppliers/options` (active, managers allowed).
   **Receipt from an RS waybill** (2026-10-22): on RS → RS waybills the **WMS admin** clicks "Create
-  receipt" on a purchase waybill (RS types 2 / 3 / 4 / 6, status active or closed, not rejected),
+  receipt" on a purchase waybill (RS types 2 / 3 / 6, status active or closed, not rejected; not
+  4 = distribution: that is the seller's own document for a loaded van, the buyer receives its
+  sub-waybill 6, so allowing both could bring the same goods in twice; agreed with the user),
   picks the warehouse, and `POST /wms/receipts/from-rs/:waybillId` makes a **draft** from the
   waybill as RS returns it right then: supplier found by the seller's identification code
   (unknown → 409 `SUPPLIER_MISSING`, the page asks, then `createSupplier: true` creates it, or adds
@@ -164,7 +166,7 @@ submodules are planned, so keep to the structure below.
   unique index allows one non-cancelled receipt per waybill. On such a draft **quantities, prices,
   lines, supplier, number and date are locked**; only the warehouse, note and each line's product
   change, and every link made is remembered for that supplier. **Posting** first requires every
-  line linked and RS unit = product unit (ცალი = pcs, კგ = kg; any other RS unit blocks it), then
+  line linked and RS unit = product unit (ცალი = pcs, კგ = kg; RS's unit 99 "სხვა" counts too when the seller typed კგ / ცალი as its text, `rsProductUnit`; any other RS unit blocks it), then
   re-reads the waybill (refused if it changed in RS), **confirms it in RS** (`confirm_waybill`,
   skipped if already accepted; sets `rs_confirmed_at`), and only then posts stock; if RS refuses,
   nothing is posted. `POST /wms/receipts/from-rs/:waybillId/reject` rejects it in RS
@@ -372,6 +374,35 @@ count, ...). **.xlsx only** (`exceljs` on the backend; nothing Excel-related in 
   templateName codeLabel (imported) (closed)>`) with the service's `importSource`; `saveFile` there
   downloads a blob (exports are named `<page>-YYYY-MM-DD.xlsx`). Exports contain everything the user
   may see, **not** the current search / filters.
+
+## Languages (English / Georgian)
+
+Added 2026-10-23. The EN / ქა switch (`shared/language-switch/`) sits in the sidebar footer, the
+superuser top bar and both login pages. It changes the language instantly and is remembered per
+account (`users.language`, `PATCH /auth/language`, applied at login; the login pages remember it per
+browser in localStorage). **English text is the key**: there are no message ids.
+- Frontend: `core/i18n/` holds `I18nService` (`language` signal, `t(text, params)`, `confirm(text,
+  params)`), the impure `t` pipe and `ka.ts` (English → Georgian). Templates write
+  `{{ 'Add product' | t }}`, `[placeholder]="'e.g. Vake' | t"`, and values with placeholders:
+  `{{ '{p0} of {p1} products' | t: { p0: shown, p1: total } }}`. Label maps (`*_LABELS`), messages
+  and backend errors are shown through `| t` too; TS code uses `this.i18n.t(...)` and
+  `this.i18n.confirm(...)` instead of `confirm(...)`. A missing key just shows the English. **Every
+  new UI text needs its Georgian line in `core/i18n/ka.ts`.** Dates use numeric formats
+  (`dd.MM.yyyy`), because Angular's month names would stay English.
+- The frontend sends `Accept-Language: en|ka` on every request (`auth.interceptor.ts`).
+- Backend: `common/i18n/` — `ka.ts` (exact messages and patterns like
+  `Not enough {name} in {code}: {quantity} {unit} available`; captured values are translated too,
+  e.g. `pcs`), `translate.ts` (`translate`, `languageOf`, the `@Lang()` parameter decorator),
+  `translate.filter.ts` (global: translates every `HttpException` message, class-validator ones
+  included, with field names like `firstName`) and `translate.interceptor.ts` (global: translates
+  import reports' messages and column names). Services keep throwing English. **A new backend
+  message needs its Georgian line in `common/i18n/ka.ts`.**
+- Excel: templates and exports are written in the user's language: `workbookBuffer(workbook,
+  language)` translates sheet names, header rows, the Instructions sheet, dropdown lists, their
+  error texts and the data cells of columns marked `translated: true` (Type, Status, Unit, ...;
+  never names). Imports accept both languages: sheet names, headers (`headerKeys`) and choices
+  (`choiceKeys`) match the English or the Georgian label.
+- **Not translated, by the user's choice**: saved texts (audit log summaries) and data the users typed.
 
 ## Verifying changes and known gaps
 

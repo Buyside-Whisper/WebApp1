@@ -1,12 +1,13 @@
 import { Component } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { Boxes, Layers, LucideAngularModule, Truck } from 'lucide-angular';
+import { TranslatePipe } from '../../../../core/i18n/t.pipe';
 
 @Component({
   selector: 'app-product-tabs',
-  imports: [RouterLink, RouterLinkActive, LucideAngularModule],
+  imports: [TranslatePipe, RouterLink, RouterLinkActive, LucideAngularModule],
   template: `
-    <nav class="page-tabs" aria-label="Products">
+    <nav class="page-tabs" [attr.aria-label]="'Products' | t">
       @for (tab of tabs; track tab.link) {
         <a
           class="page-tabs__link"
@@ -15,7 +16,7 @@ import { Boxes, Layers, LucideAngularModule, Truck } from 'lucide-angular';
           [routerLinkActiveOptions]="{ exact: true }"
         >
           <lucide-icon [img]="tab.icon" [size]="16"></lucide-icon>
-          {{ tab.label }}
+          {{ tab.label | t }}
         </a>
       }
     </nav>

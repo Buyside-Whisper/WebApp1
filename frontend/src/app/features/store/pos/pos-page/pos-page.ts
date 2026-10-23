@@ -6,6 +6,7 @@ import { CashRegisterService } from '../../cash-register/cash-register.service';
 import { RegisterSession } from '../../cash-register/cash-register.model';
 import { StoreProduct } from '../pos.model';
 import { PosService } from '../pos.service';
+import { TranslatePipe } from '../../../../core/i18n/t.pipe';
 
 interface CartLine {
   product: StoreProduct;
@@ -14,7 +15,7 @@ interface CartLine {
 
 @Component({
   selector: 'app-pos-page',
-  imports: [DecimalPipe, RouterLink],
+  imports: [TranslatePipe, DecimalPipe, RouterLink],
   templateUrl: './pos-page.html',
   styleUrl: './pos-page.css',
 })

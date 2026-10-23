@@ -1,4 +1,4 @@
-import { Component, computed, input, output, signal } from '@angular/core';
+import { Component, computed, inject, input, output, signal } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import {
   CircleCheck,
@@ -9,14 +9,17 @@ import {
   TriangleAlert,
 } from 'lucide-angular';
 import { ImportIssue, ImportReport, ImportSource, PreviewColumn, saveFile } from './xlsx-import.model';
+import { TranslatePipe } from '../../core/i18n/t.pipe';
+import { I18nService } from '../../core/i18n/i18n.service';
 
 @Component({
   selector: 'app-xlsx-import',
-  imports: [LucideAngularModule],
+  imports: [TranslatePipe, LucideAngularModule],
   templateUrl: './xlsx-import.html',
   styleUrl: './xlsx-import.css',
 })
 export class XlsxImport<P extends { row: number }> {
+  private readonly i18n = inject(I18nService);
   readonly source = input.required<ImportSource<P>>();
   readonly columns = input.required<PreviewColumn<P>[]>();
   readonly noun = input.required<{ one: string; many: string }>();
@@ -77,7 +80,7 @@ export class XlsxImport<P extends { row: number }> {
     this.errorMessage.set('');
     if (!file.name.toLowerCase().endsWith('.xlsx')) {
       this.errorMessage.set(
-        `"${file.name}" is not an .xlsx file. In Excel use File → Save As → Excel Workbook (.xlsx).`,
+        this.i18n.t('"{name}" is not an .xlsx file. In Excel use File → Save As → Excel Workbook (.xlsx).', { name: file.name }),
       );
       return;
     }
@@ -115,7 +118,7 @@ export class XlsxImport<P extends { row: number }> {
   }
 
   protected count(n: number): string {
-    return `${n} ${n === 1 ? this.noun().one : this.noun().many}`;
+    return `${n} ${this.i18n.t(n === 1 ? this.noun().one : this.noun().many)}`;
   }
 
   private sorted(issues: ImportIssue[]): ImportIssue[] {
@@ -130,7 +133,7 @@ export class XlsxImport<P extends { row: number }> {
         ? message
         : error.status === 413
           ? 'The file is too big (max 5 MB).'
-          : `${fallback} Is the backend running?`,
+          : `${this.i18n.t(fallback)} ${this.i18n.t('Is the backend running?')}`,
     );
   }
 }

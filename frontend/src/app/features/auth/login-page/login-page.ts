@@ -4,10 +4,12 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { landingUrl } from '../../../core/auth/access';
 import { AuthService } from '../../../core/auth/auth.service';
+import { LanguageSwitch } from '../../../shared/language-switch/language-switch';
+import { TranslatePipe } from '../../../core/i18n/t.pipe';
 
 @Component({
   selector: 'app-login-page',
-  imports: [FormsModule, RouterLink],
+  imports: [TranslatePipe, LanguageSwitch, FormsModule, RouterLink],
   templateUrl: './login-page.html',
   styleUrl: './login-page.css',
 })

@@ -7,14 +7,17 @@ import { AuthService } from '../../../../core/auth/auth.service';
 import { RsTabs } from '../rs-tabs/rs-tabs';
 import { RsConnection as RsConnectionModel } from '../rs.model';
 import { RsService } from '../rs.service';
+import { TranslatePipe } from '../../../../core/i18n/t.pipe';
+import { I18nService } from '../../../../core/i18n/i18n.service';
 
 @Component({
   selector: 'app-rs-connection',
-  imports: [DatePipe, FormsModule, LucideAngularModule, RsTabs],
+  imports: [TranslatePipe, DatePipe, FormsModule, LucideAngularModule, RsTabs],
   templateUrl: './rs-connection.html',
   styleUrl: './rs-connection.css',
 })
 export class RsConnection implements OnInit {
+  private readonly i18n = inject(I18nService);
   private readonly rsService = inject(RsService);
   private readonly auth = inject(AuthService);
 
@@ -89,7 +92,7 @@ export class RsConnection implements OnInit {
   }
 
   remove(): void {
-    if (!confirm('Remove the RS connection? The RS waybills page stops working until it is added again.')) {
+    if (!this.i18n.confirm('Remove the RS connection? The RS waybills page stops working until it is added again.')) {
       return;
     }
     this.busy.set('remove');

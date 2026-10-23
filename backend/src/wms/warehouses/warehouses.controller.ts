@@ -21,6 +21,8 @@ import { WarehouseExcelService, WarehouseImportReport } from './warehouse-excel.
 import { CreateWarehouseDto } from './dto/create-warehouse.dto.js';
 import { UpdateWarehouseDto } from './dto/update-warehouse.dto.js';
 import { Warehouse } from './warehouse.entity.js';
+import { Lang } from '../../common/i18n/translate.js';
+import type { Language } from '../../common/i18n/translate.js';
 
 @Controller('warehouses')
 @Access(AppModuleName.WMS)
@@ -47,8 +49,8 @@ export class WarehousesController {
   }
 
   @Get('export')
-  async export(@CurrentUser() user: AuthUser): Promise<StreamableFile> {
-    return new StreamableFile(await this.excelService.export(user), {
+  async export(@CurrentUser() user: AuthUser, @Lang() language: Language): Promise<StreamableFile> {
+    return new StreamableFile(await this.excelService.export(user, language), {
       type: XLSX_TYPE,
       disposition: 'attachment; filename="warehouses.xlsx"',
     });
@@ -56,8 +58,8 @@ export class WarehousesController {
 
   @Get('import/template')
   @Roles(UserRole.MODULE_ADMIN)
-  async importTemplate(@CurrentUser() user: AuthUser): Promise<StreamableFile> {
-    return new StreamableFile(await this.excelService.template(user), {
+  async importTemplate(@CurrentUser() user: AuthUser, @Lang() language: Language): Promise<StreamableFile> {
+    return new StreamableFile(await this.excelService.template(user, language), {
       type: XLSX_TYPE,
       disposition: 'attachment; filename="warehouses-template.xlsx"',
     });

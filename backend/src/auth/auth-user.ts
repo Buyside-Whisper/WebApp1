@@ -11,6 +11,7 @@ export class AuthUser {
   companyName!: string | null;
   companyModules!: AppModuleName[];
   employeeId!: string | null;
+  language!: string;
 }
 
 export class SessionUser {
@@ -20,6 +21,7 @@ export class SessionUser {
   module!: AppModuleName | null;
   companyName!: string | null;
   companyModules!: AppModuleName[];
+  language!: string;
 }
 
 export function toSessionUser(user: AuthUser): SessionUser {
@@ -30,5 +32,6 @@ export function toSessionUser(user: AuthUser): SessionUser {
     module: user.module,
     companyName: user.companyName,
     companyModules: user.companyModules,
+    language: user.language,
   };
 }

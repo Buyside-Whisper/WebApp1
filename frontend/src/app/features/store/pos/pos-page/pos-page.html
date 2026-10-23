@@ -1,13 +1,13 @@
 <div class="page-stack">
   <div class="page-header">
     <div>
-      <p class="page-eyebrow">Store</p>
-      <h1 class="page-title">POS</h1>
-      <p class="page-description">Tap products to ring up a sale on your open register.</p>
+      <p class="page-eyebrow">{{ 'Store' | t }}</p>
+      <h1 class="page-title">{{ 'POS' | t }}</h1>
+      <p class="page-description">{{ 'Tap products to ring up a sale on your open register.' | t }}</p>
     </div>
     @if (session(); as current) {
       <span class="badge badge--active">
-        Register {{ current.registerNo }} · {{ current.storeName }}
+        {{ 'Register {p0} · {p1}' | t: { p0: current.registerNo, p1: current.storeName } }}
       </span>
     }
   </div>
@@ -15,19 +15,19 @@
   @if (!isLoading() && !session()) {
     <div class="page-card pos-banner">
       <div>
-        <div class="cell-strong">No register is open</div>
-        <div class="cell-sub">Open a register in Cash register before ringing up sales.</div>
+        <div class="cell-strong">{{ 'No register is open' | t }}</div>
+        <div class="cell-sub">{{ 'Open a register in Cash register before ringing up sales.' | t }}</div>
       </div>
-      <a class="button button--primary" routerLink="/store/cash-register">Open a register</a>
+      <a class="button button--primary" routerLink="/store/cash-register">{{ 'Open a register' | t }}</a>
     </div>
   }
 
   @if (errorMessage()) {
-    <p class="field-error">{{ errorMessage() }}</p>
+    <p class="field-error">{{ errorMessage() | t }}</p>
   }
 
   @if (lastSale(); as sale) {
-    <div class="pos-success">Sale #{{ sale.number }} recorded: ₾{{ sale.total | number: '1.2-2' }}</div>
+    <div class="pos-success">{{ 'Sale #{p0} recorded: ₾{p1}' | t: { p0: sale.number, p1: (sale.total | number: '1.2-2') } }}</div>
   }
 
   <div class="pos-layout">
@@ -44,28 +44,28 @@
             <span class="pos-product__price">₾{{ product.price | number: '1.2-2' }}</span>
           </button>
         } @empty {
-          <p class="page-description">No products to sell yet.</p>
+          <p class="page-description">{{ 'No products to sell yet.' | t }}</p>
         }
       </div>
     </div>
 
     <div class="page-card pos-cart">
-      <h2 class="pos-cart__title">Current sale</h2>
+      <h2 class="pos-cart__title">{{ 'Current sale' | t }}</h2>
 
       @if (cart().length === 0) {
-        <p class="page-description">Nothing added yet.</p>
+        <p class="page-description">{{ 'Nothing added yet.' | t }}</p>
       } @else {
         <ul class="pos-cart__lines">
           @for (line of cart(); track line.product.id) {
             <li class="pos-cart__line">
               <div class="pos-cart__name">
                 <div class="cell-strong">{{ line.product.name }}</div>
-                <div class="cell-sub">₾{{ line.product.price | number: '1.2-2' }} each</div>
+                <div class="cell-sub">{{ '₾{p0} each' | t: { p0: (line.product.price | number: '1.2-2') } }}</div>
               </div>
               <div class="pos-qty">
-                <button type="button" class="pos-qty__button" aria-label="One less" (click)="change(line, -1)">−</button>
+                <button type="button" class="pos-qty__button" [aria-label]="'One less' | t" (click)="change(line, -1)">−</button>
                 <span>{{ line.quantity }}</span>
-                <button type="button" class="pos-qty__button" aria-label="One more" (click)="change(line, 1)">+</button>
+                <button type="button" class="pos-qty__button" [aria-label]="'One more' | t" (click)="change(line, 1)">+</button>
               </div>
               <div class="pos-cart__amount">₾{{ line.product.price * line.quantity | number: '1.2-2' }}</div>
             </li>
@@ -74,7 +74,7 @@
       }
 
       <div class="pos-cart__total">
-        <span>Total ({{ itemCount() }} items)</span>
+        <span>{{ 'Total ({p0} items)' | t: { p0: itemCount() } }}</span>
         <strong>₾{{ total() | number: '1.2-2' }}</strong>
       </div>
 
@@ -85,10 +85,10 @@
           [disabled]="cart().length === 0 || !session() || isCharging()"
           (click)="charge()"
         >
-          {{ isCharging() ? 'Recording…' : 'Charge ₾' + (total() | number: '1.2-2') }}
+          {{ isCharging() ? ('Recording…' | t) : ('Charge ₾{amount}' | t: { amount: total() | number: '1.2-2' }) }}
         </button>
         @if (cart().length > 0) {
-          <button type="button" class="button button--secondary" (click)="clear()">Clear</button>
+          <button type="button" class="button button--secondary" (click)="clear()">{{ 'Clear' | t }}</button>
         }
       </div>
     </div>

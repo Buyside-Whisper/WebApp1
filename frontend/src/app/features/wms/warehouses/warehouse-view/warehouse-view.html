@@ -1,16 +1,16 @@
 <div class="page-stack">
   <div class="page-header">
     <div>
-      <p class="page-eyebrow">WMS · Warehouses</p>
+      <p class="page-eyebrow">{{ 'WMS · Warehouses' | t }}</p>
       <div class="page-header__title-row">
-        <h1 class="page-title">{{ warehouse()?.name ?? 'Warehouse' }}</h1>
+        <h1 class="page-title">{{ warehouse()?.name ?? ('Warehouse' | t) }}</h1>
         @if (warehouse(); as warehouse) {
           <span
             class="badge"
             [class.badge--active]="warehouse.status === 'active'"
             [class.badge--inactive]="warehouse.status === 'inactive'"
           >
-            {{ warehouse.status === 'active' ? 'Active' : 'Inactive' }}
+            {{ warehouse.status === 'active' ? ('Active' | t) : ('Inactive' | t) }}
           </span>
         }
       </div>
@@ -20,51 +20,51 @@
         </p>
       }
     </div>
-    <a class="button button--secondary" routerLink="/wms/warehouses">Back to warehouses</a>
+    <a class="button button--secondary" routerLink="/wms/warehouses">{{ 'Back to warehouses' | t }}</a>
   </div>
 
   @if (errorMessage()) {
-    <p class="field-error">{{ errorMessage() }}</p>
+    <p class="field-error">{{ errorMessage() | t }}</p>
   }
 
   @if (warehouse(); as warehouse) {
     <div class="stat-row">
       <div class="stat">
-        <div class="stat__label">Products</div>
+        <div class="stat__label">{{ 'Products' | t }}</div>
         <div class="stat__value">{{ warehouse.productCount }}</div>
       </div>
       <div class="stat">
-        <div class="stat__label">Stock</div>
+        <div class="stat__label">{{ 'Stock' | t }}</div>
         <div class="stat__value">{{ warehouse.stockPcs + warehouse.stockKg | number: '1.0-3' }}</div>
       </div>
       <div class="stat">
-        <div class="stat__label">Total price (at cost)</div>
+        <div class="stat__label">{{ 'Total price (at cost)' | t }}</div>
         <div class="stat__value">₾{{ warehouse.totalCost | number: '1.2-2' }}</div>
       </div>
     </div>
 
     <div class="page-card">
-      <h2 class="card-title">Details</h2>
+      <h2 class="card-title">{{ 'Details' | t }}</h2>
       <dl class="detail-grid">
-        <div><dt>Type</dt><dd>{{ warehouse.type === 'main' ? 'Main' : 'Sales' }}</dd></div>
+        <div><dt>{{ 'Type' | t }}</dt><dd>{{ warehouse.type === 'main' ? ('Main' | t) : ('Sales' | t) }}</dd></div>
         <div>
-          <dt>Branch</dt>
+          <dt>{{ 'Branch' | t }}</dt>
           <dd>
             @if (warehouse.type === 'main') {
-              <span class="muted">All branches</span>
+              <span class="muted">{{ 'All branches' | t }}</span>
             } @else {
               {{ warehouse.branch ?? '–' }}
             }
           </dd>
         </div>
-        <div><dt>Address</dt><dd>{{ warehouse.address }}</dd></div>
+        <div><dt>{{ 'Address' | t }}</dt><dd>{{ warehouse.address }}</dd></div>
         <div>
-          <dt>Manager</dt>
+          <dt>{{ 'Manager' | t }}</dt>
           <dd>
             @if (warehouse.manager) {
               {{ warehouse.manager.firstName }} {{ warehouse.manager.lastName }}
             } @else {
-              <span class="muted">No manager</span>
+              <span class="muted">{{ 'No manager' | t }}</span>
             }
           </dd>
         </div>
@@ -72,9 +72,9 @@
     </div>
 
     <div class="page-card">
-      <h2 class="card-title">Products in this warehouse</h2>
+      <h2 class="card-title">{{ 'Products in this warehouse' | t }}</h2>
       @if (stock().length === 0) {
-        <p class="page-description">This warehouse is empty.</p>
+        <p class="page-description">{{ 'This warehouse is empty.' | t }}</p>
       } @else {
         <div class="table-filters">
           <div class="search-input table-filters__search">
@@ -82,9 +82,9 @@
             <input
               class="text-input"
               type="search"
-              aria-label="Search products in this warehouse"
+              [aria-label]="'Search products in this warehouse' | t"
               [(ngModel)]="search"
-              placeholder="Product, barcode, category or group"
+              [placeholder]="'Product, barcode, category or group' | t"
             />
           </div>
         </div>
@@ -92,14 +92,14 @@
           <table class="data-table">
             <thead>
               <tr>
-                <th>Product</th>
-                <th>Barcode</th>
-                <th>Category</th>
-                <th>Group</th>
-                <th>Quantity</th>
-                <th>Unit</th>
-                <th>Cost price</th>
-                <th>Value</th>
+                <th>{{ 'Product' | t }}</th>
+                <th>{{ 'Barcode' | t }}</th>
+                <th>{{ 'Category' | t }}</th>
+                <th>{{ 'Group' | t }}</th>
+                <th>{{ 'Quantity' | t }}</th>
+                <th>{{ 'Unit' | t }}</th>
+                <th>{{ 'Cost price' | t }}</th>
+                <th>{{ 'Value' | t }}</th>
               </tr>
             </thead>
             <tbody>
@@ -116,13 +116,13 @@
                   <td>{{ row.product.category.name }}</td>
                   <td>{{ row.product.group }}</td>
                   <td class="cell-figure">{{ row.quantity | number: '1.0-3' }}</td>
-                  <td>{{ row.product.unit }}</td>
+                  <td>{{ row.product.unit | t }}</td>
                   <td class="cell-figure">₾{{ row.product.costPrice | number: '1.2-2' }}</td>
                   <td class="cell-figure">₾{{ row.quantity * row.product.costPrice | number: '1.2-2' }}</td>
                 </tr>
               } @empty {
                 <tr>
-                  <td class="muted" colspan="8">No products match “{{ search().trim() }}”.</td>
+                  <td class="muted" colspan="8">{{ 'No products match “{p0}”.' | t: { p0: search().trim() } }}</td>
                 </tr>
               }
             </tbody>
@@ -134,8 +134,8 @@
 
     <div class="page-card">
       <h2 class="card-title">
-        Stock history
-        <span class="card-title__note">every change, newest first</span>
+        {{ 'Stock history' | t }}
+        <span class="card-title__note">{{ 'every change, newest first' | t }}</span>
       </h2>
       <app-movement-history
         [movements]="movements()"

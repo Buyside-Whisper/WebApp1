@@ -1,5 +1,6 @@
 import { BadRequestException } from '@nestjs/common';
 import ExcelJS from 'exceljs';
+import { Language, translate } from './i18n/translate.js';
 
 export const XLSX_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 export const XLSX_UPLOAD = { limits: { fileSize: 5 * 1024 * 1024, files: 1 } };
@@ -14,6 +15,7 @@ export interface SheetColumn<F extends string = string> {
   text?: boolean;
   numFmt?: string;
   choices?: string[];
+  translated?: boolean;
 }
 
 export interface ImportIssue {
@@ -44,6 +46,14 @@ const tidy = (text: string) => text.trim().replace(/\s+/g, ' ');
 export const choiceKey = (text: string) => tidy(text).toLowerCase();
 
 const headerKey = (text: string) => choiceKey(text.replace(/\*/g, ''));
+
+const headerKeys = (header: string) => [headerKey(header), headerKey(translate(header, 'ka'))];
+
+export const choiceKeys = (label: string) => [choiceKey(label), choiceKey(translate(label, 'ka'))];
+
+const INSTRUCTIONS_SHEET = 'Instructions';
+
+const translatedColumns = new WeakMap<ExcelJS.Worksheet, number[]>();
 
 export function cellText(value: ExcelJS.CellValue): string {
   if (value === null || value === undefined) {
@@ -117,13 +127,14 @@ export async function readImportFile<F extends string, P>(
     report.errors.push({ row: null, column: null, value: null, message });
     return { report, rows: [] };
   };
-  const sheet = workbook.getWorksheet(sheetName) ?? workbook.worksheets[0];
+  const sheet =
+    workbook.getWorksheet(sheetName) ?? workbook.getWorksheet(translate(sheetName, 'ka')) ?? workbook.worksheets[0];
   if (!sheet) {
     return fileError('The workbook has no sheets');
   }
 
   const columnOf = new Map<F, number>();
-  const ignored = new Set(exportOnlyHeaders.map(headerKey));
+  const ignored = new Set(exportOnlyHeaders.flatMap(headerKeys));
   sheet.getRow(1).eachCell((cell, column) => {
     const text = cellText(cell.value);
     if (!text) {
@@ -131,7 +142,7 @@ export async function readImportFile<F extends string, P>(
     }
     const key = headerKey(text);
     const match = columns.find(
-      ({ header, aliases }) => headerKey(header) === key || (aliases ?? []).includes(key),
+      ({ header, aliases }) => headerKeys(header).includes(key) || (aliases ?? []).includes(key),
     );
     if (!match) {
       if (!ignored.has(key)) {
@@ -255,10 +266,14 @@ export function addListDropdown(
 export function addTableSheet(
   workbook: ExcelJS.Workbook,
   name: string,
-  columns: Pick<SheetColumn, 'header' | 'width' | 'text' | 'numFmt'>[],
+  columns: Pick<SheetColumn, 'header' | 'width' | 'text' | 'numFmt' | 'translated'>[],
   rows: unknown[][],
 ): ExcelJS.Worksheet {
   const sheet = workbook.addWorksheet(name, { views: [{ state: 'frozen', ySplit: 1 }] });
+  translatedColumns.set(
+    sheet,
+    columns.flatMap(({ translated }, index) => (translated ? [index + 1] : [])),
+  );
   sheet.columns = columns.map(({ header, width, text, numFmt }) => ({
     header,
     width,
@@ -277,7 +292,7 @@ export function addInstructionsSheet(
   columns: [string, string, string, string][],
   notes: string[],
 ): void {
-  const sheet = workbook.addWorksheet('Instructions');
+  const sheet = workbook.addWorksheet(INSTRUCTIONS_SHEET);
   sheet.columns = [
     { header: 'Column', width: 22 },
     { header: 'Required', width: 22 },
@@ -290,6 +305,67 @@ export function addInstructionsSheet(
   sheet.addRows(notes.map((note) => [note]));
 }
 
-export async function workbookBuffer(workbook: ExcelJS.Workbook): Promise<Buffer> {
+function localize(workbook: ExcelJS.Workbook, language: Language): void {
+  const tr = (text: string) => translate(text, language);
+  const sheetNames = new Map(workbook.worksheets.map((sheet) => [sheet.name, tr(sheet.name)]));
+  const translateCell = (cell: ExcelJS.Cell) => {
+    if (typeof cell.value === 'string' && cell.value) {
+      cell.value = tr(cell.value);
+    }
+  };
+  for (const sheet of workbook.worksheets) {
+    const everything = sheet.name === INSTRUCTIONS_SHEET;
+    const columns = translatedColumns.get(sheet) ?? [];
+    sheet.eachRow((row, rowNumber) => {
+      if (rowNumber === 1) {
+        row.eachCell((cell) => {
+          if (typeof cell.value === 'string') {
+            const required = cell.value.endsWith(' *');
+            const header = tr(required ? cell.value.slice(0, -2) : cell.value);
+            cell.value = required ? `${header} *` : header;
+          }
+        });
+      } else if (everything) {
+        row.eachCell(translateCell);
+      } else {
+        columns.forEach((column) => translateCell(row.getCell(column)));
+      }
+    });
+    const validations = (sheet as unknown as { dataValidations: { model: Record<string, ExcelJS.DataValidation> } })
+      .dataValidations.model;
+    const cache = new Map<string, Pick<ExcelJS.DataValidation, 'formulae' | 'error'>>();
+    for (const validation of Object.values(validations)) {
+      const formula = String(validation.formulae?.[0] ?? '');
+      const cacheKey = `${formula}\u0000${validation.error ?? ''}`;
+      let localized = cache.get(cacheKey);
+      if (!localized) {
+        const listed = /^"(.*)"$/.exec(formula);
+        const referenced = /^'(.+)'!(.*)$/.exec(formula);
+        if (listed) {
+          const choices = listed[1].split(',').map(tr);
+          localized = { formulae: [`"${choices.join(',')}"`], error: `${tr('Choose one of:')} ${choices.join(', ')}` };
+        } else if (referenced) {
+          localized = {
+            formulae: [`'${sheetNames.get(referenced[1]) ?? referenced[1]}'!${referenced[2]}`],
+            error: validation.error ? tr(validation.error) : validation.error,
+          };
+        } else {
+          localized = { formulae: validation.formulae, error: validation.error };
+        }
+        cache.set(cacheKey, localized);
+      }
+      validation.formulae = localized.formulae;
+      validation.error = localized.error;
+    }
+  }
+  for (const sheet of workbook.worksheets) {
+    sheet.name = sheetNames.get(sheet.name) ?? sheet.name;
+  }
+}
+
+export async function workbookBuffer(workbook: ExcelJS.Workbook, language: Language = 'en'): Promise<Buffer> {
+  if (language !== 'en') {
+    localize(workbook, language);
+  }
   return Buffer.from(await workbook.xlsx.writeBuffer());
 }

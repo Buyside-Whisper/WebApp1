@@ -1,76 +1,75 @@
 <div class="page-stack">
   <div class="page-header">
     <div>
-      <p class="page-eyebrow">Platform · Companies</p>
-      <h1 class="page-title">{{ id() ? 'Edit ' + (company()?.name ?? 'company') : 'Sell to a new company' }}</h1>
+      <p class="page-eyebrow">{{ 'Platform · Companies' | t }}</p>
+      <h1 class="page-title">{{ id() ? ('Edit {name}' | t: { name: company()?.name ?? '' }) : ('Sell to a new company' | t) }}</h1>
       <p class="page-description">
         @if (id()) {
-          Change the company's details, modules or prices. Payments are recorded on the company's page.
+          {{ 'Change the company\'s details, modules or prices. Payments are recorded on the company\'s page.' | t }}
         } @else {
-          The company's legal details, who runs it, which modules it buys and at what price. Saving
-          creates the system admin's login.
+          {{ 'The company\'s legal details, who runs it, which modules it buys and at what price. Saving creates the system admin\'s login.' | t }}
         }
       </p>
     </div>
     <a class="button button--secondary" [routerLink]="id() ? ['/superadmin/companies', id()] : '/superadmin/companies'">
-      Cancel
+      {{ 'Cancel' | t }}
     </a>
   </div>
 
   @if (isLoading()) {
-    <p class="page-description">Loading…</p>
+    <p class="page-description">{{ 'Loading…' | t }}</p>
   } @else {
     <form class="page-stack" [formGroup]="form" (ngSubmit)="save()" novalidate>
       <section class="page-card">
-        <h2 class="card-title">Company</h2>
+        <h2 class="card-title">{{ 'Company' | t }}</h2>
         <div class="form-grid">
           <div class="field">
-            <label for="name">Name in the app</label>
-            <input id="name" class="text-input" formControlName="name" placeholder="e.g. Acme Retail" />
+            <label for="name">{{ 'Name in the app' | t }}</label>
+            <input id="name" class="text-input" formControlName="name" [placeholder]="'e.g. Acme Retail' | t" />
             @if (errorFor('name'); as message) {
-              <span class="field-error">{{ message }}</span>
+              <span class="field-error">{{ message | t }}</span>
             }
           </div>
           <div class="field">
-            <label for="legalForm">Legal form</label>
+            <label for="legalForm">{{ 'Legal form' | t }}</label>
             <select id="legalForm" class="text-select" formControlName="legalForm">
               @for (option of legalForms; track option[0]) {
-                <option [value]="option[0]">{{ option[1] }}</option>
+                <option [value]="option[0]">{{ option[1] | t }}</option>
               }
             </select>
           </div>
           <div class="field">
-            <label for="legalName">Registered legal name</label>
-            <input id="legalName" class="text-input" formControlName="legalName" placeholder="e.g. შპს აკმე რითეილი" />
+            <label for="legalName">{{ 'Registered legal name' | t }}</label>
+            <input id="legalName" class="text-input" formControlName="legalName" [placeholder]="'e.g. შპს აკმე რითეილი' | t" />
             @if (errorFor('legalName'); as message) {
-              <span class="field-error">{{ message }}</span>
+              <span class="field-error">{{ message | t }}</span>
             }
           </div>
           <div class="field">
-            <label for="identificationCode">Identification code (ს/კ)</label>
+            <label for="identificationCode">{{ 'Identification code (ს/კ)' | t }}</label>
             <input
               id="identificationCode"
               class="text-input"
               inputmode="numeric"
               formControlName="identificationCode"
-              [placeholder]="form.controls.legalForm.value === 'individual_entrepreneur' ? '11-digit personal ID' : '9 digits, e.g. 405123456'"
+              [placeholder]="form.controls.legalForm.value === 'individual_entrepreneur' ? ('11-digit personal ID' | t) : ('9 digits, e.g. 405123456' | t)"
             />
             @if (errorFor('identificationCode'); as message) {
-              <span class="field-error">{{ message }}</span>
+              <span class="field-error">{{ message | t }}</span>
             }
           </div>
           <div class="field">
-            <label for="vatPayer">VAT</label>
+            <label for="vatPayer">{{ 'VAT' | t }}</label>
             <select id="vatPayer" class="text-select" formControlName="vatPayer">
-              <option [ngValue]="true">VAT payer</option>
-              <option [ngValue]="false">Not a VAT payer</option>
+              <option [ngValue]="true">{{ 'VAT payer' | t }}</option>
+              <option [ngValue]="false">{{ 'Not a VAT payer' | t }}</option>
             </select>
           </div>
           <div class="field">
-            <label for="legalAddress">Legal address</label>
-            <input id="legalAddress" class="text-input" formControlName="legalAddress" placeholder="e.g. 12 Rustaveli Ave, Tbilisi" />
+            <label for="legalAddress">{{ 'Legal address' | t }}</label>
+            <input id="legalAddress" class="text-input" formControlName="legalAddress" [placeholder]="'e.g. 12 Rustaveli Ave, Tbilisi' | t" />
             @if (errorFor('legalAddress'); as message) {
-              <span class="field-error">{{ message }}</span>
+              <span class="field-error">{{ message | t }}</span>
             }
           </div>
         </div>
@@ -78,58 +77,57 @@
 
       <section class="page-card">
         <h2 class="card-title">
-          System admin and contact
-          <span class="card-title__note">the person who runs the app in this company; invoices and notices go here</span>
+          {{ 'System admin and contact' | t }}
+          <span class="card-title__note">{{ 'the person who runs the app in this company; invoices and notices go here' | t }}</span>
         </h2>
         <div class="form-grid">
           <div class="field">
-            <label for="adminFirst">First name</label>
-            <input id="adminFirst" class="text-input" formControlName="adminFirst" placeholder="e.g. Nino" />
+            <label for="adminFirst">{{ 'First name' | t }}</label>
+            <input id="adminFirst" class="text-input" formControlName="adminFirst" [placeholder]="'e.g. Nino' | t" />
             @if (errorFor('adminFirst'); as message) {
-              <span class="field-error">{{ message }}</span>
+              <span class="field-error">{{ message | t }}</span>
             }
           </div>
           <div class="field">
-            <label for="adminLast">Last name</label>
-            <input id="adminLast" class="text-input" formControlName="adminLast" placeholder="e.g. Beridze" />
+            <label for="adminLast">{{ 'Last name' | t }}</label>
+            <input id="adminLast" class="text-input" formControlName="adminLast" [placeholder]="'e.g. Beridze' | t" />
             @if (errorFor('adminLast'); as message) {
-              <span class="field-error">{{ message }}</span>
+              <span class="field-error">{{ message | t }}</span>
             }
           </div>
           <div class="field">
-            <label for="contactEmail">Email</label>
-            <input id="contactEmail" class="text-input" type="email" formControlName="contactEmail" placeholder="e.g. nino@acme.ge" />
+            <label for="contactEmail">{{ 'Email' | t }}</label>
+            <input id="contactEmail" class="text-input" type="email" formControlName="contactEmail" [placeholder]="'e.g. nino@acme.ge' | t" />
             @if (errorFor('contactEmail'); as message) {
-              <span class="field-error">{{ message }}</span>
+              <span class="field-error">{{ message | t }}</span>
             }
           </div>
           <div class="field">
-            <label for="contactPhone">Phone</label>
-            <input id="contactPhone" class="text-input" type="tel" formControlName="contactPhone" placeholder="e.g. +995 555 12 34 56" />
+            <label for="contactPhone">{{ 'Phone' | t }}</label>
+            <input id="contactPhone" class="text-input" type="tel" formControlName="contactPhone" [placeholder]="'e.g. +995 555 12 34 56' | t" />
             @if (errorFor('contactPhone'); as message) {
-              <span class="field-error">{{ message }}</span>
+              <span class="field-error">{{ message | t }}</span>
             }
           </div>
         </div>
         @if (id()) {
           <p class="field-hint">
-            The admin's name and login ({{ company()?.adminUsername ?? '—' }}) can't be changed here; use
-            "Reset admin password" on the company's page if they lost it.
+            {{ 'The admin\'s name and login ({p0}) can\'t be changed here; use "Reset admin password" on the company\'s page if they lost it.' | t: { p0: company()?.adminUsername ?? '—' } }}
           </p>
         }
       </section>
 
       <section class="page-card">
         <h2 class="card-title">
-          Modules and price
-          <span class="card-title__note">₾ per month for each module this company buys</span>
+          {{ 'Modules and price' | t }}
+          <span class="card-title__note">{{ '₾ per month for each module this company buys' | t }}</span>
         </h2>
         <div class="module-prices" formGroupName="prices">
           @for (included of ['HR', 'RS']; track included) {
             <div class="module-price module-price--included">
               <div class="module-price__head">
-                <strong>{{ included }}</strong>
-                <span class="muted">Always included</span>
+                <strong>{{ included | t }}</strong>
+                <span class="muted">{{ 'Always included' | t }}</span>
               </div>
               <span class="module-price__amount">₾0</span>
             </div>
@@ -138,7 +136,7 @@
             <div class="module-price" [class.module-price--on]="selected().includes(module)">
               <label class="module-price__head">
                 <input type="checkbox" [checked]="selected().includes(module)" (change)="toggleModule(module)" />
-                <strong>{{ moduleLabels[module] }}</strong>
+                <strong>{{ moduleLabels[module] | t }}</strong>
               </label>
               @if (selected().includes(module)) {
                 <div class="field">
@@ -150,46 +148,46 @@
                       min="0"
                       step="0.01"
                       [formControlName]="module"
-                      [attr.aria-label]="moduleLabels[module] + ' price per month'"
+                      [attr.aria-label]="'{module} price per month' | t: { module: moduleLabels[module] | t }"
                     />
-                    <span class="muted">/ month</span>
+                    <span class="muted">{{ '/ month' | t }}</span>
                   </div>
                   @if (priceError(module); as message) {
-                    <span class="field-error">{{ message }}</span>
+                    <span class="field-error">{{ message | t }}</span>
                   }
                 </div>
               } @else {
-                <span class="muted">Not sold</span>
+                <span class="muted">{{ 'Not sold' | t }}</span>
               }
             </div>
           }
         </div>
         <p class="monthly-total">
-          Monthly total: <strong>₾{{ monthlyTotal().toFixed(2) }}</strong>
+          {{ 'Monthly total:' | t }} <strong>₾{{ monthlyTotal().toFixed(2) }}</strong>
           @if (id()) {
-            <span class="muted">Removing a module hides it from the company straight away; its data is kept.</span>
+            <span class="muted">{{ 'Removing a module hides it from the company straight away; its data is kept.' | t }}</span>
           }
         </p>
       </section>
 
       <section class="page-card">
-        <h2 class="card-title">Subscription</h2>
+        <h2 class="card-title">{{ 'Subscription' | t }}</h2>
         <div class="form-grid">
           <div class="field">
-            <label for="subscriptionStart">Starts on</label>
+            <label for="subscriptionStart">{{ 'Starts on' | t }}</label>
             <input id="subscriptionStart" class="text-input" type="date" formControlName="subscriptionStart" />
-            <span class="field-hint">The first month is due from this day (after the trial, if any).</span>
+            <span class="field-hint">{{ 'The first month is due from this day (after the trial, if any).' | t }}</span>
           </div>
           <div class="field">
             <label class="trial-toggle">
               <input type="checkbox" formControlName="hasTrial" (change)="toggleTrial()" />
-              Free trial
+              {{ 'Free trial' | t }}
             </label>
             @if (form.controls.hasTrial.value) {
-              <input class="text-input" type="date" formControlName="trialEndsOn" aria-label="Trial ends on" />
-              <span class="field-hint">Nothing is due until the day after the trial ends.</span>
+              <input class="text-input" type="date" formControlName="trialEndsOn" [aria-label]="'Trial ends on' | t" />
+              <span class="field-hint">{{ 'Nothing is due until the day after the trial ends.' | t }}</span>
               @if (errorFor('trialEndsOn'); as message) {
-                <span class="field-error">{{ message }}</span>
+                <span class="field-error">{{ message | t }}</span>
               }
             }
           </div>
@@ -197,23 +195,23 @@
       </section>
 
       <section class="page-card">
-        <h2 class="card-title">Notes <span class="card-title__note">only you see these</span></h2>
-        <textarea class="text-input notes-input" rows="3" formControlName="notes" placeholder="e.g. Agreed a 10% discount for the first year"></textarea>
+        <h2 class="card-title">{{ 'Notes' | t }} <span class="card-title__note">{{ 'only you see these' | t }}</span></h2>
+        <textarea class="text-input notes-input" rows="3" formControlName="notes" [placeholder]="'e.g. Agreed a 10% discount for the first year' | t"></textarea>
       </section>
 
       @if (formError()) {
-        <p class="field-error">{{ formError() }}</p>
+        <p class="field-error">{{ formError() | t }}</p>
       }
 
       <div class="button-row form-actions">
         <a class="button button--secondary" [routerLink]="id() ? ['/superadmin/companies', id()] : '/superadmin/companies'">
-          Cancel
+          {{ 'Cancel' | t }}
         </a>
         <button type="submit" class="button button--primary" [disabled]="isSaving()">
           @if (id()) {
-            {{ isSaving() ? 'Saving…' : 'Save changes' }}
+            {{ isSaving() ? ('Saving…' | t) : ('Save changes' | t) }}
           } @else {
-            {{ isSaving() ? 'Creating…' : 'Create company and issue login' }}
+            {{ isSaving() ? ('Creating…' | t) : ('Create company and issue login' | t) }}
           }
         </button>
       </div>
@@ -223,6 +221,6 @@
 
 <app-credentials-modal
   [credentials]="credentials()"
-  title="Login for the system admin"
+  [title]="'Login for the system admin' | t"
   (closed)="credentialsClosed()"
 />

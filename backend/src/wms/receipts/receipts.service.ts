@@ -30,7 +30,7 @@ const PREFIX = 'REC';
 const round2 = (value: number) => Math.round(value * 100) / 100;
 const round3 = (value: number) => Math.round(value * 1000) / 1000;
 
-const RS_PURCHASE_TYPES = new Set([2, 3, 4, 6]);
+const RS_PURCHASE_TYPES = new Set([2, 3, 6]);
 const RS_RECEIVABLE_STATUSES = new Set([1, 2]);
 
 export type ReceiptView = Omit<Receipt, 'warehouse' | 'lines' | 'supplier'> & {

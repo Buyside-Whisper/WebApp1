@@ -1,16 +1,15 @@
 <div class="page-stack">
   <div class="page-header">
     <div>
-      <p class="page-eyebrow">Store</p>
-      <h1 class="page-title">Stores</h1>
+      <p class="page-eyebrow">{{ 'Store' | t }}</p>
+      <h1 class="page-title">{{ 'Stores' | t }}</h1>
       <p class="page-description">
         @if (canManage()) {
-          Your shops, each with one manager picked from the people you added in HR. A store's cashiers are
-          added by its manager in HR.
+          {{ 'Your shops, each with one manager picked from the people you added in HR. A store\'s cashiers are added by its manager in HR.' | t }}
         } @else if (isAdmin()) {
-          All of the company's stores. They are created and edited by the Store admin.
+          {{ 'All of the company\'s stores. They are created and edited by the Store admin.' | t }}
         } @else {
-          The stores you manage.
+          {{ 'The stores you manage.' | t }}
         }
       </p>
     </div>
@@ -21,31 +20,31 @@
       <form class="page-stack" (ngSubmit)="save()">
         <div class="form-grid">
           <div class="field">
-            <label for="storeName">Store</label>
+            <label for="storeName">{{ 'Store' | t }}</label>
             <input
               id="storeName"
               class="text-input"
               name="name"
               [(ngModel)]="name"
-              placeholder="e.g. Vake Store"
+              [placeholder]="'e.g. Vake Store' | t"
               required
             />
           </div>
 
           <div class="field">
-            <label for="storeAddress">Address</label>
+            <label for="storeAddress">{{ 'Address' | t }}</label>
             <input
               id="storeAddress"
               class="text-input"
               name="address"
               [(ngModel)]="address"
-              placeholder="e.g. 23 Chavchavadze Ave, Tbilisi"
+              [placeholder]="'e.g. 23 Chavchavadze Ave, Tbilisi' | t"
               required
             />
           </div>
 
           <div class="field">
-            <label for="storeRegisters">Cash registers</label>
+            <label for="storeRegisters">{{ 'Cash registers' | t }}</label>
             <input
               id="storeRegisters"
               class="text-input"
@@ -59,16 +58,16 @@
           </div>
 
           <div class="field">
-            <label for="storeManager">Manager</label>
+            <label for="storeManager">{{ 'Manager' | t }}</label>
             <select id="storeManager" class="text-select" name="managerId" [(ngModel)]="managerId">
-              <option value="">— No manager —</option>
+              <option value="">{{ '— No manager —' | t }}</option>
               @for (manager of options().managers; track manager.id) {
                 <option [value]="manager.id">{{ manager.name }}</option>
               }
             </select>
             @if (options().managers.length === 0) {
               <span class="field-hint">
-                No managers yet. In HR, add an employee with the Manager role in the Store module.
+                {{ 'No managers yet. In HR, add an employee with the Manager role in the Store module.' | t }}
               </span>
             }
           </div>
@@ -76,38 +75,38 @@
         </div>
 
         @if (errorMessage()) {
-          <p class="field-error">{{ errorMessage() }}</p>
+          <p class="field-error">{{ errorMessage() | t }}</p>
         }
 
         <div class="button-row">
           <button type="submit" class="button button--primary" [disabled]="isSaving()">
             @if (editingId()) {
-              {{ isSaving() ? 'Saving…' : 'Save changes' }}
+              {{ isSaving() ? ('Saving…' | t) : ('Save changes' | t) }}
             } @else {
-              {{ isSaving() ? 'Adding…' : 'Add store' }}
+              {{ isSaving() ? ('Adding…' | t) : ('Add store' | t) }}
             }
           </button>
           @if (editingId()) {
-            <button type="button" class="button button--secondary" (click)="resetForm()">Cancel</button>
+            <button type="button" class="button button--secondary" (click)="resetForm()">{{ 'Cancel' | t }}</button>
           }
         </div>
       </form>
     </div>
   } @else if (errorMessage()) {
-    <p class="field-error">{{ errorMessage() }}</p>
+    <p class="field-error">{{ errorMessage() | t }}</p>
   }
 
   <div class="page-card">
     @if (isLoading()) {
-      <p class="page-description">Loading…</p>
+      <p class="page-description">{{ 'Loading…' | t }}</p>
     } @else if (stores().length === 0) {
       <p class="page-description">
         @if (canManage()) {
-          No stores yet. Add the first one above.
+          {{ 'No stores yet. Add the first one above.' | t }}
         } @else if (isAdmin()) {
-          No stores yet. The Store admin adds them.
+          {{ 'No stores yet. The Store admin adds them.' | t }}
         } @else {
-          No stores are assigned to you yet.
+          {{ 'No stores are assigned to you yet.' | t }}
         }
       </p>
     } @else {
@@ -115,12 +114,12 @@
         <table class="data-table">
           <thead>
             <tr>
-              <th>Store</th>
-              <th>Address</th>
-              <th>Manager</th>
-              <th class="cell-number">Registers</th>
+              <th>{{ 'Store' | t }}</th>
+              <th>{{ 'Address' | t }}</th>
+              <th>{{ 'Manager' | t }}</th>
+              <th class="cell-number">{{ 'Registers' | t }}</th>
               @if (canManage()) {
-                <th>Actions</th>
+                <th>{{ 'Actions' | t }}</th>
               }
             </tr>
           </thead>
@@ -135,10 +134,10 @@
                   <td>
                     <div class="button-row button-row--tight">
                       <button type="button" class="button button--secondary button--sm" (click)="edit(store)">
-                        Edit
+                        {{ 'Edit' | t }}
                       </button>
                       <button type="button" class="button button--secondary button--sm" (click)="remove(store)">
-                        Delete
+                        {{ 'Delete' | t }}
                       </button>
                     </div>
                   </td>

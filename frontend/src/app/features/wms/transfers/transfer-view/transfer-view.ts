@@ -9,13 +9,16 @@ import { WarehouseOption } from '../../warehouses/warehouse.model';
 import { WarehouseService } from '../../warehouses/warehouse.service';
 import { TRANSFER_STATUS_LABELS, Transfer } from '../transfer.model';
 import { TransferService } from '../transfer.service';
+import { TranslatePipe } from '../../../../core/i18n/t.pipe';
+import { I18nService } from '../../../../core/i18n/i18n.service';
 
 @Component({
   selector: 'app-transfer-view',
-  imports: [DatePipe, DecimalPipe, FormsModule, RouterLink],
+  imports: [TranslatePipe, DatePipe, DecimalPipe, FormsModule, RouterLink],
   templateUrl: './transfer-view.html',
 })
 export class TransferView implements OnInit {
+  private readonly i18n = inject(I18nService);
   private readonly transferService = inject(TransferService);
   private readonly warehouseService = inject(WarehouseService);
   private readonly auth = inject(AuthService);
@@ -60,7 +63,7 @@ export class TransferView implements OnInit {
   }
 
   send(): void {
-    if (confirm('Send this transfer? The goods leave the source warehouse now.')) {
+    if (this.i18n.confirm('Send this transfer? The goods leave the source warehouse now.')) {
       this.run(this.transferService.send(this.id()));
     }
   }
@@ -69,13 +72,13 @@ export class TransferView implements OnInit {
     const question = this.transfer()?.rsWaybillId
       ? 'Cancel this transfer? This works only after the waybill was cancelled in RS. The goods go back into the source warehouse.'
       : 'Cancel this transfer? The goods go back into the source warehouse.';
-    if (confirm(question)) {
+    if (this.i18n.confirm(question)) {
       this.run(this.transferService.cancel(this.id()));
     }
   }
 
   remove(): void {
-    if (!confirm('Delete this draft?')) {
+    if (!this.i18n.confirm('Delete this draft?')) {
       return;
     }
     this.transferService.remove(this.id()).subscribe({
@@ -88,8 +91,8 @@ export class TransferView implements OnInit {
     const transfer = this.transfer();
     if (transfer?.rsWaybillId) {
       if (
-        confirm(
-          `Receive everything on waybill ${transfer.waybillNumber}? The waybill is closed in RS (დასრულებული) and the goods go into ${transfer.toWarehouse.code}.`,
+        this.i18n.confirm(
+          this.i18n.t('Receive everything on waybill {waybillNumber}? The waybill is closed in RS (დასრულებული) and the goods go into {code}.', { waybillNumber: transfer.waybillNumber, code: transfer.toWarehouse.code }),
         )
       ) {
         this.run(
@@ -115,14 +118,14 @@ export class TransferView implements OnInit {
     const entries = lines.map((line) => ({ line, value: Number(this.received()[line.id]) }));
     const bad = entries.find(({ line, value }) => !(value >= 0) || value > line.quantity);
     if (bad) {
-      this.errorMessage.set(`${bad.line.product?.name ?? bad.line.rsName}: enter between 0 and ${bad.line.quantity}.`);
+      this.errorMessage.set(this.i18n.t('{value}: enter between 0 and {quantity}.', { value: bad.line.product?.name ?? bad.line.rsName, quantity: bad.line.quantity }));
       return;
     }
     const short = entries.filter(({ line, value }) => value < line.quantity).length;
     const question = short
-      ? `${short} product(s) arrived short. Confirm? The difference is recorded as missing.`
+      ? this.i18n.t('{short} product(s) arrived short. Confirm? The difference is recorded as missing.', { short })
       : 'Confirm that everything arrived?';
-    if (confirm(question)) {
+    if (this.i18n.confirm(question)) {
       this.run(
         this.transferService.receive(
           this.id(),

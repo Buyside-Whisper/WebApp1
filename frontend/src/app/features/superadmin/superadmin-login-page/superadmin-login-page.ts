@@ -3,10 +3,12 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
+import { LanguageSwitch } from '../../../shared/language-switch/language-switch';
+import { TranslatePipe } from '../../../core/i18n/t.pipe';
 
 @Component({
   selector: 'app-superadmin-login-page',
-  imports: [FormsModule, RouterLink],
+  imports: [TranslatePipe, LanguageSwitch, FormsModule, RouterLink],
   templateUrl: './superadmin-login-page.html',
   styleUrl: './superadmin-login-page.css',
 })

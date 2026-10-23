@@ -19,14 +19,17 @@ import {
   WarehouseType,
 } from '../warehouse.model';
 import { WarehouseService } from '../warehouse.service';
+import { TranslatePipe } from '../../../../core/i18n/t.pipe';
+import { I18nService } from '../../../../core/i18n/i18n.service';
 
 @Component({
   selector: 'app-warehouses-list',
-  imports: [DecimalPipe, FormsModule, RouterLink, LucideAngularModule, Modal, Pager, XlsxImport],
+  imports: [TranslatePipe, DecimalPipe, FormsModule, RouterLink, LucideAngularModule, Modal, Pager, XlsxImport],
   templateUrl: './warehouses-list.html',
   styleUrl: './warehouses-list.css',
 })
 export class WarehousesList implements OnInit {
+  private readonly i18n = inject(I18nService);
   protected readonly warehouseService = inject(WarehouseService);
   private readonly auth = inject(AuthService);
 
@@ -240,7 +243,7 @@ export class WarehousesList implements OnInit {
   }
 
   deleteWarehouse(warehouse: Warehouse): void {
-    if (!confirm(`Delete ${warehouse.code} ${warehouse.name}?`)) {
+    if (!this.i18n.confirm(this.i18n.t('Delete {code} {name}?', { code: warehouse.code, name: warehouse.name }))) {
       return;
     }
 

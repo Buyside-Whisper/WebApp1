@@ -4,10 +4,11 @@ import { RouterLink } from '@angular/router';
 import { Pager } from '../../../../shared/pager/pager';
 import { Pagination } from '../../../../shared/pager/pagination';
 import { STOCK_MOVEMENT_LABELS, StockMovement, movementDocumentLink } from '../stock.model';
+import { TranslatePipe } from '../../../../core/i18n/t.pipe';
 
 @Component({
   selector: 'app-movement-history',
-  imports: [DatePipe, DecimalPipe, RouterLink, Pager],
+  imports: [TranslatePipe, DatePipe, DecimalPipe, RouterLink, Pager],
   templateUrl: './movement-history.html',
 })
 export class MovementHistory {

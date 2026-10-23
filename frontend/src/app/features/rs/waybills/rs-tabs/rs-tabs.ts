@@ -1,10 +1,11 @@
 import { Component } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { FileText, LucideAngularModule, PlugZap } from 'lucide-angular';
+import { TranslatePipe } from '../../../../core/i18n/t.pipe';
 
 @Component({
   selector: 'app-rs-tabs',
-  imports: [RouterLink, RouterLinkActive, LucideAngularModule],
+  imports: [TranslatePipe, RouterLink, RouterLinkActive, LucideAngularModule],
   template: `
     <nav class="page-tabs" aria-label="RS">
       @for (tab of tabs; track tab.link) {
@@ -15,7 +16,7 @@ import { FileText, LucideAngularModule, PlugZap } from 'lucide-angular';
           [routerLinkActiveOptions]="{ exact: true }"
         >
           <lucide-icon [img]="tab.icon" [size]="16"></lucide-icon>
-          {{ tab.label }}
+          {{ tab.label | t }}
         </a>
       }
     </nav>

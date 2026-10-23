@@ -21,6 +21,8 @@ import { ProductOption, ProductsService } from './products.service.js';
 import { CreateProductDto } from './dto/create-product.dto.js';
 import { UpdateProductDto } from './dto/update-product.dto.js';
 import { Product } from './product.entity.js';
+import { Lang } from '../../common/i18n/translate.js';
+import type { Language } from '../../common/i18n/translate.js';
 
 @Controller('products')
 @Access(AppModuleName.WMS)
@@ -43,8 +45,8 @@ export class ProductsController {
   }
 
   @Get('export')
-  async export(@CurrentUser() user: AuthUser): Promise<StreamableFile> {
-    return new StreamableFile(await this.excelService.export(user), {
+  async export(@CurrentUser() user: AuthUser, @Lang() language: Language): Promise<StreamableFile> {
+    return new StreamableFile(await this.excelService.export(user, language), {
       type: XLSX_TYPE,
       disposition: 'attachment; filename="products.xlsx"',
     });
@@ -52,8 +54,8 @@ export class ProductsController {
 
   @Get('import/template')
   @Roles(UserRole.MODULE_ADMIN)
-  async importTemplate(@CurrentUser() user: AuthUser): Promise<StreamableFile> {
-    return new StreamableFile(await this.excelService.template(user), {
+  async importTemplate(@CurrentUser() user: AuthUser, @Lang() language: Language): Promise<StreamableFile> {
+    return new StreamableFile(await this.excelService.template(user, language), {
       type: XLSX_TYPE,
       disposition: 'attachment; filename="products-template.xlsx"',
     });

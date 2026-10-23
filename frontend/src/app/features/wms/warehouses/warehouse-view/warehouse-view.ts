@@ -11,10 +11,11 @@ import { StockMovement, WarehouseStockRow } from '../../stock/stock.model';
 import { StockService } from '../../stock/stock.service';
 import { Warehouse } from '../warehouse.model';
 import { WarehouseService } from '../warehouse.service';
+import { TranslatePipe } from '../../../../core/i18n/t.pipe';
 
 @Component({
   selector: 'app-warehouse-view',
-  imports: [DecimalPipe, FormsModule, RouterLink, LucideAngularModule, Pager, MovementHistory],
+  imports: [TranslatePipe, DecimalPipe, FormsModule, RouterLink, LucideAngularModule, Pager, MovementHistory],
   templateUrl: './warehouse-view.html',
 })
 export class WarehouseView implements OnInit {

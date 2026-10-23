@@ -1,37 +1,37 @@
 <div class="page-stack">
   <div class="page-header">
     <div>
-      <p class="page-eyebrow">{{ eyebrow() }}</p>
-      <h1 class="page-title">Audit log</h1>
-      <p class="page-description">The latest 200 actions: logins, people, logins issued, sales and more.</p>
+      <p class="page-eyebrow">{{ eyebrow() | t }}</p>
+      <h1 class="page-title">{{ 'Audit log' | t }}</h1>
+      <p class="page-description">{{ 'The latest 200 actions: logins, people, logins issued, sales and more.' | t }}</p>
     </div>
   </div>
 
   <div class="page-card">
     @if (isLoading()) {
-      <p class="page-description">Loading…</p>
+      <p class="page-description">{{ 'Loading…' | t }}</p>
     } @else if (errorMessage()) {
-      <p class="field-error">{{ errorMessage() }}</p>
+      <p class="field-error">{{ errorMessage() | t }}</p>
     } @else if (entries().length === 0) {
-      <p class="page-description">Nothing recorded yet.</p>
+      <p class="page-description">{{ 'Nothing recorded yet.' | t }}</p>
     } @else {
       <div class="table-scroll">
         <table class="data-table">
           <thead>
             <tr>
-              <th>When</th>
-              <th>Who</th>
-              <th>Action</th>
-              <th>What happened</th>
+              <th>{{ 'When' | t }}</th>
+              <th>{{ 'Who' | t }}</th>
+              <th>{{ 'Action' | t }}</th>
+              <th>{{ 'What happened' | t }}</th>
             </tr>
           </thead>
           <tbody>
             @for (entry of entries(); track entry.id) {
               <tr>
-                <td class="nowrap">{{ entry.createdAt | date: 'MMM d, HH:mm:ss' }}</td>
+                <td class="nowrap">{{ entry.createdAt | date: 'dd.MM.yyyy HH:mm:ss' }}</td>
                 <td>
                   <div class="cell-strong">{{ entry.actorName }}</div>
-                  <div class="cell-sub">{{ entry.actorRole.replace('_', ' ') }}</div>
+                  <div class="cell-sub">{{ entry.actorRole.replace('_', ' ') | t }}</div>
                 </td>
                 <td><code class="code-tag">{{ entry.action }}</code></td>
                 <td>{{ entry.summary }}</td>

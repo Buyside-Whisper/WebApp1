@@ -13,8 +13,10 @@ import { SupplierService } from '../../suppliers/supplier.service';
 import { PickableProduct, ProductPicker } from '../../stock/product-picker/product-picker';
 import { WarehouseOption } from '../../warehouses/warehouse.model';
 import { WarehouseService } from '../../warehouses/warehouse.service';
-import { RS_UNIT_TO_PRODUCT_UNIT, Receipt, ReceiptPayload } from '../receipt.model';
+import { Receipt, ReceiptPayload, rsProductUnit } from '../receipt.model';
 import { ReceiptService } from '../receipt.service';
+import { TranslatePipe } from '../../../../core/i18n/t.pipe';
+import { I18nService } from '../../../../core/i18n/i18n.service';
 
 interface EditableLine {
   productId: string | null;
@@ -36,11 +38,12 @@ const today = () => new Date().toLocaleDateString('sv-SE');
 
 @Component({
   selector: 'app-receipt-editor',
-  imports: [DecimalPipe, FormsModule, RouterLink, LucideAngularModule, ProductPicker, Modal, ProductForm],
+  imports: [TranslatePipe, DecimalPipe, FormsModule, RouterLink, LucideAngularModule, ProductPicker, Modal, ProductForm],
   templateUrl: './receipt-editor.html',
   styleUrl: './receipt-editor.css',
 })
 export class ReceiptEditor implements OnInit {
+  private readonly i18n = inject(I18nService);
   private readonly receiptService = inject(ReceiptService);
   private readonly productService = inject(ProductService);
   private readonly warehouseService = inject(WarehouseService);
@@ -151,14 +154,20 @@ export class ReceiptEditor implements OnInit {
     if (!line.rs || !line.unit) {
       return '';
     }
-    const expected = line.rs.unitId !== null ? RS_UNIT_TO_PRODUCT_UNIT[line.rs.unitId] : undefined;
+    const expected = rsProductUnit(line.rs);
     if (!expected) {
-      return `The waybill counts it in ${line.rs.unit ?? 'an unknown unit'}; products are only pcs or kg. Ask the supplier to correct the waybill, or reject it.`;
+      return this.i18n.t('The waybill counts it in {value}; products are only pcs or kg. Ask the supplier to correct the waybill, or reject it.', { value: line.rs.unit ?? 'an unknown unit' });
     }
-    return expected === line.unit ? '' : `The waybill says ${line.rs.unit}, but this product is counted in ${line.unit}.`;
+    return expected === line.unit ? '' : this.i18n.t('The waybill says {unit}, but this product is counted in {unit2}.', { unit: line.rs.unit, unit2: line.unit });
   }
 
   protected readonly linkingIndex = signal<number | null>(null);
+  protected readonly newProductDraft = computed(() => {
+    const line = this.linkingIndex() === null ? undefined : this.lines()[this.linkingIndex()!];
+    return line?.rs
+      ? { name: line.rs.name, barcode: line.rs.barcode ?? '', unit: rsProductUnit(line.rs) ?? 'pcs' }
+      : null;
+  });
 
   openProductForm(lineIndex: number | null): void {
     this.productNotice.set('');
@@ -169,17 +178,17 @@ export class ReceiptEditor implements OnInit {
   onProductCreated(product: Product): void {
     this.isProductFormOpen.set(false);
     if (product.status !== 'active') {
-      this.productNotice.set(`${product.name} was added to Products, but it is Not active, so it can't be received.`);
+      this.productNotice.set(this.i18n.t('{name} was added to Products, but it is Not active, so it can\'t be received.', { name: product.name }));
       return;
     }
     this.products.update((products) => [...products, product]);
     const index = this.linkingIndex();
     if (index !== null) {
       this.linkProduct(index, product);
-      this.productNotice.set(`${product.name} was added to Products and linked to the waybill line.`);
+      this.productNotice.set(this.i18n.t('{name} was added to Products and linked to the waybill line.', { name: product.name }));
     } else {
       this.addProduct(product);
-      this.productNotice.set(`${product.name} was added to Products and to this receipt.`);
+      this.productNotice.set(this.i18n.t('{name} was added to Products and to this receipt.', { name: product.name }));
     }
   }
 
@@ -201,7 +210,7 @@ export class ReceiptEditor implements OnInit {
     const question = this.rsWaybillId()
       ? 'Post this receipt? The waybill is confirmed in RS (მიღებული), the goods go into the warehouse and the receipt is locked.'
       : 'Post this receipt? The goods go into the warehouse and the receipt is locked.';
-    if (andPost && !confirm(question)) {
+    if (andPost && !this.i18n.confirm(question)) {
       return;
     }
 
@@ -264,7 +273,7 @@ export class ReceiptEditor implements OnInit {
         return '';
       }
       if (this.unlinkedCount()) {
-        return `Link every waybill line to one of your products first (${this.unlinkedCount()} left).`;
+        return this.i18n.t('Link every waybill line to one of your products first ({unlinkedCount} left).', { unlinkedCount: this.unlinkedCount() });
       }
       const problem = this.lines().find((line) => this.unitProblem(line));
       return problem ? `${problem.rs?.name}: ${this.unitProblem(problem)}` : '';
@@ -275,13 +284,13 @@ export class ReceiptEditor implements OnInit {
     for (const [i, line] of payload.lines.entries()) {
       const { name, unit } = this.lines()[i];
       if (line.quantity <= 0) {
-        return `Enter a quantity for ${name}.`;
+        return this.i18n.t('Enter a quantity for {name}.', { name });
       }
       if (unit === 'pcs' && !Number.isInteger(line.quantity)) {
-        return `${name} is counted in pcs, so its quantity must be whole.`;
+        return this.i18n.t('{name} is counted in pcs, so its quantity must be whole.', { name });
       }
       if (line.unitCost < 0) {
-        return `The price of ${name} can't be negative.`;
+        return this.i18n.t('The price of {name} can\'t be negative.', { name });
       }
     }
     return '';

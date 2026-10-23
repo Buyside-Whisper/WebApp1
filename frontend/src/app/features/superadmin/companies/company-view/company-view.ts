@@ -21,14 +21,17 @@ import {
   todayIso,
 } from '../company.model';
 import { CompanyService } from '../company.service';
+import { TranslatePipe } from '../../../../core/i18n/t.pipe';
+import { I18nService } from '../../../../core/i18n/i18n.service';
 
 @Component({
   selector: 'app-company-view',
-  imports: [CredentialsModal, DatePipe, DecimalPipe, FormsModule, LucideAngularModule, Modal, RouterLink],
+  imports: [TranslatePipe, CredentialsModal, DatePipe, DecimalPipe, FormsModule, LucideAngularModule, Modal, RouterLink],
   templateUrl: './company-view.html',
   styleUrl: './company-view.css',
 })
 export class CompanyView implements OnInit {
+  private readonly i18n = inject(I18nService);
   private readonly companyService = inject(CompanyService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -150,7 +153,7 @@ export class CompanyView implements OnInit {
   }
 
   removePayment(payment: CompanyPayment): void {
-    if (!confirm(`Delete the ₾${payment.amount.toFixed(2)} payment for ${payment.periodFrom} – ${payment.periodTo}?`)) {
+    if (!this.i18n.confirm(this.i18n.t('Delete the ₾{value} payment for {periodFrom} – {periodTo}?', { value: payment.amount.toFixed(2), periodFrom: payment.periodFrom, periodTo: payment.periodTo }))) {
       return;
     }
     this.companyService.removePayment(this.company()!.id, payment.id).subscribe({
@@ -162,11 +165,11 @@ export class CompanyView implements OnInit {
   setStatus(status: CompanyStatus): void {
     const company = this.company()!;
     const question = {
-      suspended: `Suspend ${company.name}? Its users are signed out and can't log in until you reactivate it. No data is deleted.`,
-      cancelled: `Cancel ${company.name}'s subscription? Its users can't log in any more. No data is deleted; you can reactivate it later.`,
-      active: `Reactivate ${company.name}? Its users can log in again.`,
+      suspended: this.i18n.t('Suspend {name}? Its users are signed out and can\'t log in until you reactivate it. No data is deleted.', { name: company.name }),
+      cancelled: this.i18n.t('Cancel {name}\'s subscription? Its users can\'t log in any more. No data is deleted; you can reactivate it later.', { name: company.name }),
+      active: this.i18n.t('Reactivate {name}? Its users can log in again.', { name: company.name }),
     }[status];
-    if (!confirm(question)) {
+    if (!this.i18n.confirm(question)) {
       return;
     }
     this.companyService.update(company.id, { status }).subscribe({
@@ -177,7 +180,7 @@ export class CompanyView implements OnInit {
 
   resetPassword(): void {
     const company = this.company()!;
-    if (!confirm(`Reset the system admin password of ${company.name}? The old password stops working.`)) {
+    if (!this.i18n.confirm(this.i18n.t('Reset the system admin password of {name}? The old password stops working.', { name: company.name }))) {
       return;
     }
     this.companyService.resetAdminPassword(company.id).subscribe({
@@ -189,8 +192,8 @@ export class CompanyView implements OnInit {
   remove(): void {
     const company = this.company()!;
     if (
-      !confirm(
-        `Delete ${company.name} and ALL of its data (people, warehouses, sales, logins, payments)? This cannot be undone. To stop access but keep the data, cancel the subscription instead.`,
+      !this.i18n.confirm(
+        this.i18n.t('Delete {name} and ALL of its data (people, warehouses, sales, logins, payments)? This cannot be undone. To stop access but keep the data, cancel the subscription instead.', { name: company.name }),
       )
     ) {
       return;

@@ -1,10 +1,11 @@
 import { Component, computed, input } from '@angular/core';
 import { LucideAngularModule, ChevronLeft, ChevronRight } from 'lucide-angular';
 import { PAGE_SIZES, Pagination } from './pagination';
+import { TranslatePipe } from '../../core/i18n/t.pipe';
 
 @Component({
   selector: 'app-pager',
-  imports: [LucideAngularModule],
+  imports: [TranslatePipe, LucideAngularModule],
   templateUrl: './pager.html',
   styleUrl: './pager.css',
 })

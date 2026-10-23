@@ -2,21 +2,29 @@
   <div class="search-input">
     <lucide-icon [img]="ScanIcon" [size]="16" class="search-input__icon"></lucide-icon>
     <input
+      #field
       class="text-input"
       type="search"
       autocomplete="off"
-      [attr.aria-label]="placeholder()"
-      [placeholder]="placeholder()"
+      [attr.aria-label]="placeholder() | t"
+      [placeholder]="placeholder() | t"
       [value]="query()"
       (input)="onInput($any($event.target).value)"
       (keydown.enter)="onEnter($event)"
       (keydown.escape)="open.set(false)"
-      (focus)="open.set(true)"
+      (focus)="show()"
       (blur)="onBlur()"
     />
   </div>
   @if (open() && query().trim()) {
-    <ul class="picker__results" role="listbox">
+    <ul
+      class="picker__results"
+      role="listbox"
+      [style.top.px]="position().top"
+      [style.left.px]="position().left"
+      [style.width.px]="position().width"
+      [style.max-height.px]="position().maxHeight"
+    >
       @for (product of matches(); track product.id) {
         <li>
           <button
@@ -30,21 +38,21 @@
             <code class="code-tag">{{ product.barcode }}</code>
             <span class="picker__meta">
               @if (isTaken(product)) {
-                added
+                {{ 'added' | t }}
               } @else if (product.available !== undefined) {
-                {{ product.available | number: '1.0-3' }} {{ product.unit }} available
+                {{ '{p0} {p1} available' | t: { p0: (product.available | number: '1.0-3'), p1: product.unit } }}
               } @else {
-                {{ product.unit }}
+                {{ product.unit | t }}
               }
             </span>
           </button>
         </li>
       } @empty {
-        <li class="picker__empty">No product matches.</li>
+        <li class="picker__empty">{{ 'No product matches.' | t }}</li>
       }
     </ul>
   }
   @if (message()) {
-    <p class="field-hint">{{ message() }}</p>
+    <p class="field-hint">{{ message() | t }}</p>
   }
 </div>

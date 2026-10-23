@@ -6,10 +6,11 @@ import { StockMovement } from '../../stock/stock.model';
 import { StockService } from '../../stock/stock.service';
 import { PRODUCT_POS_STATUS_LABELS, PRODUCT_USAGE_LABELS, Product } from '../product.model';
 import { ProductService } from '../product.service';
+import { TranslatePipe } from '../../../../core/i18n/t.pipe';
 
 @Component({
   selector: 'app-product-view',
-  imports: [DecimalPipe, RouterLink, MovementHistory],
+  imports: [TranslatePipe, DecimalPipe, RouterLink, MovementHistory],
   templateUrl: './product-view.html',
 })
 export class ProductView implements OnInit {

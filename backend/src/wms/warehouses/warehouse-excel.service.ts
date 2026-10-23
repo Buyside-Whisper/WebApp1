@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import ExcelJS from 'exceljs';
 import { Repository } from 'typeorm';
 import { AuthUser } from '../../auth/auth-user.js';
+import { Language } from '../../common/i18n/translate.js';
 import { nameKey } from '../../common/name-key.js';
 import {
   ImportReport,
@@ -94,7 +95,7 @@ export class WarehouseExcelService {
     private readonly warehousesService: WarehousesService,
   ) {}
 
-  async export(actor: AuthUser): Promise<Buffer> {
+  async export(actor: AuthUser, language: Language): Promise<Buffer> {
     const warehouses = await this.warehousesService.findAll(actor);
     const workbook = new ExcelJS.Workbook();
     addTableSheet(
@@ -103,11 +104,11 @@ export class WarehouseExcelService {
       [
         { header: 'Code', width: 14 },
         { header: 'Name', width: 28 },
-        { header: 'Type', width: 10 },
+        { header: 'Type', width: 10, translated: true },
         { header: 'Branch', width: 18 },
         { header: 'Address', width: 36 },
         { header: 'Manager', width: 26 },
-        { header: 'Status', width: 12 },
+        { header: 'Status', width: 12, translated: true },
         { header: 'Products', width: 11 },
         { header: 'Stock', width: 12, numFmt: '#,##0.###' },
         { header: 'Total price', width: 14, numFmt: '#,##0.00' },
@@ -125,10 +126,10 @@ export class WarehouseExcelService {
         w.totalCost ?? 0,
       ]),
     );
-    return workbookBuffer(workbook);
+    return workbookBuffer(workbook, language);
   }
 
-  async template(actor: AuthUser): Promise<Buffer> {
+  async template(actor: AuthUser, language: Language): Promise<Buffer> {
     const managers = await this.wmsManagers(actor);
     const workbook = new ExcelJS.Workbook();
     const sheet = addTemplateSheet(workbook, SHEET_NAME, COLUMNS);
@@ -160,12 +161,12 @@ export class WarehouseExcelService {
     addTableSheet(
       workbook,
       'Managers',
-      [{ header: 'Manager', width: 30 }],
+      [{ header: 'Manager', width: 30, translated: managers.length === 0 }],
       managers.length
         ? managers.map((m) => [fullName(m)])
         : [['No active WMS managers yet. Add them in HR first, or leave the column empty.']],
     );
-    return workbookBuffer(workbook);
+    return workbookBuffer(workbook, language);
   }
 
   async check(actor: AuthUser, file: Express.Multer.File | undefined): Promise<WarehouseImportReport> {

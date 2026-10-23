@@ -9,13 +9,16 @@ import { Pagination } from '../../../../shared/pager/pagination';
 import { ProductTabs } from '../../products/product-tabs/product-tabs';
 import { SUPPLIER_TYPE_LABELS, Supplier, SupplierStatus, SupplierType } from '../supplier.model';
 import { SupplierService } from '../supplier.service';
+import { TranslatePipe } from '../../../../core/i18n/t.pipe';
+import { I18nService } from '../../../../core/i18n/i18n.service';
 
 @Component({
   selector: 'app-suppliers-list',
-  imports: [FormsModule, LucideAngularModule, Modal, Pager, ProductTabs],
+  imports: [TranslatePipe, FormsModule, LucideAngularModule, Modal, Pager, ProductTabs],
   templateUrl: './suppliers-list.html',
 })
 export class SuppliersList implements OnInit {
+  private readonly i18n = inject(I18nService);
   private readonly supplierService = inject(SupplierService);
   private readonly auth = inject(AuthService);
 
@@ -163,7 +166,7 @@ export class SuppliersList implements OnInit {
   }
 
   deleteSupplier(supplier: Supplier): void {
-    if (!confirm(`Delete the supplier ${supplier.name}?`)) {
+    if (!this.i18n.confirm(this.i18n.t('Delete the supplier {name}?', { name: supplier.name }))) {
       return;
     }
     this.errorMessage.set('');

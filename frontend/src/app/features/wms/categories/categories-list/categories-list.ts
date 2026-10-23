@@ -9,13 +9,16 @@ import { Pagination } from '../../../../shared/pager/pagination';
 import { ProductTabs } from '../../products/product-tabs/product-tabs';
 import { Category, CategoryStatus } from '../category.model';
 import { CategoryService } from '../category.service';
+import { TranslatePipe } from '../../../../core/i18n/t.pipe';
+import { I18nService } from '../../../../core/i18n/i18n.service';
 
 @Component({
   selector: 'app-categories-list',
-  imports: [FormsModule, LucideAngularModule, Modal, Pager, ProductTabs],
+  imports: [TranslatePipe, FormsModule, LucideAngularModule, Modal, Pager, ProductTabs],
   templateUrl: './categories-list.html',
 })
 export class CategoriesList implements OnInit {
+  private readonly i18n = inject(I18nService);
   private readonly categoryService = inject(CategoryService);
   private readonly auth = inject(AuthService);
 
@@ -125,7 +128,7 @@ export class CategoriesList implements OnInit {
   }
 
   deleteCategory(category: Category): void {
-    if (!confirm(`Delete the category ${category.name}?`)) {
+    if (!this.i18n.confirm(this.i18n.t('Delete the category {name}?', { name: category.name }))) {
       return;
     }
     this.errorMessage.set('');

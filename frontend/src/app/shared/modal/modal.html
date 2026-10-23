@@ -8,7 +8,7 @@
   <div class="modal__panel">
     <div class="modal__header">
       <h2 class="modal__title" [id]="titleId">{{ title() }}</h2>
-      <button type="button" class="shell-icon-button" aria-label="Close" (click)="closed.emit()">
+      <button type="button" class="shell-icon-button" [aria-label]="'Close' | t" (click)="closed.emit()">
         <lucide-icon [img]="XIcon" [size]="20"></lucide-icon>
       </button>
     </div>

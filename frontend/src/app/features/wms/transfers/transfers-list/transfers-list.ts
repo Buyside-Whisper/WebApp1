@@ -9,13 +9,16 @@ import { Pager } from '../../../../shared/pager/pager';
 import { Pagination } from '../../../../shared/pager/pagination';
 import { TRANSFER_STATUS_LABELS, Transfer, TransferStatus } from '../transfer.model';
 import { TransferService } from '../transfer.service';
+import { TranslatePipe } from '../../../../core/i18n/t.pipe';
+import { I18nService } from '../../../../core/i18n/i18n.service';
 
 @Component({
   selector: 'app-transfers-list',
-  imports: [DatePipe, FormsModule, RouterLink, LucideAngularModule, Pager],
+  imports: [TranslatePipe, DatePipe, FormsModule, RouterLink, LucideAngularModule, Pager],
   templateUrl: './transfers-list.html',
 })
 export class TransfersList implements OnInit {
+  private readonly i18n = inject(I18nService);
   private readonly transferService = inject(TransferService);
   private readonly auth = inject(AuthService);
 
@@ -87,7 +90,7 @@ export class TransfersList implements OnInit {
   }
 
   deleteDraft(transfer: Transfer): void {
-    if (!confirm(`Delete draft ${transfer.code}?`)) {
+    if (!this.i18n.confirm(this.i18n.t('Delete draft {code}?', { code: transfer.code }))) {
       return;
     }
     this.transferService.remove(transfer.id).subscribe({

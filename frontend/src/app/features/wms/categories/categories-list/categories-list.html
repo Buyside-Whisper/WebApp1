@@ -1,13 +1,12 @@
 <div class="page-stack">
   <div class="page-header">
     <div>
-      <p class="page-eyebrow">WMS</p>
-      <h1 class="page-title">Categories</h1>
+      <p class="page-eyebrow">{{ 'WMS' | t }}</p>
+      <h1 class="page-title">{{ 'Categories' | t }}</h1>
       <p class="page-description">
-        Product categories (e.g. Sweets, Dairy). Every product belongs to one; its group is the
-        narrower part inside the category.
+        {{ 'Product categories (e.g. Sweets, Dairy). Every product belongs to one; its group is the narrower part inside the category.' | t }}
         @if (!canManage()) {
-          They are added and edited by the WMS admin.
+          {{ 'They are added and edited by the WMS admin.' | t }}
         }
       </p>
     </div>
@@ -15,7 +14,7 @@
       <div class="button-row page-header__actions">
         <button type="button" class="button button--dark" (click)="openAddForm()">
           <lucide-icon [img]="PlusIcon" [size]="16"></lucide-icon>
-          Add category
+          {{ 'Add category' | t }}
         </button>
       </div>
     }
@@ -24,18 +23,18 @@
   <app-product-tabs />
 
   @if (errorMessage()) {
-    <p class="field-error">{{ errorMessage() }}</p>
+    <p class="field-error">{{ errorMessage() | t }}</p>
   }
 
   <div class="page-card">
     @if (isLoading()) {
-      <p class="page-description">Loading…</p>
+      <p class="page-description">{{ 'Loading…' | t }}</p>
     } @else if (categories().length === 0) {
       <p class="page-description">
         @if (canManage()) {
-          No categories yet. Use “Add category” to create the first one.
+          {{ 'No categories yet. Use “Add category” to create the first one.' | t }}
         } @else {
-          No categories yet. The WMS admin adds them.
+          {{ 'No categories yet. The WMS admin adds them.' | t }}
         }
       </p>
     } @else {
@@ -45,26 +44,26 @@
           <input
             class="text-input"
             type="search"
-            aria-label="Search categories"
+            [aria-label]="'Search categories' | t"
             [(ngModel)]="search"
-            placeholder="Category or description"
+            [placeholder]="'Category or description' | t"
           />
         </div>
-        <select class="text-select" aria-label="Status" [(ngModel)]="statusFilter">
-          <option value="all">All statuses</option>
-          <option value="active">Active</option>
-          <option value="inactive">Inactive</option>
+        <select class="text-select" [aria-label]="'Status' | t" [(ngModel)]="statusFilter">
+          <option value="all">{{ 'All statuses' | t }}</option>
+          <option value="active">{{ 'Active' | t }}</option>
+          <option value="inactive">{{ 'Inactive' | t }}</option>
         </select>
         @if (hasFilters()) {
-          <button type="button" class="link-button" (click)="clearFilters()">Clear</button>
+          <button type="button" class="link-button" (click)="clearFilters()">{{ 'Clear' | t }}</button>
         }
       </div>
       <div class="table-toolbar">
         <span>
           @if (hasFilters()) {
-            {{ filtered().length }} of {{ categories().length }} categories
+            {{ '{p0} of {p1} categories' | t: { p0: filtered().length, p1: categories().length } }}
           } @else {
-            {{ categories().length }} categories
+            {{ '{p0} categories' | t: { p0: categories().length } }}
           }
         </span>
       </div>
@@ -72,11 +71,11 @@
         <table class="data-table">
           <thead>
             <tr>
-              <th>Category</th>
-              <th>Description</th>
-              <th>Products</th>
-              <th>Status</th>
-              <th>Actions</th>
+              <th>{{ 'Category' | t }}</th>
+              <th>{{ 'Description' | t }}</th>
+              <th>{{ 'Products' | t }}</th>
+              <th>{{ 'Status' | t }}</th>
+              <th>{{ 'Actions' | t }}</th>
             </tr>
           </thead>
           <tbody>
@@ -93,7 +92,7 @@
                 <td class="cell-figure">{{ category.productCount }}</td>
                 <td>
                   <span class="badge" [class]="category.status === 'active' ? 'badge--active' : 'badge--inactive'">
-                    {{ category.status === 'active' ? 'Active' : 'Inactive' }}
+                    {{ category.status === 'active' ? ('Active' | t) : ('Inactive' | t) }}
                   </span>
                 </td>
                 <td>
@@ -102,8 +101,8 @@
                       type="button"
                       class="icon-action"
                       [disabled]="!canManage()"
-                      [title]="canManage() ? 'Edit' : 'Only the WMS admin can edit'"
-                      [attr.aria-label]="'Edit ' + category.name"
+                      [title]="canManage() ? ('Edit' | t) : ('Only the WMS admin can edit' | t)"
+                      [attr.aria-label]="'Edit {name}' | t: { name: category.name }"
                       (click)="editCategory(category)"
                     >
                       <lucide-icon [img]="EditIcon" [size]="18"></lucide-icon>
@@ -112,8 +111,8 @@
                       type="button"
                       class="icon-action icon-action--danger"
                       [disabled]="!canManage() || category.productCount > 0"
-                      [title]="deleteTitle(category)"
-                      [attr.aria-label]="'Delete ' + category.name"
+                      [title]="deleteTitle(category) | t"
+                      [attr.aria-label]="'Delete {name}' | t: { name: category.name }"
                       (click)="deleteCategory(category)"
                     >
                       <lucide-icon [img]="DeleteIcon" [size]="18"></lucide-icon>
@@ -123,7 +122,7 @@
               </tr>
             } @empty {
               <tr>
-                <td class="muted" colspan="5">No categories match the search and filters.</td>
+                <td class="muted" colspan="5">{{ 'No categories match the search and filters.' | t }}</td>
               </tr>
             }
           </tbody>
@@ -136,59 +135,59 @@
 
 <app-modal
   [open]="isFormOpen()"
-  [title]="editingId() ? 'Edit category' : 'Add category'"
+  [title]="editingId() ? ('Edit category' | t) : ('Add category' | t)"
   (closed)="isFormOpen.set(false)"
 >
   <form class="page-stack" (ngSubmit)="saveCategory()">
     <div class="form-grid">
       <div class="field">
-        <label for="categoryName">Category</label>
+        <label for="categoryName">{{ 'Category' | t }}</label>
         <input
           id="categoryName"
           class="text-input"
           type="text"
           name="name"
           [(ngModel)]="name"
-          placeholder="e.g. Sweets"
+          [placeholder]="'e.g. Sweets' | t"
           required
         />
       </div>
 
       <div class="field">
-        <label for="categoryStatus">Status</label>
+        <label for="categoryStatus">{{ 'Status' | t }}</label>
         <select id="categoryStatus" class="text-select" name="status" [(ngModel)]="status">
-          <option value="active">Active</option>
-          <option value="inactive">Inactive</option>
+          <option value="active">{{ 'Active' | t }}</option>
+          <option value="inactive">{{ 'Inactive' | t }}</option>
         </select>
-        <span class="field-hint">Inactive categories can't be chosen for new products.</span>
+        <span class="field-hint">{{ 'Inactive categories can\'t be chosen for new products.' | t }}</span>
       </div>
 
       <div class="field">
-        <label for="categoryDescription">Description (optional)</label>
+        <label for="categoryDescription">{{ 'Description (optional)' | t }}</label>
         <input
           id="categoryDescription"
           class="text-input"
           type="text"
           name="description"
           [(ngModel)]="description"
-          placeholder="e.g. Chocolate, candy and biscuits"
+          [placeholder]="'e.g. Chocolate, candy and biscuits' | t"
         />
       </div>
     </div>
 
     @if (formError()) {
-      <p class="field-error">{{ formError() }}</p>
+      <p class="field-error">{{ formError() | t }}</p>
     }
 
     <div class="button-row">
       <button type="submit" class="button button--dark" [disabled]="isSaving()">
         @if (editingId()) {
-          {{ isSaving() ? 'Saving…' : 'Save changes' }}
+          {{ isSaving() ? ('Saving…' | t) : ('Save changes' | t) }}
         } @else {
-          {{ isSaving() ? 'Adding…' : 'Add category' }}
+          {{ isSaving() ? ('Adding…' | t) : ('Add category' | t) }}
         }
       </button>
-      <button type="button" class="button button--secondary" (click)="isFormOpen.set(false)">Cancel</button>
+      <button type="button" class="button button--secondary" (click)="isFormOpen.set(false)">{{ 'Cancel' | t }}</button>
     </div>
   </form>
 </app-modal>

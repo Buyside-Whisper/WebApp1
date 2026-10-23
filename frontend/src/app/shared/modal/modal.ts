@@ -1,11 +1,12 @@
 import { Component, ElementRef, effect, input, output, viewChild } from '@angular/core';
 import { LucideAngularModule, X } from 'lucide-angular';
+import { TranslatePipe } from '../../core/i18n/t.pipe';
 
 let nextId = 0;
 
 @Component({
   selector: 'app-modal',
-  imports: [LucideAngularModule],
+  imports: [TranslatePipe, LucideAngularModule],
   templateUrl: './modal.html',
   styleUrl: './modal.css',
 })

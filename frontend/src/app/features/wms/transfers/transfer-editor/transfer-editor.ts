@@ -4,15 +4,21 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { LucideAngularModule, Trash2 } from 'lucide-angular';
-import { ProductUnit } from '../../products/product.model';
+import { AuthService } from '../../../../core/auth/auth.service';
+import { Modal } from '../../../../shared/modal/modal';
+import { ProductForm } from '../../products/product-form/product-form';
+import { Product, ProductOption, ProductUnit } from '../../products/product.model';
+import { ProductService } from '../../products/product.service';
 import { PickableProduct, ProductPicker } from '../../stock/product-picker/product-picker';
 import { WarehouseStockRow } from '../../stock/stock.model';
 import { StockService } from '../../stock/stock.service';
 import { WarehouseOption } from '../../warehouses/warehouse.model';
 import { WarehouseService } from '../../warehouses/warehouse.service';
-import { RS_UNIT_TO_PRODUCT_UNIT } from '../../receipts/receipt.model';
+import { rsProductUnit } from '../../receipts/receipt.model';
 import { Transfer, TransferPayload } from '../transfer.model';
 import { TransferService } from '../transfer.service';
+import { TranslatePipe } from '../../../../core/i18n/t.pipe';
+import { I18nService } from '../../../../core/i18n/i18n.service';
 
 interface EditableLine {
   productId: string | null;
@@ -27,14 +33,17 @@ const today = () => new Date().toLocaleDateString('sv-SE');
 
 @Component({
   selector: 'app-transfer-editor',
-  imports: [DecimalPipe, FormsModule, RouterLink, LucideAngularModule, ProductPicker],
+  imports: [TranslatePipe, DecimalPipe, FormsModule, RouterLink, LucideAngularModule, ProductPicker, Modal, ProductForm],
   templateUrl: './transfer-editor.html',
   styleUrl: './transfer-editor.css',
 })
 export class TransferEditor implements OnInit {
+  private readonly i18n = inject(I18nService);
   private readonly transferService = inject(TransferService);
   private readonly stockService = inject(StockService);
   private readonly warehouseService = inject(WarehouseService);
+  private readonly productService = inject(ProductService);
+  private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
 
   readonly id = input<string>();
@@ -43,6 +52,11 @@ export class TransferEditor implements OnInit {
 
   protected readonly warehouses = signal<WarehouseOption[]>([]);
   protected readonly sourceStock = signal<WarehouseStockRow[]>([]);
+  protected readonly products = signal<ProductOption[]>([]);
+  protected readonly canCreateProducts = computed(() => this.auth.user()?.role === 'module_admin');
+  protected readonly isProductFormOpen = signal(false);
+  protected readonly linkingIndex = signal<number | null>(null);
+  protected readonly productNotice = signal('');
   protected readonly code = signal('');
   protected readonly isSaving = signal(false);
   protected readonly errorMessage = signal('');
@@ -72,6 +86,23 @@ export class TransferEditor implements OnInit {
         available: row.quantity,
       })),
   );
+  protected readonly linkable = computed<PickableProduct[]>(() =>
+    this.products()
+      .map((product) => ({
+        id: product.id,
+        name: product.name,
+        barcode: product.barcode,
+        unit: product.unit,
+        available: this.available().get(product.id) ?? 0,
+      }))
+      .sort((a, b) => Number(b.available > 0) - Number(a.available > 0)),
+  );
+  protected readonly newProductDraft = computed(() => {
+    const line = this.linkingIndex() === null ? undefined : this.lines()[this.linkingIndex()!];
+    return line?.rs
+      ? { name: line.rs.name, barcode: line.rs.barcode ?? '', unit: rsProductUnit(line.rs) ?? 'pcs' }
+      : null;
+  });
   protected readonly available = computed(
     () => new Map(this.sourceStock().map((row) => [row.productId, row.quantity])),
   );
@@ -86,6 +117,10 @@ export class TransferEditor implements OnInit {
         }
       },
       error: () => this.errorMessage.set('Could not load warehouses.'),
+    });
+    this.productService.options().subscribe({
+      next: (products) => this.products.set(products),
+      error: () => this.errorMessage.set('Could not load products.'),
     });
     const carried = (history.state as { error?: string } | null)?.error;
     if (carried) {
@@ -109,7 +144,7 @@ export class TransferEditor implements OnInit {
       this.loadSourceStock(warehouseId);
       return;
     }
-    if (this.lines().length && !confirm('Changing the source warehouse removes the products added so far.')) {
+    if (this.lines().length && !this.i18n.confirm('Changing the source warehouse removes the products added so far.')) {
       return;
     }
     this.fromWarehouseId.set(warehouseId);
@@ -135,6 +170,24 @@ export class TransferEditor implements OnInit {
     );
   }
 
+  openProductForm(index: number): void {
+    this.productNotice.set('');
+    this.linkingIndex.set(index);
+    this.isProductFormOpen.set(true);
+  }
+
+  onProductCreated(product: Product): void {
+    this.isProductFormOpen.set(false);
+    const index = this.linkingIndex();
+    if (product.status !== 'active' || index === null) {
+      this.productNotice.set(this.i18n.t('{name} was added to Products, but it is Not active, so it can\'t be moved.', { name: product.name }));
+      return;
+    }
+    this.products.update((products) => [...products, product]);
+    this.linkProduct(index, product);
+    this.productNotice.set(this.i18n.t('{name} was added to Products and linked to the waybill line.', { name: product.name }));
+  }
+
   unlinkProduct(index: number): void {
     this.lines.update((lines) =>
       lines.map((line, i) => (i === index ? { ...line, productId: null, name: null, barcode: null, unit: null } : line)),
@@ -145,11 +198,11 @@ export class TransferEditor implements OnInit {
     if (!line.rs || !line.unit) {
       return '';
     }
-    const expected = line.rs.unitId !== null ? RS_UNIT_TO_PRODUCT_UNIT[line.rs.unitId] : undefined;
+    const expected = rsProductUnit(line.rs);
     if (!expected) {
-      return `The waybill counts it in ${line.rs.unit ?? 'an unknown unit'}; products are only pcs or kg.`;
+      return this.i18n.t('The waybill counts it in {value}; products are only pcs or kg.', { value: line.rs.unit ?? 'an unknown unit' });
     }
-    return expected === line.unit ? '' : `The waybill says ${line.rs.unit}, but this product is counted in ${line.unit}.`;
+    return expected === line.unit ? '' : this.i18n.t('The waybill says {unit}, but this product is counted in {unit2}.', { unit: line.rs.unit, unit2: line.unit });
   }
 
   updateQuantity(index: number, value: number): void {
@@ -169,7 +222,7 @@ export class TransferEditor implements OnInit {
     }
     if (
       andSend &&
-      !confirm(
+      !this.i18n.confirm(
         this.rsWaybillId()
           ? 'Send this transfer? The goods leave the source warehouse now. The RS waybill is already active, so nothing changes in RS.'
           : 'Send this transfer? The goods leave the source warehouse now.',
@@ -232,7 +285,7 @@ export class TransferEditor implements OnInit {
         return '';
       }
       if (this.unlinkedCount()) {
-        return `Link every waybill line to one of your products first (${this.unlinkedCount()} left).`;
+        return this.i18n.t('Link every waybill line to one of your products first ({unlinkedCount} left).', { unlinkedCount: this.unlinkedCount() });
       }
       const problem = this.lines().find((line) => this.unitProblem(line));
       if (problem) {
@@ -246,13 +299,13 @@ export class TransferEditor implements OnInit {
       }
       const available = this.available().get(line.productId) ?? 0;
       if (line.quantity <= 0) {
-        return `Enter a quantity for ${name}.`;
+        return this.i18n.t('Enter a quantity for {name}.', { name });
       }
       if (unit === 'pcs' && !Number.isInteger(line.quantity)) {
-        return `${name} is counted in pcs, so its quantity must be whole.`;
+        return this.i18n.t('{name} is counted in pcs, so its quantity must be whole.', { name });
       }
       if (andSend && line.quantity > available) {
-        return `Only ${available} ${unit} of ${name} available.`;
+        return this.i18n.t('Only {available} {unit} of {name} available.', { available, unit, name });
       }
     }
     return '';

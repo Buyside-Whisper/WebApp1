@@ -46,6 +46,9 @@ export class User {
   @Column({ name: 'employee_id', type: 'uuid', nullable: true })
   employeeId!: string | null;
 
+  @Column({ type: 'varchar', length: 2, default: 'en' })
+  language!: string;
+
   @ManyToOne(() => Employee, { nullable: true, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'employee_id' })
   employee?: Employee | null;

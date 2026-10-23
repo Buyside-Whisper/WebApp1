@@ -2,6 +2,7 @@ import { Component, OnInit, inject, input, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { API_BASE_URL } from '../../core/api';
+import { TranslatePipe } from '../../core/i18n/t.pipe';
 
 export interface AuditEntry {
   id: string;
@@ -15,7 +16,7 @@ export interface AuditEntry {
 
 @Component({
   selector: 'app-audit-log-page',
-  imports: [DatePipe],
+  imports: [TranslatePipe, DatePipe],
   templateUrl: './audit-log-page.html',
 })
 export class AuditLogPage implements OnInit {

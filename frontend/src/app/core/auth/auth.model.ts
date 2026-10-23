@@ -9,6 +9,7 @@ export interface SessionUser {
   module: AppModule | null;
   companyName: string | null;
   companyModules: AppModule[];
+  language?: string;
 }
 
 export interface Session {

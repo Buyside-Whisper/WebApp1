@@ -1,12 +1,10 @@
 <div class="page-stack">
   <div class="page-header">
     <div>
-      <p class="page-eyebrow">RS</p>
-      <h1 class="page-title">RS waybills</h1>
+      <p class="page-eyebrow">{{ 'RS' | t }}</p>
+      <h1 class="page-title">{{ 'RS waybills' | t }}</h1>
       <p class="page-description">
-        Waybills (ზედნადები) issued to you in RS, read live from rs.ge. The WMS admin turns a
-        purchase into a receipt (posting confirms it in RS) or rejects it, and an internal transfer
-        (შიდა გადაზიდვა) into a transfer (receiving closes it in RS).
+        {{ 'Waybills (ზედნადები) issued to you in RS, read live from rs.ge. The WMS admin turns a purchase into a receipt (posting confirms it in RS) or rejects it, and an internal transfer (შიდა გადაზიდვა) into a transfer (receiving closes it in RS).' | t }}
       </p>
     </div>
   </div>
@@ -16,14 +14,13 @@
   @if (connection(); as conn) {
     @if (!conn.connected) {
       <div class="page-card">
-        <h2 class="card-title">RS isn't connected yet</h2>
+        <h2 class="card-title">{{ 'RS isn\'t connected yet' | t }}</h2>
         <p class="page-description">
           @if (isSystemAdmin()) {
-            Add your company's RS service user under
-            <a routerLink="/rs/waybills/connection">RS connection</a> to see the waybills issued to you.
+            {{ 'Add your company\'s RS service user under' | t }}
+            <a routerLink="/rs/waybills/connection">{{ 'RS connection' | t }}</a> {{ 'to see the waybills issued to you.' | t }}
           } @else {
-            The system admin adds the company's RS service user under RS connection. Then the
-            waybills issued to you appear here.
+            {{ 'The system admin adds the company\'s RS service user under RS connection. Then the waybills issued to you appear here.' | t }}
           }
         </p>
       </div>
@@ -31,15 +28,15 @@
       <div class="page-card period-card">
         <div class="period-row">
           <div class="field">
-            <label for="rsFrom">Created from</label>
+            <label for="rsFrom">{{ 'Created from' | t }}</label>
             <input id="rsFrom" class="text-input" type="date" [(ngModel)]="from" [max]="to()" />
           </div>
           <div class="field">
-            <label for="rsTo">to</label>
+            <label for="rsTo">{{ 'to' | t }}</label>
             <input id="rsTo" class="text-input" type="date" [(ngModel)]="to" [min]="from()" />
           </div>
           <button type="button" class="button button--dark" [disabled]="isLoading()" (click)="load()">
-            {{ isLoading() ? 'Asking RS…' : 'Show' }}
+            {{ isLoading() ? ('Asking RS…' | t) : ('Show' | t) }}
           </button>
           <div class="quick-periods">
             @for (period of quickPeriods; track period.days) {
@@ -51,37 +48,36 @@
                 [disabled]="isLoading()"
                 (click)="setQuickPeriod(period.days)"
               >
-                {{ period.label }}
+                {{ period.label | t }}
               </button>
             }
           </div>
         </div>
         <p class="field-hint">
-          At most 92 days at a time. RS can take up to a minute to answer for a new period; the same
-          period opens instantly for the next 5 minutes.
+          {{ 'At most 92 days at a time. RS can take up to a minute to answer for a new period; the same period opens instantly for the next 5 minutes.' | t }}
         </p>
       </div>
 
       @if (errorMessage()) {
-        <p class="field-error">{{ errorMessage() }}</p>
+        <p class="field-error">{{ errorMessage() | t }}</p>
       }
 
       @if (isLoading() && !loadedPeriod()) {
         <div class="page-card">
-          <p class="page-description">Asking RS for your waybills… this can take up to a minute.</p>
+          <p class="page-description">{{ 'Asking RS for your waybills… this can take up to a minute.' | t }}</p>
         </div>
       } @else if (loadedPeriod(); as period) {
         <div class="stat-row">
           <div class="stat">
-            <div class="stat__label">Waybills</div>
+            <div class="stat__label">{{ 'Waybills' | t }}</div>
             <div class="stat__value">{{ waybills().length }}</div>
           </div>
           <div class="stat">
-            <div class="stat__label">Waiting for your confirmation</div>
+            <div class="stat__label">{{ 'Waiting for your confirmation' | t }}</div>
             <div class="stat__value">{{ waiting() }}</div>
           </div>
           <div class="stat">
-            <div class="stat__label">Total {{ hasFilters() ? '(shown)' : '' }}</div>
+            <div class="stat__label">{{ 'Total {p0}' | t: { p0: hasFilters() ? ('(shown)' | t) : '' } }}</div>
             <div class="stat__value">₾{{ totalAmount() | number: '1.2-2' }}</div>
           </div>
         </div>
@@ -93,47 +89,47 @@
               <input
                 class="text-input"
                 type="search"
-                aria-label="Search waybills"
+                [aria-label]="'Search waybills' | t"
                 [(ngModel)]="search"
-                placeholder="Number, seller, code, address, car or driver"
+                [placeholder]="'Number, seller, code, address, car or driver' | t"
               />
             </div>
-            <select class="text-select" aria-label="Type" [(ngModel)]="typeFilter">
-              <option value="all">All types</option>
+            <select class="text-select" [aria-label]="'Type' | t" [(ngModel)]="typeFilter">
+              <option value="all">{{ 'All types' | t }}</option>
               @for (type of types(); track type) {
                 <option [value]="type">{{ type }}</option>
               }
             </select>
-            <select class="text-select" aria-label="Status" [(ngModel)]="statusFilter">
-              <option value="all">All statuses</option>
+            <select class="text-select" [aria-label]="'Status' | t" [(ngModel)]="statusFilter">
+              <option value="all">{{ 'All statuses' | t }}</option>
               @for (status of statuses(); track status) {
-                <option [value]="status">{{ statusLabel(+status) }}</option>
+                <option [value]="status">{{ statusLabel(+status) | t }}</option>
               }
             </select>
-            <select class="text-select" aria-label="Your confirmation" [(ngModel)]="confirmationFilter">
-              <option value="all">Any confirmation</option>
-              <option value="pending">Waiting for you</option>
-              <option value="accepted">Accepted</option>
-              <option value="rejected">Rejected</option>
+            <select class="text-select" [aria-label]="'Your confirmation' | t" [(ngModel)]="confirmationFilter">
+              <option value="all">{{ 'Any confirmation' | t }}</option>
+              <option value="pending">{{ 'Waiting for you' | t }}</option>
+              <option value="accepted">{{ 'Accepted' | t }}</option>
+              <option value="rejected">{{ 'Rejected' | t }}</option>
             </select>
             @if (hasFilters()) {
-              <button type="button" class="link-button" (click)="clearFilters()">Clear</button>
+              <button type="button" class="link-button" (click)="clearFilters()">{{ 'Clear' | t }}</button>
             }
           </div>
           <div class="table-toolbar">
             <span>
               {{ period.from | date: 'dd.MM.yyyy' }} – {{ period.to | date: 'dd.MM.yyyy' }}:
               @if (hasFilters()) {
-                {{ filtered().length }} of {{ waybills().length }} waybills
+                {{ '{p0} of {p1} waybills' | t: { p0: filtered().length, p1: waybills().length } }}
               } @else {
-                {{ waybills().length }} waybills
+                {{ '{p0} waybills' | t: { p0: waybills().length } }}
               }
             </span>
             <span class="table-toolbar__hint">
-              From RS at {{ fetchedAt() | date: 'HH:mm' }}
+              {{ 'From RS at {p0}' | t: { p0: (fetchedAt() | date: 'HH:mm') } }}
               <button type="button" class="link-button refresh" [disabled]="isLoading()" (click)="load(true)">
                 <lucide-icon [img]="RefreshIcon" [size]="14"></lucide-icon>
-                {{ isLoading() ? 'Refreshing…' : 'Refresh' }}
+                {{ isLoading() ? ('Refreshing…' | t) : ('Refresh' | t) }}
               </button>
             </span>
           </div>
@@ -141,15 +137,15 @@
             <table class="data-table">
               <thead>
                 <tr>
-                  <th>Waybill</th>
-                  <th>Seller</th>
-                  <th>From → To</th>
-                  <th>Amount</th>
-                  <th>Status</th>
-                  <th>Your confirmation</th>
-                  <th>Created</th>
+                  <th>{{ 'Waybill' | t }}</th>
+                  <th>{{ 'Seller' | t }}</th>
+                  <th>{{ 'From → To' | t }}</th>
+                  <th>{{ 'Amount' | t }}</th>
+                  <th>{{ 'Status' | t }}</th>
+                  <th>{{ 'Your confirmation' | t }}</th>
+                  <th>{{ 'Created' | t }}</th>
                   @if (canSeeReceipts()) {
-                    <th>Document</th>
+                    <th>{{ 'Document' | t }}</th>
                   }
                   <th></th>
                 </tr>
@@ -159,7 +155,7 @@
                   <tr class="clickable" (click)="open(waybill)">
                     <td class="cell-nowrap">
                       <code class="code-tag">{{ waybill.number }}</code>
-                      <div class="muted small">{{ waybill.typeName ?? 'Type ' + waybill.typeId }}</div>
+                      <div class="muted small">{{ waybill.typeName ?? ('Type {id}' | t: { id: waybill.typeId }) }}</div>
                     </td>
                     <td>
                       <div class="cell-strong">{{ waybill.sellerName ?? '—' }}</div>
@@ -170,10 +166,10 @@
                       <div class="muted" [title]="waybill.endAddress ?? ''">→ {{ waybill.endAddress ?? '—' }}</div>
                     </td>
                     <td class="cell-figure cell-strong">₾{{ waybill.amount | number: '1.2-2' }}</td>
-                    <td><span class="badge" [class]="statusBadge(waybill.status)">{{ statusLabel(waybill.status) }}</span></td>
+                    <td><span class="badge" [class]="statusBadge(waybill.status)">{{ statusLabel(waybill.status) | t }}</span></td>
                     <td>
                       <span class="badge" [class]="confirmationBadges[waybill.confirmation]">
-                        {{ confirmationLabels[waybill.confirmation] }}
+                        {{ confirmationLabels[waybill.confirmation] | t }}
                       </span>
                     </td>
                     <td class="cell-nowrap">{{ waybill.createdAt | date: 'dd.MM.yyyy HH:mm' }}</td>
@@ -181,14 +177,14 @@
                       <td class="cell-nowrap" (click)="$event.stopPropagation()">
                         @if (linkFor(waybill); as link) {
                           <a [routerLink]="linkRoute(link)">{{ link.code }}</a>
-                          <div class="muted small">{{ link.statusLabel }}</div>
+                          <div class="muted small">{{ link.statusLabel | t }}</div>
                         } @else if (canReceive(waybill)) {
                           <button type="button" class="button button--outline button--sm" (click)="startReceipt(waybill)">
-                            Create receipt
+                            {{ 'Create receipt' | t }}
                           </button>
                         } @else if (canTransfer(waybill)) {
                           <button type="button" class="button button--outline button--sm" (click)="startTransfer(waybill)">
-                            Create transfer
+                            {{ 'Create transfer' | t }}
                           </button>
                         } @else {
                           <span class="muted">—</span>
@@ -199,8 +195,8 @@
                       <button
                         type="button"
                         class="icon-action"
-                        title="View"
-                        [attr.aria-label]="'View waybill ' + waybill.number"
+                        [title]="'View' | t"
+                        [attr.aria-label]="'View waybill {number}' | t: { number: waybill.number }"
                         (click)="open(waybill); $event.stopPropagation()"
                       >
                         <lucide-icon [img]="ViewIcon" [size]="18"></lucide-icon>
@@ -210,7 +206,7 @@
                 } @empty {
                   <tr>
                     <td class="muted" [attr.colspan]="canSeeReceipts() ? 9 : 8">
-                      {{ waybills().length ? 'No waybills match the search and filters.' : 'No waybills were issued to you in this period.' }}
+                      {{ waybills().length ? ('No waybills match the search and filters.' | t) : ('No waybills were issued to you in this period.' | t) }}
                     </td>
                   </tr>
                 }
@@ -222,53 +218,53 @@
       }
     }
   } @else if (errorMessage()) {
-    <p class="field-error">{{ errorMessage() }}</p>
+    <p class="field-error">{{ errorMessage() | t }}</p>
   }
 </div>
 
 <app-modal
   [open]="detailFor() !== null"
-  [title]="'Waybill ' + (detailFor()?.number ?? '')"
+  [title]="'Waybill {number}' | t: { number: detailFor()?.number ?? '' }"
   (closed)="close()"
 >
   @if (detailError()) {
-    <p class="field-error">{{ detailError() }}</p>
+    <p class="field-error">{{ detailError() | t }}</p>
   } @else if (detail(); as w) {
     <div class="page-stack">
       <div class="badge-row">
-        <span class="badge" [class]="statusBadge(w.status)">{{ statusLabel(w.status) }}</span>
-        <span class="badge" [class]="confirmationBadges[w.confirmation]">{{ confirmationLabels[w.confirmation] }}</span>
+        <span class="badge" [class]="statusBadge(w.status)">{{ statusLabel(w.status) | t }}</span>
+        <span class="badge" [class]="confirmationBadges[w.confirmation]">{{ confirmationLabels[w.confirmation] | t }}</span>
         <span class="muted">{{ w.typeName }}</span>
         @if (w.corrected) {
-          <span class="muted">· corrected</span>
+          <span class="muted">{{ '· corrected' | t }}</span>
         }
       </div>
       <dl class="detail-grid">
-        <div><dt>Seller</dt><dd>{{ w.sellerName }}<br /><span class="muted">{{ w.sellerTin }}</span></dd></div>
-        <div><dt>Buyer</dt><dd>{{ w.buyerName }}<br /><span class="muted">{{ w.buyerTin }}</span></dd></div>
-        <div><dt>Created</dt><dd>{{ w.createdAt | date: 'dd.MM.yyyy HH:mm' }}</dd></div>
-        <div><dt>Activated</dt><dd>{{ w.activatedAt ? (w.activatedAt | date: 'dd.MM.yyyy HH:mm') : '—' }}</dd></div>
-        <div><dt>Delivered</dt><dd>{{ w.deliveredAt ? (w.deliveredAt | date: 'dd.MM.yyyy HH:mm') : '—' }}</dd></div>
-        <div><dt>Confirmed</dt><dd>{{ w.confirmedAt ? (w.confirmedAt | date: 'dd.MM.yyyy HH:mm') : '—' }}</dd></div>
-        <div class="wide"><dt>From</dt><dd>{{ w.startAddress ?? '—' }}</dd></div>
-        <div class="wide"><dt>To</dt><dd>{{ w.endAddress ?? '—' }}</dd></div>
-        <div><dt>Driver</dt><dd>{{ w.driverName ?? '—' }}@if (w.driverTin) {<br /><span class="muted">{{ w.driverTin }}</span>}</dd></div>
-        <div><dt>Car</dt><dd>{{ w.carNumber ?? '—' }}</dd></div>
-        <div><dt>Transport cost</dt><dd>₾{{ w.transportCost | number: '1.2-2' }}</dd></div>
+        <div><dt>{{ 'Seller' | t }}</dt><dd>{{ w.sellerName }}<br /><span class="muted">{{ w.sellerTin }}</span></dd></div>
+        <div><dt>{{ 'Buyer' | t }}</dt><dd>{{ w.buyerName }}<br /><span class="muted">{{ w.buyerTin }}</span></dd></div>
+        <div><dt>{{ 'Created' | t }}</dt><dd>{{ w.createdAt | date: 'dd.MM.yyyy HH:mm' }}</dd></div>
+        <div><dt>{{ 'Activated' | t }}</dt><dd>{{ w.activatedAt ? (w.activatedAt | date: 'dd.MM.yyyy HH:mm') : '—' }}</dd></div>
+        <div><dt>{{ 'Delivered' | t }}</dt><dd>{{ w.deliveredAt ? (w.deliveredAt | date: 'dd.MM.yyyy HH:mm') : '—' }}</dd></div>
+        <div><dt>{{ 'Confirmed' | t }}</dt><dd>{{ w.confirmedAt ? (w.confirmedAt | date: 'dd.MM.yyyy HH:mm') : '—' }}</dd></div>
+        <div class="wide"><dt>{{ 'From' | t }}</dt><dd>{{ w.startAddress ?? '—' }}</dd></div>
+        <div class="wide"><dt>{{ 'To' | t }}</dt><dd>{{ w.endAddress ?? '—' }}</dd></div>
+        <div><dt>{{ 'Driver' | t }}</dt><dd>{{ w.driverName ?? '—' }}@if (w.driverTin) {<br /><span class="muted">{{ w.driverTin }}</span>}</dd></div>
+        <div><dt>{{ 'Car' | t }}</dt><dd>{{ w.carNumber ?? '—' }}</dd></div>
+        <div><dt>{{ 'Transport cost' | t }}</dt><dd>₾{{ w.transportCost | number: '1.2-2' }}</dd></div>
         @if (w.comment) {
-          <div class="wide"><dt>Comment</dt><dd>{{ w.comment }}</dd></div>
+          <div class="wide"><dt>{{ 'Comment' | t }}</dt><dd>{{ w.comment }}</dd></div>
         }
       </dl>
       <div class="table-scroll">
         <table class="data-table">
           <thead>
             <tr>
-              <th>Goods</th>
-              <th>Barcode</th>
-              <th>Quantity</th>
-              <th>Unit</th>
-              <th>Price</th>
-              <th>Amount</th>
+              <th>{{ 'Goods' | t }}</th>
+              <th>{{ 'Barcode' | t }}</th>
+              <th>{{ 'Quantity' | t }}</th>
+              <th>{{ 'Unit' | t }}</th>
+              <th>{{ 'Price' | t }}</th>
+              <th>{{ 'Amount' | t }}</th>
             </tr>
           </thead>
           <tbody>
@@ -282,13 +278,13 @@
                 <td class="cell-figure">₾{{ line.amount | number: '1.2-2' }}</td>
               </tr>
             } @empty {
-              <tr><td class="muted" colspan="6">No goods lines.</td></tr>
+              <tr><td class="muted" colspan="6">{{ 'No goods lines.' | t }}</td></tr>
             }
           </tbody>
         </table>
       </div>
       <p class="doc-total">
-        Total <strong>₾{{ w.amount | number: '1.2-2' }}</strong>
+        {{ 'Total' | t }} <strong>₾{{ w.amount | number: '1.2-2' }}</strong>
         @if (w.amountInWords) {
           <span class="muted">{{ w.amountInWords }}</span>
         }
@@ -297,77 +293,73 @@
         <div class="button-row detail-actions">
           @if (linkFor(w); as link) {
             <a class="button button--outline" [routerLink]="linkRoute(link)">
-              Open {{ link.code }} ({{ link.statusLabel.toLowerCase() }})
+              {{ 'Open {p0} ({p1})' | t: { p0: link.code, p1: link.statusLabel.toLowerCase() } }}
             </a>
           }
           @if (canReject(w)) {
-            <button type="button" class="button button--danger" (click)="reject(w)">Reject in RS</button>
+            <button type="button" class="button button--danger" (click)="reject(w)">{{ 'Reject in RS' | t }}</button>
           }
           @if (canReceive(w)) {
-            <button type="button" class="button button--dark" (click)="close(); startReceipt(w)">Create receipt</button>
+            <button type="button" class="button button--dark" (click)="close(); startReceipt(w)">{{ 'Create receipt' | t }}</button>
           }
           @if (canTransfer(w)) {
-            <button type="button" class="button button--dark" (click)="close(); startTransfer(w)">Create transfer</button>
+            <button type="button" class="button button--dark" (click)="close(); startTransfer(w)">{{ 'Create transfer' | t }}</button>
           }
         </div>
       }
     </div>
   } @else {
-    <p class="page-description">Loading the waybill from RS…</p>
+    <p class="page-description">{{ 'Loading the waybill from RS…' | t }}</p>
   }
 </app-modal>
 
 <app-modal
   [open]="receiptFor() !== null"
-  [title]="'Receipt from waybill ' + (receiptFor()?.number ?? '')"
+  [title]="'Receipt from waybill {number}' | t: { number: receiptFor()?.number ?? '' }"
   (closed)="receiptFor.set(null)"
 >
   @if (receiptFor(); as waybill) {
     <div class="page-stack">
       <p class="page-description">
-        {{ waybill.sellerName }} ({{ waybill.sellerTin }}) · ₾{{ waybill.amount | number: '1.2-2' }}.
-        The app makes a <strong>draft</strong> receipt with the waybill's goods, quantities and
-        prices. You link the goods to your products there; posting confirms the waybill in RS.
+        {{ '{p0} ({p1}) · ₾{p2}. The app makes a' | t: { p0: waybill.sellerName, p1: waybill.sellerTin, p2: (waybill.amount | number: '1.2-2') } }} <strong>{{ 'draft' | t }}</strong> {{ 'receipt with the waybill\'s goods, quantities and prices. You link the goods to your products there; posting confirms the waybill in RS.' | t }}
       </p>
       @if (supplierQuestion(); as seller) {
         <div class="supplier-question">
           <p>
             @if (seller.existingSupplier) {
-              <strong>{{ seller.existingSupplier }}</strong> is in your Suppliers without identification
-              code {{ seller.identificationCode }}. Add the code to it and continue?
+              <strong>{{ seller.existingSupplier }}</strong> {{ 'is in your Suppliers without identification code {p0}. Add the code to it and continue?' | t: { p0: seller.identificationCode } }}
             } @else {
-              <strong>{{ seller.name }}</strong> ({{ seller.identificationCode }}) is not in your
-              Suppliers yet. Add it and continue?
+              <strong>{{ seller.name }}</strong> {{ '({p0}) is not in your Suppliers yet. Add it and continue?' | t: { p0: seller.identificationCode } }}
             }
           </p>
           <div class="button-row">
             <button type="button" class="button button--dark" [disabled]="isCreating()" (click)="createReceipt(true)">
-              {{ isCreating() ? 'Creating…' : seller.existingSupplier ? 'Add the code and continue' : 'Add supplier and continue' }}
+              {{ isCreating() ? ('Creating…' | t) : seller.existingSupplier ? ('Add the code and continue' | t) : ('Add supplier and continue' | t) }}
             </button>
-            <button type="button" class="button button--secondary" (click)="receiptFor.set(null)">Cancel</button>
+            <button type="button" class="button button--secondary" (click)="receiptFor.set(null)">{{ 'Cancel' | t }}</button>
           </div>
         </div>
       } @else {
         <div class="field">
-          <label for="rsReceiptWarehouse">Goods arrive in</label>
+          <label for="rsReceiptWarehouse">{{ 'Goods arrive in' | t }}</label>
           <select id="rsReceiptWarehouse" class="text-select" [(ngModel)]="warehouseId">
-            <option value="" disabled>Choose a warehouse</option>
+            <option value="" disabled>{{ 'Choose a warehouse' | t }}</option>
             @for (warehouse of myWarehouses(); track warehouse.id) {
               <option [value]="warehouse.id">{{ warehouse.code }} · {{ warehouse.name }}</option>
             }
           </select>
           @if (waybill.endAddress) {
-            <span class="field-hint">Delivery address on the waybill: {{ waybill.endAddress }}</span>
+            <span class="field-hint">{{ 'Delivery address on the waybill: {p0}' | t: { p0: waybill.endAddress } }}</span>
           }
         </div>
         @if (createError()) {
-          <p class="field-error">{{ createError() }}</p>
+          <p class="field-error">{{ createError() | t }}</p>
         }
         <div class="button-row">
           <button type="button" class="button button--dark" [disabled]="isCreating()" (click)="createReceipt()">
-            {{ isCreating() ? 'Creating…' : 'Create draft receipt' }}
+            {{ isCreating() ? ('Creating…' | t) : ('Create draft receipt' | t) }}
           </button>
-          <button type="button" class="button button--secondary" (click)="receiptFor.set(null)">Cancel</button>
+          <button type="button" class="button button--secondary" (click)="receiptFor.set(null)">{{ 'Cancel' | t }}</button>
         </div>
       }
     </div>
@@ -376,33 +368,32 @@
 
 <app-modal
   [open]="transferFor() !== null"
-  [title]="'Transfer from waybill ' + (transferFor()?.number ?? '')"
+  [title]="'Transfer from waybill {number}' | t: { number: transferFor()?.number ?? '' }"
   (closed)="transferFor.set(null)"
 >
   @if (transferFor(); as waybill) {
     <div class="page-stack">
       <p class="page-description">
-        An internal transfer (შიდა გადაზიდვა) between your own places. The app makes a
-        <strong>draft</strong> transfer with the waybill's goods and quantities; you link them to your
-        products there. Sending takes the goods out of the source; receiving closes the waybill in RS.
+        {{ 'An internal transfer (შიდა გადაზიდვა) between your own places. The app makes a' | t }}
+        <strong>{{ 'draft' | t }}</strong> {{ 'transfer with the waybill\'s goods and quantities; you link them to your products there. Sending takes the goods out of the source; receiving closes the waybill in RS.' | t }}
       </p>
       <div class="form-grid">
         <div class="field">
-          <label for="rsTransferFrom">From</label>
+          <label for="rsTransferFrom">{{ 'From' | t }}</label>
           <select id="rsTransferFrom" class="text-select" [(ngModel)]="fromWarehouseId">
-            <option value="" disabled>Choose a warehouse</option>
+            <option value="" disabled>{{ 'Choose a warehouse' | t }}</option>
             @for (warehouse of myWarehouses(); track warehouse.id) {
               <option [value]="warehouse.id">{{ warehouse.code }} · {{ warehouse.name }}</option>
             }
           </select>
           @if (waybill.startAddress) {
-            <span class="field-hint">On the waybill: {{ waybill.startAddress }}</span>
+            <span class="field-hint">{{ 'On the waybill: {p0}' | t: { p0: waybill.startAddress } }}</span>
           }
         </div>
         <div class="field">
-          <label for="rsTransferTo">To</label>
+          <label for="rsTransferTo">{{ 'To' | t }}</label>
           <select id="rsTransferTo" class="text-select" [(ngModel)]="toWarehouseId">
-            <option value="" disabled>Choose a warehouse</option>
+            <option value="" disabled>{{ 'Choose a warehouse' | t }}</option>
             @for (warehouse of activeWarehouses(); track warehouse.id) {
               @if (warehouse.id !== fromWarehouseId()) {
                 <option [value]="warehouse.id">{{ warehouse.code }} · {{ warehouse.name }}</option>
@@ -410,18 +401,18 @@
             }
           </select>
           @if (waybill.endAddress) {
-            <span class="field-hint">On the waybill: {{ waybill.endAddress }}</span>
+            <span class="field-hint">{{ 'On the waybill: {p0}' | t: { p0: waybill.endAddress } }}</span>
           }
         </div>
       </div>
       @if (createError()) {
-        <p class="field-error">{{ createError() }}</p>
+        <p class="field-error">{{ createError() | t }}</p>
       }
       <div class="button-row">
         <button type="button" class="button button--dark" [disabled]="isCreating()" (click)="createTransfer()">
-          {{ isCreating() ? 'Creating…' : 'Create draft transfer' }}
+          {{ isCreating() ? ('Creating…' | t) : ('Create draft transfer' | t) }}
         </button>
-        <button type="button" class="button button--secondary" (click)="transferFor.set(null)">Cancel</button>
+        <button type="button" class="button button--secondary" (click)="transferFor.set(null)">{{ 'Cancel' | t }}</button>
       </div>
     </div>
   }

@@ -1,9 +1,9 @@
 <div class="page-stack">
   <div class="page-header">
     <div>
-      <p class="page-eyebrow">WMS · Transfers</p>
+      <p class="page-eyebrow">{{ 'WMS · Transfers' | t }}</p>
       <div class="page-header__title-row">
-        <h1 class="page-title">{{ transfer()?.code ?? 'Transfer' }}</h1>
+        <h1 class="page-title">{{ transfer()?.code ?? ('Transfer' | t) }}</h1>
         @if (transfer(); as transfer) {
           <span
             class="badge"
@@ -12,7 +12,7 @@
             [class.badge--done]="transfer.status === 'received'"
             [class.badge--cancelled]="transfer.status === 'cancelled'"
           >
-            {{ statusLabels[transfer.status] }}
+            {{ statusLabels[transfer.status] | t }}
           </span>
         }
       </div>
@@ -27,100 +27,100 @@
       @if (transfer(); as transfer) {
         @if (actsForSource() && transfer.status === 'draft') {
           <button type="button" class="button button--secondary" [disabled]="isBusy()" (click)="remove()">
-            Delete
+            {{ 'Delete' | t }}
           </button>
-          <a class="button button--outline" [routerLink]="['/wms/transfers', transfer.id, 'edit']">Edit</a>
-          <button type="button" class="button button--dark" [disabled]="isBusy()" (click)="send()">Send</button>
+          <a class="button button--outline" [routerLink]="['/wms/transfers', transfer.id, 'edit']">{{ 'Edit' | t }}</a>
+          <button type="button" class="button button--dark" [disabled]="isBusy()" (click)="send()">{{ 'Send' | t }}</button>
         }
         @if (transfer.status === 'in_transit' && !receiving()) {
           @if (actsForSource()) {
             <button type="button" class="button button--secondary" [disabled]="isBusy()" (click)="cancel()">
-              Cancel transfer
+              {{ 'Cancel transfer' | t }}
             </button>
           }
           @if (actsForDestination()) {
             <button type="button" class="button button--dark" [disabled]="isBusy()" (click)="startReceiving()">
-              {{ transfer.rsWaybillId ? 'Receive and close in RS' : 'Receive' }}
+              {{ transfer.rsWaybillId ? ('Receive and close in RS' | t) : ('Receive' | t) }}
             </button>
           }
         }
       }
-      <a class="button button--secondary" routerLink="/wms/transfers">Back to transfers</a>
+      <a class="button button--secondary" routerLink="/wms/transfers">{{ 'Back to transfers' | t }}</a>
     </div>
   </div>
 
   @if (errorMessage()) {
-    <p class="field-error">{{ errorMessage() }}</p>
+    <p class="field-error">{{ errorMessage() | t }}</p>
   }
 
   @if (transfer(); as transfer) {
     <div class="page-card">
-      <h2 class="card-title">Details</h2>
+      <h2 class="card-title">{{ 'Details' | t }}</h2>
       <dl class="detail-grid">
         <div>
-          <dt>From</dt>
+          <dt>{{ 'From' | t }}</dt>
           <dd>
             <a [routerLink]="['/wms/warehouses', transfer.fromWarehouse.id]">{{ transfer.fromWarehouse.code }}</a>
             {{ transfer.fromWarehouse.name }}
           </dd>
         </div>
         <div>
-          <dt>To</dt>
+          <dt>{{ 'To' | t }}</dt>
           <dd>
             <a [routerLink]="['/wms/warehouses', transfer.toWarehouse.id]">{{ transfer.toWarehouse.code }}</a>
             {{ transfer.toWarehouse.name }}
           </dd>
         </div>
-        <div><dt>Date</dt><dd>{{ transfer.date | date: 'dd.MM.yyyy' }}</dd></div>
+        <div><dt>{{ 'Date' | t }}</dt><dd>{{ transfer.date | date: 'dd.MM.yyyy' }}</dd></div>
         @if (transfer.rsWaybillId) {
           <div>
-            <dt>RS waybill</dt>
+            <dt>{{ 'RS waybill' | t }}</dt>
             <dd>
               {{ transfer.waybillNumber }}
-              <br /><span class="muted">{{ transfer.rsClosedAt ? 'Closed in RS ' + (transfer.rsClosedAt | date: 'dd.MM.yyyy HH:mm') : 'Active in RS' }}</span>
+              <br /><span class="muted">{{ transfer.rsClosedAt ? ('Closed in RS {date}' | t: { date: transfer.rsClosedAt | date: 'dd.MM.yyyy HH:mm' }) : ('Active in RS' | t) }}</span>
             </dd>
           </div>
         }
-        <div><dt>Created by</dt><dd>{{ transfer.createdByName }}</dd></div>
+        <div><dt>{{ 'Created by' | t }}</dt><dd>{{ transfer.createdByName }}</dd></div>
         @if (transfer.sentAt) {
-          <div><dt>Sent</dt><dd>{{ transfer.sentByName }}, {{ transfer.sentAt | date: 'dd.MM.yyyy HH:mm' }}</dd></div>
+          <div><dt>{{ 'Sent' | t }}</dt><dd>{{ transfer.sentByName }}, {{ transfer.sentAt | date: 'dd.MM.yyyy HH:mm' }}</dd></div>
         }
         @if (transfer.receivedAt) {
-          <div><dt>Received</dt><dd>{{ transfer.receivedByName }}, {{ transfer.receivedAt | date: 'dd.MM.yyyy HH:mm' }}</dd></div>
+          <div><dt>{{ 'Received' | t }}</dt><dd>{{ transfer.receivedByName }}, {{ transfer.receivedAt | date: 'dd.MM.yyyy HH:mm' }}</dd></div>
         }
         @if (transfer.cancelledAt) {
-          <div><dt>Cancelled</dt><dd>{{ transfer.cancelledByName }}, {{ transfer.cancelledAt | date: 'dd.MM.yyyy HH:mm' }}</dd></div>
+          <div><dt>{{ 'Cancelled' | t }}</dt><dd>{{ transfer.cancelledByName }}, {{ transfer.cancelledAt | date: 'dd.MM.yyyy HH:mm' }}</dd></div>
         }
         @if (transfer.note) {
-          <div><dt>Note</dt><dd>{{ transfer.note }}</dd></div>
+          <div><dt>{{ 'Note' | t }}</dt><dd>{{ transfer.note }}</dd></div>
         }
       </dl>
     </div>
 
     <div class="page-card">
       <h2 class="card-title">
-        Products
+        {{ 'Products' | t }}
         @if (receiving()) {
-          <span class="card-title__note">enter what actually arrived</span>
+          <span class="card-title__note">{{ 'enter what actually arrived' | t }}</span>
         } @else if (shortLines()) {
-          <span class="card-title__note short">{{ shortLines() }} arrived short</span>
+          <span class="card-title__note short">{{ '{p0} arrived short' | t: { p0: shortLines() } }}</span>
         }
       </h2>
       @if (!transfer.lines?.length) {
-        <p class="page-description">No products on this draft yet.</p>
+        <p class="page-description">{{ 'No products on this draft yet.' | t }}</p>
       } @else {
         <div class="table-scroll">
           <table class="data-table">
             <thead>
               <tr>
-                <th>Product</th>
-                <th>Barcode</th>
-                <th>Sent</th>
+                <th>{{ 'Product' | t }}</th>
+                <th>{{ 'Barcode' | t }}</th>
+                <th>{{ 'Sent' | t }}</th>
                 @if (receiving() || transfer.status === 'received') {
-                  <th>Received</th>
-                  <th>Missing</th>
+                  <th>{{ 'Received' | t }}</th>
+                  <th>{{ 'Missing' | t }}</th>
                 }
-                <th>Unit</th>
+                <th>{{ 'Unit' | t }}</th>
               </tr>
             </thead>
             <tbody>
@@ -134,10 +134,10 @@
                         {{ product.name }}
                       }
                     } @else {
-                      <span class="short">Not linked yet</span>
+                      <span class="short">{{ 'Not linked yet' | t }}</span>
                     }
                     @if (line.rsName && line.rsName !== line.product?.name) {
-                      <div class="muted">RS: {{ line.rsName }}</div>
+                      <div class="muted">{{ 'RS: {p0}' | t: { p0: line.rsName } }}</div>
                     }
                   </td>
                   <td><code class="code-tag">{{ line.product?.barcode ?? line.rsBarcode ?? '—' }}</code></td>
@@ -150,7 +150,7 @@
                         min="0"
                         [max]="line.quantity"
                         [step]="line.product?.unit === 'kg' ? 0.001 : 1"
-                        [attr.aria-label]="'Received ' + (line.product?.name ?? line.rsName)"
+                        [attr.aria-label]="'Received {name}' | t: { name: line.product?.name ?? line.rsName }"
                         [ngModel]="received()[line.id]"
                         (ngModelChange)="setReceived(line.id, $event)"
                       />
@@ -164,7 +164,7 @@
                       {{ line.quantity - (line.receivedQuantity ?? 0) | number: '1.0-3' }}
                     </td>
                   }
-                  <td>{{ line.product?.unit ?? line.rsUnit }}</td>
+                  <td>{{ (line.product?.unit ?? line.rsUnit) | t }}</td>
                 </tr>
               }
             </tbody>
@@ -173,9 +173,9 @@
         @if (receiving()) {
           <div class="button-row doc-actions">
             <button type="button" class="button button--dark" [disabled]="isBusy()" (click)="confirmReceipt()">
-              {{ isBusy() ? 'Saving…' : 'Confirm receipt' }}
+              {{ isBusy() ? ('Saving…' | t) : ('Confirm receipt' | t) }}
             </button>
-            <button type="button" class="button button--secondary" (click)="receiving.set(false)">Back</button>
+            <button type="button" class="button button--secondary" (click)="receiving.set(false)">{{ 'Back' | t }}</button>
           </div>
         }
       }

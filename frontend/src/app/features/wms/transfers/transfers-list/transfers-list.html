@@ -1,32 +1,31 @@
 <div class="page-stack">
   <div class="page-header">
     <div>
-      <p class="page-eyebrow">WMS</p>
-      <h1 class="page-title">Transfers</h1>
+      <p class="page-eyebrow">{{ 'WMS' | t }}</p>
+      <h1 class="page-title">{{ 'Transfers' | t }}</h1>
       <p class="page-description">
-        Goods moving between warehouses. Sending takes them out of the source; they are in transit
-        until the destination confirms what arrived.
+        {{ 'Goods moving between warehouses. Sending takes them out of the source; they are in transit until the destination confirms what arrived.' | t }}
       </p>
     </div>
     @if (canWrite()) {
       <div class="button-row page-header__actions">
         <a class="button button--dark" routerLink="/wms/transfers/new">
           <lucide-icon [img]="PlusIcon" [size]="16"></lucide-icon>
-          New transfer
+          {{ 'New transfer' | t }}
         </a>
       </div>
     }
   </div>
 
   @if (errorMessage()) {
-    <p class="field-error">{{ errorMessage() }}</p>
+    <p class="field-error">{{ errorMessage() | t }}</p>
   }
 
   <div class="page-card">
     @if (isLoading()) {
-      <p class="page-description">Loading…</p>
+      <p class="page-description">{{ 'Loading…' | t }}</p>
     } @else if (transfers().length === 0) {
-      <p class="page-description">No transfers yet.</p>
+      <p class="page-description">{{ 'No transfers yet.' | t }}</p>
     } @else {
       <div class="table-filters">
         <div class="search-input table-filters__search">
@@ -34,26 +33,26 @@
           <input
             class="text-input"
             type="search"
-            aria-label="Search transfers"
+            [aria-label]="'Search transfers' | t"
             [(ngModel)]="search"
-            placeholder="Number or warehouse"
+            [placeholder]="'Number or warehouse' | t"
           />
         </div>
-        <select class="text-select" aria-label="Status" [(ngModel)]="statusFilter">
-          <option value="all">All statuses</option>
-          <option value="draft">Draft</option>
-          <option value="in_transit">In transit</option>
-          <option value="received">Received</option>
-          <option value="cancelled">Cancelled</option>
+        <select class="text-select" [aria-label]="'Status' | t" [(ngModel)]="statusFilter">
+          <option value="all">{{ 'All statuses' | t }}</option>
+          <option value="draft">{{ 'Draft' | t }}</option>
+          <option value="in_transit">{{ 'In transit' | t }}</option>
+          <option value="received">{{ 'Received' | t }}</option>
+          <option value="cancelled">{{ 'Cancelled' | t }}</option>
         </select>
-        <select class="text-select" aria-label="Warehouse" [(ngModel)]="warehouseFilter">
-          <option value="all">All warehouses</option>
+        <select class="text-select" [aria-label]="'Warehouse' | t" [(ngModel)]="warehouseFilter">
+          <option value="all">{{ 'All warehouses' | t }}</option>
           @for (warehouse of warehousesInList(); track warehouse.id) {
             <option [value]="warehouse.id">{{ warehouse.code }} · {{ warehouse.name }}</option>
           }
         </select>
         @if (hasFilters()) {
-          <button type="button" class="link-button" (click)="clearFilters()">Clear</button>
+          <button type="button" class="link-button" (click)="clearFilters()">{{ 'Clear' | t }}</button>
         }
       </div>
 
@@ -61,15 +60,15 @@
         <table class="data-table">
           <thead>
             <tr>
-              <th>Number</th>
-              <th>Date</th>
-              <th>From</th>
+              <th>{{ 'Number' | t }}</th>
+              <th>{{ 'Date' | t }}</th>
+              <th>{{ 'From' | t }}</th>
               <th></th>
-              <th>To</th>
-              <th>Lines</th>
-              <th>Status</th>
-              <th>Created by</th>
-              <th>Actions</th>
+              <th>{{ 'To' | t }}</th>
+              <th>{{ 'Lines' | t }}</th>
+              <th>{{ 'Status' | t }}</th>
+              <th>{{ 'Created by' | t }}</th>
+              <th>{{ 'Actions' | t }}</th>
             </tr>
           </thead>
           <tbody>
@@ -78,7 +77,7 @@
                 <td class="cell-strong">
                   <a [routerLink]="['/wms/transfers', transfer.id]">{{ transfer.code }}</a>
                   @if (transfer.rsWaybillId) {
-                    <span class="chip chip--rs" title="Made from an RS waybill">RS</span>
+                    <span class="chip chip--rs" [title]="'Made from an RS waybill' | t">{{ 'RS' | t }}</span>
                   }
                 </td>
                 <td class="cell-figure">{{ transfer.date | date: 'dd.MM.yyyy' }}</td>
@@ -100,27 +99,27 @@
                     [class.badge--done]="transfer.status === 'received'"
                     [class.badge--cancelled]="transfer.status === 'cancelled'"
                   >
-                    {{ statusLabels[transfer.status] }}
+                    {{ statusLabels[transfer.status] | t }}
                   </span>
                 </td>
                 <td class="cell-nowrap">{{ transfer.createdByName }}</td>
                 <td>
                   <div class="icon-actions">
-                    <a class="icon-action" [routerLink]="['/wms/transfers', transfer.id]" title="View">
+                    <a class="icon-action" [routerLink]="['/wms/transfers', transfer.id]" [title]="'View' | t">
                       <lucide-icon [img]="ViewIcon" [size]="18"></lucide-icon>
                     </a>
                     @if (canWrite() && transfer.status === 'draft') {
                       <a
                         class="icon-action"
                         [routerLink]="['/wms/transfers', transfer.id, 'edit']"
-                        title="Edit draft"
+                        [title]="'Edit draft' | t"
                       >
                         <lucide-icon [img]="EditIcon" [size]="18"></lucide-icon>
                       </a>
                       <button
                         type="button"
                         class="icon-action icon-action--danger"
-                        title="Delete draft"
+                        [title]="'Delete draft' | t"
                         (click)="deleteDraft(transfer)"
                       >
                         <lucide-icon [img]="DeleteIcon" [size]="18"></lucide-icon>
@@ -131,7 +130,7 @@
               </tr>
             } @empty {
               <tr>
-                <td class="muted" colspan="9">No transfers match the search and filters.</td>
+                <td class="muted" colspan="9">{{ 'No transfers match the search and filters.' | t }}</td>
               </tr>
             }
           </tbody>

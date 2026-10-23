@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import ExcelJS from 'exceljs';
 import { Repository } from 'typeorm';
 import { AuthUser } from '../../auth/auth-user.js';
+import { Language } from '../../common/i18n/translate.js';
 import { nameKey } from '../../common/name-key.js';
 import {
   ImportReport,
@@ -13,6 +14,7 @@ import {
   addListDropdown,
   addTemplateSheet,
   choiceKey,
+  choiceKeys,
   readImportFile,
   rowIssues,
   workbookBuffer,
@@ -91,7 +93,7 @@ const EXPORT_ONLY = ['In stock', 'Warehouses', 'Value at cost'];
 const choices = <T>(labels: Record<string, string>, extra: Record<string, T>): Record<string, T> => ({
   ...Object.fromEntries(Object.entries(labels).flatMap(([value, label]) => [
     [choiceKey(value), value as T],
-    [choiceKey(label), value as T],
+    ...choiceKeys(label).map((key) => [key, value as T]),
   ])),
   ...extra,
 });
@@ -164,14 +166,14 @@ export class ProductExcelService {
     private readonly productsService: ProductsService,
   ) {}
 
-  async export(actor: AuthUser): Promise<Buffer> {
+  async export(actor: AuthUser, language: Language): Promise<Buffer> {
     const products = await this.productsService.findAll(actor);
     const workbook = new ExcelJS.Workbook();
     addTableSheet(
       workbook,
       SHEET_NAME,
       [
-        ...COLUMNS.map(({ header, width, text, numFmt }) => ({ header, width, text, numFmt })),
+        ...COLUMNS.map(({ header, width, text, numFmt, choices }) => ({ header, width, text, numFmt, translated: !!choices })),
         { header: 'In stock', width: 12, numFmt: '#,##0.###' },
         { header: 'Warehouses', width: 12 },
         { header: 'Value at cost', width: 14, numFmt: '#,##0.00' },
@@ -193,10 +195,10 @@ export class ProductExcelService {
         Math.round(p.quantity * p.costPrice * 100) / 100,
       ]),
     );
-    return workbookBuffer(workbook);
+    return workbookBuffer(workbook, language);
   }
 
-  async template(actor: AuthUser): Promise<Buffer> {
+  async template(actor: AuthUser, language: Language): Promise<Buffer> {
     const { categories, suppliers } = await this.activeLists(actor);
     const workbook = new ExcelJS.Workbook();
     const sheet = addTemplateSheet(workbook, SHEET_NAME, COLUMNS);
@@ -229,16 +231,16 @@ export class ProductExcelService {
     addTableSheet(
       workbook,
       'Categories',
-      [{ header: 'Category', width: 30 }],
+      [{ header: 'Category', width: 30, translated: categories.length === 0 }],
       categories.length ? categories.map((c) => [c.name]) : [['No active categories yet. Add them in Products → Categories first.']],
     );
     addTableSheet(
       workbook,
       'Suppliers',
-      [{ header: 'Supplier', width: 34 }],
+      [{ header: 'Supplier', width: 34, translated: suppliers.length === 0 }],
       suppliers.length ? suppliers.map((s) => [s.name]) : [['No active suppliers yet. Add them in Products → Suppliers first.']],
     );
-    return workbookBuffer(workbook);
+    return workbookBuffer(workbook, language);
   }
 
   async check(actor: AuthUser, file: Express.Multer.File | undefined): Promise<ProductImportReport> {

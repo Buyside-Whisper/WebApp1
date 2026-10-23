@@ -1,29 +1,29 @@
 @if (movements().length === 0) {
-  <p class="page-description">No stock movements yet.</p>
+  <p class="page-description">{{ 'No stock movements yet.' | t }}</p>
 } @else {
   <div class="table-scroll">
     <table class="data-table">
       <thead>
         <tr>
-          <th>Date</th>
-          <th>Type</th>
+          <th>{{ 'Date' | t }}</th>
+          <th>{{ 'Type' | t }}</th>
           @if (showProduct()) {
-            <th>Product</th>
+            <th>{{ 'Product' | t }}</th>
           }
           @if (showWarehouse()) {
-            <th>Warehouse</th>
+            <th>{{ 'Warehouse' | t }}</th>
           }
-          <th>Change</th>
-          <th>Balance after</th>
-          <th>By</th>
-          <th>Document / note</th>
+          <th>{{ 'Change' | t }}</th>
+          <th>{{ 'Balance after' | t }}</th>
+          <th>{{ 'By' | t }}</th>
+          <th>{{ 'Document / note' | t }}</th>
         </tr>
       </thead>
       <tbody>
         @for (movement of pages.items(); track movement.id) {
           <tr>
             <td class="cell-figure">{{ movement.createdAt | date: 'dd.MM.yyyy HH:mm' }}</td>
-            <td class="cell-nowrap">{{ labels[movement.kind] }}</td>
+            <td class="cell-nowrap">{{ labels[movement.kind] | t }}</td>
             @if (showProduct()) {
               <td class="cell-strong">
                 @if (linkProducts()) {
@@ -47,7 +47,7 @@
               [class.change-out]="movement.quantity < 0"
             >
               {{ movement.quantity > 0 ? '+' : '' }}{{ movement.quantity | number: '1.0-3' }}
-              {{ movement.product.unit }}
+              {{ movement.product.unit | t }}
             </td>
             <td class="cell-figure">{{ movement.balanceAfter | number: '1.0-3' }}</td>
             <td class="cell-nowrap">{{ movement.createdByName }}</td>

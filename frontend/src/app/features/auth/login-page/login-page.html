@@ -1,11 +1,12 @@
 <div class="login-page">
+  <app-language-switch class="login-language" />
   <form class="login-card" (ngSubmit)="signIn()">
     <div class="login-brand">WebApp1</div>
-    <h1 class="login-title">Sign in</h1>
-    <p class="page-description">Use the username and password you were given.</p>
+    <h1 class="login-title">{{ 'Sign in' | t }}</h1>
+    <p class="page-description">{{ 'Use the username and password you were given.' | t }}</p>
 
     <div class="field">
-      <label for="username">Username</label>
+      <label for="username">{{ 'Username' | t }}</label>
       <input
         id="username"
         class="text-input"
@@ -17,7 +18,7 @@
     </div>
 
     <div class="field">
-      <label for="password">Password</label>
+      <label for="password">{{ 'Password' | t }}</label>
       <input
         id="password"
         class="text-input"
@@ -30,13 +31,13 @@
     </div>
 
     @if (errorMessage()) {
-      <p class="field-error">{{ errorMessage() }}</p>
+      <p class="field-error">{{ errorMessage() | t }}</p>
     }
 
     <button type="submit" class="button button--primary" [disabled]="isLoading()">
-      {{ isLoading() ? 'Signing in…' : 'Sign in' }}
+      {{ isLoading() ? ('Signing in…' | t) : ('Sign in' | t) }}
     </button>
 
-    <a class="login-link" routerLink="/superadmin/login">Platform owner? Sign in here</a>
+    <a class="login-link" routerLink="/superadmin/login">{{ 'Platform owner? Sign in here' | t }}</a>
   </form>
 </div>

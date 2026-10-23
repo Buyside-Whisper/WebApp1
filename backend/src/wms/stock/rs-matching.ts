@@ -7,6 +7,24 @@ import { RsProductLink } from './rs-product-link.entity.js';
 
 export const RS_UNITS: Record<number, ProductUnit> = { 1: ProductUnit.PCS, 2: ProductUnit.KG };
 
+const RS_OTHER_UNIT = 99;
+
+const UNIT_WORDS: Record<string, ProductUnit> = {
+  'ცალი': ProductUnit.PCS,
+  'ც': ProductUnit.PCS,
+  pcs: ProductUnit.PCS,
+  'კგ': ProductUnit.KG,
+  'კილოგრამი': ProductUnit.KG,
+  kg: ProductUnit.KG,
+};
+
+export function rsProductUnit(line: Pick<RsSnapshotLine, 'rsUnitId' | 'rsUnit'>): ProductUnit | undefined {
+  if (line.rsUnitId === RS_OTHER_UNIT) {
+    return UNIT_WORDS[(line.rsUnit ?? '').trim().toLowerCase().replace(/\.$/, '')];
+  }
+  return line.rsUnitId !== null ? RS_UNITS[line.rsUnitId] : undefined;
+}
+
 export const goodsKey = (goods: { barcode: string | null; name: string }) =>
   goods.barcode?.trim() ? goods.barcode.trim() : `name:${nameKey(goods.name)}`;
 
@@ -18,7 +36,7 @@ export interface RsSnapshotLine {
 }
 
 export function rsUnitProblem(line: RsSnapshotLine, product: Pick<Product, 'name' | 'unit'> | undefined): string {
-  const expected = line.rsUnitId !== null ? RS_UNITS[line.rsUnitId] : undefined;
+  const expected = rsProductUnit(line);
   if (expected && expected === product?.unit) {
     return '';
   }

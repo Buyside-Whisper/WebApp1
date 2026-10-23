@@ -8,10 +8,11 @@ import { Pager } from '../../../../shared/pager/pager';
 import { Pagination } from '../../../../shared/pager/pagination';
 import { BILLING_BADGES, BILLING_LABELS, BillingState, Company } from '../company.model';
 import { CompanyService } from '../company.service';
+import { TranslatePipe } from '../../../../core/i18n/t.pipe';
 
 @Component({
   selector: 'app-companies-page',
-  imports: [DatePipe, DecimalPipe, FormsModule, LucideAngularModule, Pager, RouterLink],
+  imports: [TranslatePipe, DatePipe, DecimalPipe, FormsModule, LucideAngularModule, Pager, RouterLink],
   templateUrl: './companies-page.html',
   styleUrl: './companies-page.css',
 })

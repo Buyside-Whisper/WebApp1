@@ -17,10 +17,13 @@ import {
   LogOut,
   FileText,
 } from 'lucide-angular';
+import { LanguageSwitch } from '../../shared/language-switch/language-switch';
+import { TranslatePipe } from '../../core/i18n/t.pipe';
+import { I18nService } from '../../core/i18n/i18n.service';
 
 @Component({
   selector: 'app-shell',
-  imports: [RouterLink, RouterLinkActive, RouterOutlet, LucideAngularModule],
+  imports: [TranslatePipe, LanguageSwitch, RouterLink, RouterLinkActive, RouterOutlet, LucideAngularModule],
   templateUrl: './shell.html',
   styleUrl: './shell.css',
 })
@@ -44,6 +47,7 @@ export class Shell {
 
   protected readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly i18n = inject(I18nService);
 
   protected readonly user = this.auth.user;
   protected readonly showHr = computed(() => canAccessModule(this.user(), 'hr'));
@@ -65,8 +69,11 @@ export class Shell {
       return '';
     }
     return user.module && user.role !== 'system_admin'
-      ? `${MODULE_LABELS[user.module]} ${ROLE_LABELS[user.role].toLowerCase()}`
-      : ROLE_LABELS[user.role];
+      ? this.i18n.t('{module} {role}', {
+          module: this.i18n.t(MODULE_LABELS[user.module]),
+          role: this.i18n.t(ROLE_LABELS[user.role].toLowerCase()),
+        })
+      : this.i18n.t(ROLE_LABELS[user.role]);
   });
   private readonly currentUrl = toSignal(
     this.router.events.pipe(

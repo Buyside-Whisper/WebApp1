@@ -83,7 +83,7 @@ export interface RsWaybillDetail extends RsWaybillSummary {
   goods: RsWaybillGoods[];
 }
 
-export const RS_PURCHASE_TYPES = [2, 3, 4, 6];
+export const RS_PURCHASE_TYPES = [2, 3, 6];
 
 export const RS_INTERNAL_TYPE = 1;
 

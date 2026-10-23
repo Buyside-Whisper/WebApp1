@@ -1,9 +1,9 @@
 <div class="page-stack">
   <div class="page-header">
     <div>
-      <p class="page-eyebrow">WMS · Receipts</p>
+      <p class="page-eyebrow">{{ 'WMS · Receipts' | t }}</p>
       <div class="page-header__title-row">
-        <h1 class="page-title">{{ receipt()?.code ?? 'Receipt' }}</h1>
+        <h1 class="page-title">{{ receipt()?.code ?? ('Receipt' | t) }}</h1>
         @if (receipt(); as receipt) {
           <span
             class="badge"
@@ -11,7 +11,7 @@
             [class.badge--done]="receipt.status === 'posted'"
             [class.badge--cancelled]="receipt.status === 'cancelled'"
           >
-            {{ statusLabels[receipt.status] }}
+            {{ statusLabels[receipt.status] | t }}
           </span>
         }
       </div>
@@ -25,72 +25,72 @@
       @if (receipt(); as receipt) {
         @if (canWrite() && receipt.status === 'draft') {
           <button type="button" class="button button--secondary" [disabled]="isBusy()" (click)="remove()">
-            Delete
+            {{ 'Delete' | t }}
           </button>
-          <a class="button button--outline" [routerLink]="['/wms/receipts', receipt.id, 'edit']">Edit</a>
-          <button type="button" class="button button--dark" [disabled]="isBusy()" (click)="post()">Post</button>
+          <a class="button button--outline" [routerLink]="['/wms/receipts', receipt.id, 'edit']">{{ 'Edit' | t }}</a>
+          <button type="button" class="button button--dark" [disabled]="isBusy()" (click)="post()">{{ 'Post' | t }}</button>
         }
         @if (canWrite() && receipt.status === 'posted') {
           <button type="button" class="button button--secondary" [disabled]="isBusy()" (click)="cancel()">
-            Cancel receipt
+            {{ 'Cancel receipt' | t }}
           </button>
         }
       }
-      <a class="button button--secondary" routerLink="/wms/receipts">Back to receipts</a>
+      <a class="button button--secondary" routerLink="/wms/receipts">{{ 'Back to receipts' | t }}</a>
     </div>
   </div>
 
   @if (errorMessage()) {
-    <p class="field-error">{{ errorMessage() }}</p>
+    <p class="field-error">{{ errorMessage() | t }}</p>
   }
 
   @if (receipt(); as receipt) {
     <div class="page-card">
-      <h2 class="card-title">Details</h2>
+      <h2 class="card-title">{{ 'Details' | t }}</h2>
       <dl class="detail-grid">
         <div>
-          <dt>Warehouse</dt>
+          <dt>{{ 'Warehouse' | t }}</dt>
           <dd>
             <a [routerLink]="['/wms/warehouses', receipt.warehouse.id]">{{ receipt.warehouse.code }}</a>
             {{ receipt.warehouse.name }}
           </dd>
         </div>
-        <div><dt>Supplier</dt><dd>{{ receipt.supplier.name }}@if (receipt.supplier.identificationCode) {<br /><span class="muted">{{ receipt.supplier.identificationCode }}</span>}</dd></div>
+        <div><dt>{{ 'Supplier' | t }}</dt><dd>{{ receipt.supplier.name }}@if (receipt.supplier.identificationCode) {<br /><span class="muted">{{ receipt.supplier.identificationCode }}</span>}</dd></div>
         @if (receipt.rsWaybillId) {
-          <div><dt>RS waybill</dt><dd>{{ receipt.waybillNumber }}<br /><span class="muted">{{ receipt.rsConfirmedAt ? 'Confirmed in RS ' + (receipt.rsConfirmedAt | date: 'dd.MM.yyyy HH:mm') : 'Not confirmed in RS yet' }}</span></dd></div>
+          <div><dt>{{ 'RS waybill' | t }}</dt><dd>{{ receipt.waybillNumber }}<br /><span class="muted">{{ receipt.rsConfirmedAt ? ('Confirmed in RS {date}' | t: { date: receipt.rsConfirmedAt | date: 'dd.MM.yyyy HH:mm' }) : ('Not confirmed in RS yet' | t) }}</span></dd></div>
         }
         @if (!receipt.rsWaybillId) {
-          <div><dt>Waybill / invoice</dt><dd>{{ receipt.waybillNumber ?? '–' }}</dd></div>
+          <div><dt>{{ 'Waybill / invoice' | t }}</dt><dd>{{ receipt.waybillNumber ?? '–' }}</dd></div>
         }
-        <div><dt>Date</dt><dd>{{ receipt.date | date: 'dd.MM.yyyy' }}</dd></div>
-        <div><dt>Created by</dt><dd>{{ receipt.createdByName }}</dd></div>
+        <div><dt>{{ 'Date' | t }}</dt><dd>{{ receipt.date | date: 'dd.MM.yyyy' }}</dd></div>
+        <div><dt>{{ 'Created by' | t }}</dt><dd>{{ receipt.createdByName }}</dd></div>
         @if (receipt.postedAt) {
-          <div><dt>Posted</dt><dd>{{ receipt.postedByName }}, {{ receipt.postedAt | date: 'dd.MM.yyyy HH:mm' }}</dd></div>
+          <div><dt>{{ 'Posted' | t }}</dt><dd>{{ receipt.postedByName }}, {{ receipt.postedAt | date: 'dd.MM.yyyy HH:mm' }}</dd></div>
         }
         @if (receipt.cancelledAt) {
-          <div><dt>Cancelled</dt><dd>{{ receipt.cancelledByName }}, {{ receipt.cancelledAt | date: 'dd.MM.yyyy HH:mm' }}</dd></div>
+          <div><dt>{{ 'Cancelled' | t }}</dt><dd>{{ receipt.cancelledByName }}, {{ receipt.cancelledAt | date: 'dd.MM.yyyy HH:mm' }}</dd></div>
         }
         @if (receipt.note) {
-          <div><dt>Note</dt><dd>{{ receipt.note }}</dd></div>
+          <div><dt>{{ 'Note' | t }}</dt><dd>{{ receipt.note }}</dd></div>
         }
       </dl>
     </div>
 
     <div class="page-card">
-      <h2 class="card-title">Products</h2>
+      <h2 class="card-title">{{ 'Products' | t }}</h2>
       @if (!receipt.lines?.length) {
-        <p class="page-description">No products on this draft yet.</p>
+        <p class="page-description">{{ 'No products on this draft yet.' | t }}</p>
       } @else {
         <div class="table-scroll">
           <table class="data-table">
             <thead>
               <tr>
-                <th>Product</th>
-                <th>Barcode</th>
-                <th>Quantity</th>
-                <th>Unit</th>
-                <th>Price per unit</th>
-                <th>Line total</th>
+                <th>{{ 'Product' | t }}</th>
+                <th>{{ 'Barcode' | t }}</th>
+                <th>{{ 'Quantity' | t }}</th>
+                <th>{{ 'Unit' | t }}</th>
+                <th>{{ 'Price per unit' | t }}</th>
+                <th>{{ 'Line total' | t }}</th>
               </tr>
             </thead>
             <tbody>
@@ -104,15 +104,15 @@
                         {{ product.name }}
                       }
                     } @else {
-                      <span class="short">Not linked yet</span>
+                      <span class="short">{{ 'Not linked yet' | t }}</span>
                     }
                     @if (line.rsName && line.rsName !== line.product?.name) {
-                      <div class="muted">RS: {{ line.rsName }}</div>
+                      <div class="muted">{{ 'RS: {p0}' | t: { p0: line.rsName } }}</div>
                     }
                   </td>
                   <td><code class="code-tag">{{ line.product?.barcode ?? line.rsBarcode ?? '—' }}</code></td>
                   <td class="cell-figure">{{ line.quantity | number: '1.0-3' }}</td>
-                  <td>{{ line.product?.unit ?? line.rsUnit }}</td>
+                  <td>{{ (line.product?.unit ?? line.rsUnit) | t }}</td>
                   <td class="cell-figure">₾{{ line.unitCost | number: '1.2-2' }}</td>
                   <td class="cell-figure">₾{{ line.quantity * line.unitCost | number: '1.2-2' }}</td>
                 </tr>
@@ -121,8 +121,8 @@
           </table>
         </div>
         <div class="doc-total">
-          <span>{{ receipt.lineCount }} products</span>
-          <span>Total <strong>₾{{ receipt.total | number: '1.2-2' }}</strong></span>
+          <span>{{ '{p0} products' | t: { p0: receipt.lineCount } }}</span>
+          <span>{{ 'Total' | t }} <strong>₾{{ receipt.total | number: '1.2-2' }}</strong></span>
         </div>
       }
     </div>

@@ -1,47 +1,47 @@
 <div class="page-stack">
   <div class="page-header">
     <div>
-      <p class="page-eyebrow">Platform</p>
-      <h1 class="page-title">Companies</h1>
+      <p class="page-eyebrow">{{ 'Platform' | t }}</p>
+      <h1 class="page-title">{{ 'Companies' | t }}</h1>
       <p class="page-description">
-        Your customers: what each one bought, what it pays per month and whether it is paid up.
+        {{ 'Your customers: what each one bought, what it pays per month and whether it is paid up.' | t }}
       </p>
     </div>
     <a class="button button--primary" routerLink="/superadmin/companies/new">
       <lucide-icon [img]="PlusIcon" [size]="16"></lucide-icon>
-      Sell to a new company
+      {{ 'Sell to a new company' | t }}
     </a>
   </div>
 
   @if (errorMessage()) {
-    <p class="field-error">{{ errorMessage() }}</p>
+    <p class="field-error">{{ errorMessage() | t }}</p>
   }
 
   <div class="stat-row">
     <div class="stat">
-      <div class="stat__label">Active customers</div>
+      <div class="stat__label">{{ 'Active customers' | t }}</div>
       <div class="stat__value">{{ paying().length }}</div>
     </div>
     <div class="stat">
-      <div class="stat__label">Monthly revenue</div>
+      <div class="stat__label">{{ 'Monthly revenue' | t }}</div>
       <div class="stat__value">₾{{ monthlyRevenue() | number: '1.2-2' }}</div>
     </div>
     <button type="button" class="stat stat--button" [class.stat--alert]="overdue().length > 0" (click)="showOverdue()">
-      <div class="stat__label">Overdue</div>
+      <div class="stat__label">{{ 'Overdue' | t }}</div>
       <div class="stat__value">{{ overdue().length }}</div>
     </button>
     <div class="stat">
-      <div class="stat__label">Suspended or cancelled</div>
+      <div class="stat__label">{{ 'Suspended or cancelled' | t }}</div>
       <div class="stat__value">{{ blocked() }}</div>
     </div>
   </div>
 
   <div class="page-card">
     @if (isLoading()) {
-      <p class="page-description">Loading…</p>
+      <p class="page-description">{{ 'Loading…' | t }}</p>
     } @else if (companies().length === 0) {
       <p class="page-description">
-        No companies yet. Use “Sell to a new company” to add the first one.
+        {{ 'No companies yet. Use “Sell to a new company” to add the first one.' | t }}
       </p>
     } @else {
       <div class="table-filters">
@@ -50,27 +50,27 @@
           <input
             class="text-input"
             type="search"
-            aria-label="Search companies"
+            [aria-label]="'Search companies' | t"
             [(ngModel)]="search"
-            placeholder="Name, legal name, identification code or admin"
+            [placeholder]="'Name, legal name, identification code or admin' | t"
           />
         </div>
-        <select class="text-select" aria-label="Billing" [(ngModel)]="billingFilter">
-          <option value="all">Any billing status</option>
+        <select class="text-select" [aria-label]="'Billing' | t" [(ngModel)]="billingFilter">
+          <option value="all">{{ 'Any billing status' | t }}</option>
           @for (state of billingStates; track state) {
-            <option [value]="state">{{ billingLabels[state] }}</option>
+            <option [value]="state">{{ billingLabels[state] | t }}</option>
           }
         </select>
         @if (hasFilters()) {
-          <button type="button" class="link-button" (click)="clearFilters()">Clear</button>
+          <button type="button" class="link-button" (click)="clearFilters()">{{ 'Clear' | t }}</button>
         }
       </div>
       <div class="table-toolbar">
         <span>
           @if (hasFilters()) {
-            {{ filtered().length }} of {{ companies().length }} companies
+            {{ '{p0} of {p1} companies' | t: { p0: filtered().length, p1: companies().length } }}
           } @else {
-            {{ companies().length }} companies
+            {{ '{p0} companies' | t: { p0: companies().length } }}
           }
         </span>
       </div>
@@ -78,13 +78,13 @@
         <table class="data-table">
           <thead>
             <tr>
-              <th>Company</th>
-              <th>Modules</th>
-              <th>Monthly</th>
-              <th>Billing</th>
-              <th>System admin</th>
-              <th>People</th>
-              <th>Actions</th>
+              <th>{{ 'Company' | t }}</th>
+              <th>{{ 'Modules' | t }}</th>
+              <th>{{ 'Monthly' | t }}</th>
+              <th>{{ 'Billing' | t }}</th>
+              <th>{{ 'System admin' | t }}</th>
+              <th>{{ 'People' | t }}</th>
+              <th>{{ 'Actions' | t }}</th>
             </tr>
           </thead>
           <tbody>
@@ -93,7 +93,7 @@
                 <td>
                   <a class="cell-strong company-link" [routerLink]="['/superadmin/companies', company.id]">{{ company.name }}</a>
                   <div class="muted">
-                    {{ company.legalName ?? 'Legal details missing' }}
+                    {{ company.legalName ?? ('Legal details missing' | t) }}
                     @if (company.identificationCode) {
                       · {{ company.identificationCode }}
                     }
@@ -101,34 +101,34 @@
                 </td>
                 <td>
                   <div class="chip-list">
-                    <span class="chip">HR</span>
-                    <span class="chip">RS</span>
+                    <span class="chip">{{ 'HR' | t }}</span>
+                    <span class="chip">{{ 'RS' | t }}</span>
                     @for (module of company.modules; track module) {
-                      <span class="chip chip--module">{{ labels[module] }}</span>
+                      <span class="chip chip--module">{{ labels[module] | t }}</span>
                     }
                   </div>
                 </td>
                 <td class="cell-figure cell-strong">₾{{ company.billing.monthlyTotal | number: '1.2-2' }}</td>
                 <td class="cell-nowrap">
                   <span class="badge" [class]="billingBadges[company.billing.state]">
-                    {{ billingLabels[company.billing.state] }}
+                    {{ billingLabels[company.billing.state] | t }}
                   </span>
                   <div class="muted billing-sub">
                     @switch (company.billing.state) {
                       @case ('overdue') {
-                        {{ company.billing.daysOverdue }} {{ company.billing.daysOverdue === 1 ? 'day' : 'days' }} since {{ company.billing.nextDue | date: 'dd.MM.yyyy' }}
+                        {{ '{p0} {p1} since {p2}' | t: { p0: company.billing.daysOverdue, p1: ((company.billing.daysOverdue === 1 ? 'day' : 'days') | t), p2: (company.billing.nextDue | date: 'dd.MM.yyyy') } }}
                       }
                       @case ('trial') {
-                        until {{ company.trialEndsOn | date: 'dd.MM.yyyy' }}
+                        {{ 'until {p0}' | t: { p0: (company.trialEndsOn | date: 'dd.MM.yyyy') } }}
                       }
                       @case ('not_started') {
-                        starts {{ company.billing.nextDue | date: 'dd.MM.yyyy' }}
+                        {{ 'starts {p0}' | t: { p0: (company.billing.nextDue | date: 'dd.MM.yyyy') } }}
                       }
                       @case ('paid') {
-                        until {{ company.billing.paidUntil | date: 'dd.MM.yyyy' }}
+                        {{ 'until {p0}' | t: { p0: (company.billing.paidUntil | date: 'dd.MM.yyyy') } }}
                       }
                       @case ('due_soon') {
-                        due {{ company.billing.nextDue | date: 'dd.MM.yyyy' }}
+                        {{ 'due {p0}' | t: { p0: (company.billing.nextDue | date: 'dd.MM.yyyy') } }}
                       }
                     }
                   </div>
@@ -142,10 +142,10 @@
                 <td class="cell-figure">{{ company.employeeCount }}</td>
                 <td>
                   <div class="icon-actions">
-                    <a class="icon-action" [routerLink]="['/superadmin/companies', company.id]" title="View" [attr.aria-label]="'View ' + company.name">
+                    <a class="icon-action" [routerLink]="['/superadmin/companies', company.id]" [title]="'View' | t" [attr.aria-label]="'View {name}' | t: { name: company.name }">
                       <lucide-icon [img]="ViewIcon" [size]="18"></lucide-icon>
                     </a>
-                    <a class="icon-action" [routerLink]="['/superadmin/companies', company.id, 'edit']" title="Edit" [attr.aria-label]="'Edit ' + company.name">
+                    <a class="icon-action" [routerLink]="['/superadmin/companies', company.id, 'edit']" [title]="'Edit' | t" [attr.aria-label]="'Edit {name}' | t: { name: company.name }">
                       <lucide-icon [img]="EditIcon" [size]="18"></lucide-icon>
                     </a>
                   </div>
@@ -153,7 +153,7 @@
               </tr>
             } @empty {
               <tr>
-                <td class="muted" colspan="7">No companies match the search and filters.</td>
+                <td class="muted" colspan="7">{{ 'No companies match the search and filters.' | t }}</td>
               </tr>
             }
           </tbody>

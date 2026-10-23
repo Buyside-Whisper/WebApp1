@@ -259,6 +259,13 @@ textarea {
   overflow: hidden;
 }
 
+.shell-topbar {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: flex-end;
+  padding: 14px 32px 0;
+}
+
 .shell-content {
   flex: 1;
   min-height: 0;
@@ -277,6 +284,10 @@ textarea {
   align-items: flex-start;
   justify-content: space-between;
   gap: 20px;
+}
+
+.page-header .button {
+  white-space: nowrap;
 }
 
 .page-eyebrow {
@@ -615,7 +626,14 @@ textarea {
 }
 
 .shell-user__info {
+  flex: 1;
   min-width: 0;
+}
+
+.login-language {
+  position: fixed;
+  top: 20px;
+  right: 24px;
 }
 
 .shell-user__name {

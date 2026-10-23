@@ -1,46 +1,55 @@
 <form class="page-stack" (ngSubmit)="save()">
   <div class="form-grid">
     <div class="field">
-      <label for="productName">Product</label>
+      <label for="productName">{{ 'Product' | t }}</label>
       <input
         id="productName"
         class="text-input"
         type="text"
         name="name"
         [(ngModel)]="name"
-        placeholder="e.g. Snickers 50g"
+        [placeholder]="'e.g. Snickers 50g' | t"
         required
       />
+      @if (shownErrors().name; as message) {
+        <span class="field-error">{{ message | t }}</span>
+      }
     </div>
 
     <div class="field">
-      <label for="productBarcode">Barcode</label>
+      <label for="productBarcode">{{ 'Barcode' | t }}</label>
       <input
         id="productBarcode"
         class="text-input"
         type="text"
         name="barcode"
         [(ngModel)]="barcode"
-        placeholder="e.g. 5000159461122"
+        [placeholder]="'e.g. 5000159461122' | t"
         required
       />
-    </div>
-
-    <div class="field">
-      <label for="productCategory">Category</label>
-      <select id="productCategory" class="text-select" name="categoryId" [(ngModel)]="categoryId" required>
-        <option value="" disabled>{{ allCategories() === null ? 'Loading…' : '— Choose a category —' }}</option>
-        @for (option of categories(); track option.id) {
-          <option [value]="option.id">{{ option.label }}</option>
-        }
-      </select>
-      @if (allCategories() !== null && categories().length === 0) {
-        <span class="field-hint">No active categories yet. Add one in Products → Categories.</span>
+      @if (shownErrors().barcode; as message) {
+        <span class="field-error">{{ message | t }}</span>
       }
     </div>
 
     <div class="field">
-      <label for="productGroup">Group</label>
+      <label for="productCategory">{{ 'Category' | t }}</label>
+      <select id="productCategory" class="text-select" name="categoryId" [(ngModel)]="categoryId" required>
+        <option value="" disabled>{{ allCategories() === null ? ('Loading…' | t) : ('— Choose a category —' | t) }}</option>
+        @for (option of categories(); track option.id) {
+          <option [value]="option.id">{{ option.label | t }}</option>
+        }
+      </select>
+      @if (shownErrors().categoryId; as message) {
+        <span class="field-error">{{ message | t }}</span>
+      }
+      @if (allCategories() !== null && categories().length === 0) {
+        <span class="field-hint">{{ 'No active categories yet. Add one in Products → Categories.' | t }}</span>
+      }
+    </div>
+
+    <div class="field">
+      <label for="productGroup">{{ 'Group' | t }}</label>
       <input
         id="productGroup"
         class="text-input"
@@ -48,7 +57,7 @@
         name="group"
         list="productGroups"
         [(ngModel)]="group"
-        placeholder="e.g. Chocolate"
+        [placeholder]="'e.g. Chocolate' | t"
         required
       />
       <datalist id="productGroups">
@@ -56,60 +65,66 @@
           <option [value]="option"></option>
         }
       </datalist>
+      @if (shownErrors().group; as message) {
+        <span class="field-error">{{ message | t }}</span>
+      }
     </div>
 
     <div class="field">
-      <label for="productSupplier">Supplier</label>
+      <label for="productSupplier">{{ 'Supplier' | t }}</label>
       <select id="productSupplier" class="text-select" name="supplierId" [(ngModel)]="supplierId" required>
-        <option value="" disabled>{{ allSuppliers() === null ? 'Loading…' : '— Choose a supplier —' }}</option>
+        <option value="" disabled>{{ allSuppliers() === null ? ('Loading…' | t) : ('— Choose a supplier —' | t) }}</option>
         @for (option of suppliers(); track option.id) {
-          <option [value]="option.id">{{ option.label }}</option>
+          <option [value]="option.id">{{ option.label | t }}</option>
         }
       </select>
+      @if (shownErrors().supplierId; as message) {
+        <span class="field-error">{{ message | t }}</span>
+      }
       @if (allSuppliers() !== null && suppliers().length === 0) {
-        <span class="field-hint">No active suppliers yet. Add one in Products → Suppliers.</span>
+        <span class="field-hint">{{ 'No active suppliers yet. Add one in Products → Suppliers.' | t }}</span>
       }
     </div>
 
     <div class="field">
-      <label for="productStatus">Production status</label>
+      <label for="productStatus">{{ 'Production status' | t }}</label>
       <select id="productStatus" class="text-select" name="status" [(ngModel)]="status">
-        <option value="active">Active</option>
-        <option value="inactive">Not active</option>
+        <option value="active">{{ 'Active' | t }}</option>
+        <option value="inactive">{{ 'Not active' | t }}</option>
       </select>
     </div>
 
     <div class="field">
-      <label for="productUsage">Use</label>
+      <label for="productUsage">{{ 'Use' | t }}</label>
       <select id="productUsage" class="text-select" name="usage" [(ngModel)]="usage">
-        <option value="sale">For sale</option>
-        <option value="ingredient">Ingredient</option>
-        <option value="both">Both</option>
+        <option value="sale">{{ 'For sale' | t }}</option>
+        <option value="ingredient">{{ 'Ingredient' | t }}</option>
+        <option value="both">{{ 'Both' | t }}</option>
       </select>
     </div>
 
     <div class="field">
-      <label for="productPosStatus">POS status</label>
+      <label for="productPosStatus">{{ 'POS status' | t }}</label>
       <select id="productPosStatus" class="text-select" name="posStatus" [(ngModel)]="posStatus">
-        <option value="storage">Storage only</option>
-        <option value="pos">Available at POS</option>
+        <option value="storage">{{ 'Storage only' | t }}</option>
+        <option value="pos">{{ 'Available at POS' | t }}</option>
       </select>
     </div>
 
     <div class="field">
-      <label for="productUnit">Unit</label>
+      <label for="productUnit">{{ 'Unit' | t }}</label>
       <select id="productUnit" class="text-select" name="unit" [(ngModel)]="unit"
         [disabled]="unitLocked()">
-        <option value="pcs">pcs</option>
-        <option value="kg">kg</option>
+        <option value="pcs">{{ 'pcs' | t }}</option>
+        <option value="kg">{{ 'kg' | t }}</option>
       </select>
       @if (unitLocked()) {
-        <span class="field-hint">Fixed while the product has stock.</span>
+        <span class="field-hint">{{ 'Fixed while the product has stock.' | t }}</span>
       }
     </div>
 
     <div class="field">
-      <label for="productCostPrice">Cost price (₾)</label>
+      <label for="productCostPrice">{{ 'Cost price (₾)' | t }}</label>
       <input
         id="productCostPrice"
         class="text-input"
@@ -119,10 +134,13 @@
         name="costPrice"
         [(ngModel)]="costPrice"
       />
+      @if (shownErrors().costPrice; as message) {
+        <span class="field-error">{{ message | t }}</span>
+      }
     </div>
 
     <div class="field">
-      <label for="productSalePrice">Sale price (₾)</label>
+      <label for="productSalePrice">{{ 'Sale price (₾)' | t }}</label>
       <input
         id="productSalePrice"
         class="text-input"
@@ -132,23 +150,26 @@
         name="salePrice"
         [(ngModel)]="salePrice"
       />
+      @if (shownErrors().salePrice; as message) {
+        <span class="field-error">{{ message | t }}</span>
+      }
     </div>
   </div>
 
   <p class="field-hint">{{ hint() }}</p>
 
   @if (formError()) {
-    <p class="field-error">{{ formError() }}</p>
+    <p class="field-error">{{ formError() | t }}</p>
   }
 
   <div class="button-row">
     <button type="submit" class="button button--dark" [disabled]="isSaving()">
       @if (product()) {
-        {{ isSaving() ? 'Saving…' : 'Save changes' }}
+        {{ isSaving() ? ('Saving…' | t) : ('Save changes' | t) }}
       } @else {
-        {{ isSaving() ? 'Adding…' : 'Add product' }}
+        {{ isSaving() ? ('Adding…' | t) : ('Add product' | t) }}
       }
     </button>
-    <button type="button" class="button button--secondary" (click)="cancelled.emit()">Cancel</button>
+    <button type="button" class="button button--secondary" (click)="cancelled.emit()">{{ 'Cancel' | t }}</button>
   </div>
 </form>

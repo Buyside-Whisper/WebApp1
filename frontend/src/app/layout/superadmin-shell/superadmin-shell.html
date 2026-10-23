@@ -1,19 +1,20 @@
 <div class="sa-layout">
   <header class="sa-topbar">
-    <div class="sa-topbar__brand">WebApp1 <span>Platform</span></div>
+    <div class="sa-topbar__brand">WebApp1 <span>{{ 'Platform' | t }}</span></div>
     <nav class="sa-topbar__nav">
       <a routerLink="/superadmin/companies" routerLinkActive="sa-topbar__link--active" class="sa-topbar__link">
-        Companies
+        {{ 'Companies' | t }}
       </a>
       <a routerLink="/superadmin/audit" routerLinkActive="sa-topbar__link--active" class="sa-topbar__link">
-        Audit log
+        {{ 'Audit log' | t }}
       </a>
     </nav>
     <div class="sa-topbar__user">
+      <app-language-switch [dark]="true" />
       <span>{{ auth.user()?.displayName }}</span>
       <button type="button" class="sa-topbar__logout" (click)="auth.logout()">
         <lucide-icon [img]="LogOutIcon" [size]="16"></lucide-icon>
-        Sign out
+        {{ 'Sign out' | t }}
       </button>
     </div>
   </header>

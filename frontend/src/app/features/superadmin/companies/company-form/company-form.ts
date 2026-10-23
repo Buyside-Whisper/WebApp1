@@ -13,6 +13,7 @@ import {
   todayIso,
 } from '../company.model';
 import { CompanyService } from '../company.service';
+import { TranslatePipe } from '../../../../core/i18n/t.pipe';
 
 const ALL_MODULES: AppModule[] = ['wms', 'store', 'restaurant'];
 const TRIAL_DAYS = 14;
@@ -40,7 +41,7 @@ type FieldName =
 
 @Component({
   selector: 'app-company-form',
-  imports: [CredentialsModal, ReactiveFormsModule, RouterLink],
+  imports: [TranslatePipe, CredentialsModal, ReactiveFormsModule, RouterLink],
   templateUrl: './company-form.html',
   styleUrl: './company-form.css',
 })

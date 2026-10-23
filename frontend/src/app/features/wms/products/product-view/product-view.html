@@ -1,16 +1,16 @@
 <div class="page-stack">
   <div class="page-header">
     <div>
-      <p class="page-eyebrow">WMS · Products</p>
+      <p class="page-eyebrow">{{ 'WMS · Products' | t }}</p>
       <div class="page-header__title-row">
-        <h1 class="page-title">{{ product()?.name ?? 'Product' }}</h1>
+        <h1 class="page-title">{{ product()?.name ?? ('Product' | t) }}</h1>
         @if (product(); as product) {
           <span
             class="badge"
             [class.badge--active]="product.status === 'active'"
             [class.badge--inactive]="product.status === 'inactive'"
           >
-            {{ product.status === 'active' ? 'Active' : 'Not active' }}
+            {{ product.status === 'active' ? ('Active' | t) : ('Not active' | t) }}
           </span>
         }
       </div>
@@ -20,57 +20,57 @@
         </p>
       }
     </div>
-    <a class="button button--secondary" routerLink="/wms/products">Back to products</a>
+    <a class="button button--secondary" routerLink="/wms/products">{{ 'Back to products' | t }}</a>
   </div>
 
   @if (errorMessage()) {
-    <p class="field-error">{{ errorMessage() }}</p>
+    <p class="field-error">{{ errorMessage() | t }}</p>
   }
 
   @if (product(); as product) {
     <div class="stat-row">
       <div class="stat">
-        <div class="stat__label">In stock</div>
-        <div class="stat__value">{{ product.quantity | number: '1.0-3' }} {{ product.unit }}</div>
+        <div class="stat__label">{{ 'In stock' | t }}</div>
+        <div class="stat__value">{{ product.quantity | number: '1.0-3' }} {{ product.unit | t }}</div>
       </div>
       <div class="stat">
-        <div class="stat__label">Warehouses</div>
+        <div class="stat__label">{{ 'Warehouses' | t }}</div>
         <div class="stat__value">{{ product.stocks.length }}</div>
       </div>
       <div class="stat">
-        <div class="stat__label">Stock value (at cost)</div>
+        <div class="stat__label">{{ 'Stock value (at cost)' | t }}</div>
         <div class="stat__value">₾{{ stockValue() | number: '1.2-2' }}</div>
       </div>
     </div>
 
     <div class="page-card">
-      <h2 class="card-title">Details</h2>
+      <h2 class="card-title">{{ 'Details' | t }}</h2>
       <dl class="detail-grid">
-        <div><dt>Category</dt><dd>{{ product.category.name }}</dd></div>
-        <div><dt>Group</dt><dd>{{ product.group }}</dd></div>
-        <div><dt>Supplier</dt><dd>{{ product.supplier.name }}</dd></div>
-        <div><dt>Unit</dt><dd>{{ product.unit }}</dd></div>
-        <div><dt>Use</dt><dd>{{ usageLabels[product.usage] }}</dd></div>
-        <div><dt>POS status</dt><dd>{{ posStatusLabels[product.posStatus] }}</dd></div>
-        <div><dt>Cost price</dt><dd>₾{{ product.costPrice | number: '1.2-2' }}</dd></div>
-        <div><dt>Sale price</dt><dd>₾{{ product.salePrice | number: '1.2-2' }}</dd></div>
+        <div><dt>{{ 'Category' | t }}</dt><dd>{{ product.category.name }}</dd></div>
+        <div><dt>{{ 'Group' | t }}</dt><dd>{{ product.group }}</dd></div>
+        <div><dt>{{ 'Supplier' | t }}</dt><dd>{{ product.supplier.name }}</dd></div>
+        <div><dt>{{ 'Unit' | t }}</dt><dd>{{ product.unit | t }}</dd></div>
+        <div><dt>{{ 'Use' | t }}</dt><dd>{{ usageLabels[product.usage] | t }}</dd></div>
+        <div><dt>{{ 'POS status' | t }}</dt><dd>{{ posStatusLabels[product.posStatus] | t }}</dd></div>
+        <div><dt>{{ 'Cost price' | t }}</dt><dd>₾{{ product.costPrice | number: '1.2-2' }}</dd></div>
+        <div><dt>{{ 'Sale price' | t }}</dt><dd>₾{{ product.salePrice | number: '1.2-2' }}</dd></div>
       </dl>
     </div>
 
     <div class="page-card">
-      <h2 class="card-title">Stock by warehouse</h2>
+      <h2 class="card-title">{{ 'Stock by warehouse' | t }}</h2>
       @if (product.stocks.length === 0) {
-        <p class="page-description">Not in any warehouse yet.</p>
+        <p class="page-description">{{ 'Not in any warehouse yet.' | t }}</p>
       } @else {
         <div class="table-scroll">
           <table class="data-table">
             <thead>
               <tr>
-                <th>Warehouse</th>
-                <th>Code</th>
-                <th>Type</th>
-                <th>Quantity</th>
-                <th>Value (at cost)</th>
+                <th>{{ 'Warehouse' | t }}</th>
+                <th>{{ 'Code' | t }}</th>
+                <th>{{ 'Type' | t }}</th>
+                <th>{{ 'Quantity' | t }}</th>
+                <th>{{ 'Value (at cost)' | t }}</th>
               </tr>
             </thead>
             <tbody>
@@ -80,8 +80,8 @@
                     <a [routerLink]="['/wms/warehouses', stock.warehouseId]">{{ stock.warehouse.name }}</a>
                   </td>
                   <td><code class="code-tag">{{ stock.warehouse.code }}</code></td>
-                  <td>{{ stock.warehouse.type === 'main' ? 'Main' : 'Sales' }}</td>
-                  <td class="cell-figure">{{ stock.quantity | number: '1.0-3' }} {{ product.unit }}</td>
+                  <td>{{ stock.warehouse.type === 'main' ? ('Main' | t) : ('Sales' | t) }}</td>
+                  <td class="cell-figure">{{ stock.quantity | number: '1.0-3' }} {{ product.unit | t }}</td>
                   <td class="cell-figure">₾{{ stock.quantity * product.costPrice | number: '1.2-2' }}</td>
                 </tr>
               }
@@ -93,8 +93,8 @@
 
     <div class="page-card">
       <h2 class="card-title">
-        Stock history
-        <span class="card-title__note">every change, newest first</span>
+        {{ 'Stock history' | t }}
+        <span class="card-title__note">{{ 'every change, newest first' | t }}</span>
       </h2>
       <app-movement-history [movements]="movements()" [showWarehouse]="true" />
     </div>

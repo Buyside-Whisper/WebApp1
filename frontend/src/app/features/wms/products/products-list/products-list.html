@@ -1,12 +1,12 @@
 <div class="page-stack">
   <div class="page-header">
     <div>
-      <p class="page-eyebrow">WMS</p>
-      <h1 class="page-title">Products</h1>
+      <p class="page-eyebrow">{{ 'WMS' | t }}</p>
+      <h1 class="page-title">{{ 'Products' | t }}</h1>
       <p class="page-description">
-        Products with their barcode, prices, quantity and the warehouses that have them.
+        {{ 'Products with their barcode, prices, quantity and the warehouses that have them.' | t }}
         @if (!canManage()) {
-          They are added and edited by the WMS admin.
+          {{ 'They are added and edited by the WMS admin.' | t }}
         }
       </p>
     </div>
@@ -14,7 +14,7 @@
       @if (canManage()) {
         <button type="button" class="button button--outline" (click)="isImportOpen.set(true)">
           <lucide-icon [img]="ImportIcon" [size]="16"></lucide-icon>
-          Import
+          {{ 'Import' | t }}
         </button>
       }
       <button
@@ -24,12 +24,12 @@
         (click)="exportProducts()"
       >
         <lucide-icon [img]="ExportIcon" [size]="16"></lucide-icon>
-        {{ isExporting() ? 'Exporting…' : 'Export' }}
+        {{ isExporting() ? ('Exporting…' | t) : ('Export' | t) }}
       </button>
       @if (canManage()) {
         <button type="button" class="button button--dark" (click)="openAddForm()">
           <lucide-icon [img]="PlusIcon" [size]="16"></lucide-icon>
-          Add product
+          {{ 'Add product' | t }}
         </button>
       }
     </div>
@@ -38,18 +38,18 @@
   <app-product-tabs />
 
   @if (errorMessage()) {
-    <p class="field-error">{{ errorMessage() }}</p>
+    <p class="field-error">{{ errorMessage() | t }}</p>
   }
 
   <div class="page-card">
     @if (isLoading()) {
-      <p class="page-description">Loading…</p>
+      <p class="page-description">{{ 'Loading…' | t }}</p>
     } @else if (products().length === 0) {
       <p class="page-description">
         @if (canManage()) {
-          No products yet. Use “Add product” to create the first one.
+          {{ 'No products yet. Use “Add product” to create the first one.' | t }}
         } @else {
-          No products yet. The WMS admin adds them.
+          {{ 'No products yet. The WMS admin adds them.' | t }}
         }
       </p>
     } @else {
@@ -59,85 +59,85 @@
           <input
             class="text-input"
             type="search"
-            aria-label="Search products"
+            [aria-label]="'Search products' | t"
             [(ngModel)]="search"
-            placeholder="Product, barcode, category, group or supplier"
+            [placeholder]="'Product, barcode, category, group or supplier' | t"
           />
         </div>
         <select
           class="text-select"
-          aria-label="Category"
+          [aria-label]="'Category' | t"
           [ngModel]="categoryFilter()"
           (ngModelChange)="setCategoryFilter($event)"
         >
-          <option value="all">All categories</option>
+          <option value="all">{{ 'All categories' | t }}</option>
           @for (option of categories(); track option.id) {
             <option [value]="option.id">{{ option.name }}</option>
           }
         </select>
-        <select class="text-select" aria-label="Group" [(ngModel)]="groupFilter">
-          <option value="all">All groups</option>
+        <select class="text-select" [aria-label]="'Group' | t" [(ngModel)]="groupFilter">
+          <option value="all">{{ 'All groups' | t }}</option>
           @for (option of filterGroups(); track option) {
             <option [value]="option">{{ option }}</option>
           }
         </select>
-        <select class="text-select" aria-label="Supplier" [(ngModel)]="supplierFilter">
-          <option value="all">All suppliers</option>
+        <select class="text-select" [aria-label]="'Supplier' | t" [(ngModel)]="supplierFilter">
+          <option value="all">{{ 'All suppliers' | t }}</option>
           @for (option of suppliers(); track option.id) {
             <option [value]="option.id">{{ option.name }}</option>
           }
         </select>
-        <select class="text-select" aria-label="Warehouse" [(ngModel)]="warehouseFilter">
-          <option value="all">All warehouses</option>
-          <option value="none">In no warehouse</option>
+        <select class="text-select" [aria-label]="'Warehouse' | t" [(ngModel)]="warehouseFilter">
+          <option value="all">{{ 'All warehouses' | t }}</option>
+          <option value="none">{{ 'In no warehouse' | t }}</option>
           @for (warehouse of warehousesInList(); track warehouse.id) {
             <option [value]="warehouse.id">{{ warehouse.code }} · {{ warehouse.name }}</option>
           }
         </select>
-        <select class="text-select" aria-label="Use" [(ngModel)]="usageFilter">
-          <option value="all">Any use</option>
-          <option value="sale">For sale</option>
-          <option value="ingredient">Ingredient</option>
-          <option value="both">Both</option>
+        <select class="text-select" [aria-label]="'Use' | t" [(ngModel)]="usageFilter">
+          <option value="all">{{ 'Any use' | t }}</option>
+          <option value="sale">{{ 'For sale' | t }}</option>
+          <option value="ingredient">{{ 'Ingredient' | t }}</option>
+          <option value="both">{{ 'Both' | t }}</option>
         </select>
-        <select class="text-select" aria-label="POS status" [(ngModel)]="posStatusFilter">
-          <option value="all">Any POS status</option>
-          <option value="pos">Available at POS</option>
-          <option value="storage">Storage only</option>
+        <select class="text-select" [aria-label]="'POS status' | t" [(ngModel)]="posStatusFilter">
+          <option value="all">{{ 'Any POS status' | t }}</option>
+          <option value="pos">{{ 'Available at POS' | t }}</option>
+          <option value="storage">{{ 'Storage only' | t }}</option>
         </select>
-        <select class="text-select" aria-label="Production status" [(ngModel)]="statusFilter">
-          <option value="all">Any production status</option>
-          <option value="active">Active</option>
-          <option value="inactive">Not active</option>
+        <select class="text-select" [aria-label]="'Production status' | t" [(ngModel)]="statusFilter">
+          <option value="all">{{ 'Any production status' | t }}</option>
+          <option value="active">{{ 'Active' | t }}</option>
+          <option value="inactive">{{ 'Not active' | t }}</option>
         </select>
-        <select class="text-select" aria-label="Unit" [(ngModel)]="unitFilter">
-          <option value="all">Any unit</option>
-          <option value="pcs">pcs</option>
-          <option value="kg">kg</option>
+        <select class="text-select" [aria-label]="'Unit' | t" [(ngModel)]="unitFilter">
+          <option value="all">{{ 'Any unit' | t }}</option>
+          <option value="pcs">{{ 'pcs' | t }}</option>
+          <option value="kg">{{ 'kg' | t }}</option>
         </select>
-        <select class="text-select" aria-label="Stock" [(ngModel)]="stockFilter">
-          <option value="all">Any stock</option>
-          <option value="in">In stock</option>
-          <option value="out">Out of stock</option>
+        <select class="text-select" [aria-label]="'Stock' | t" [(ngModel)]="stockFilter">
+          <option value="all">{{ 'Any stock' | t }}</option>
+          <option value="in">{{ 'In stock' | t }}</option>
+          <option value="out">{{ 'Out of stock' | t }}</option>
         </select>
         @if (hasFilters()) {
-          <button type="button" class="link-button" (click)="clearFilters()">Clear</button>
+          <button type="button" class="link-button" (click)="clearFilters()">{{ 'Clear' | t }}</button>
         }
       </div>
 
       <div class="table-toolbar">
         <span>
           @if (hasFilters()) {
-            {{ filtered().length }} of {{ products().length }} products
+            {{ '{p0} of {p1} products' | t: { p0: filtered().length, p1: products().length } }}
           } @else {
-            {{ products().length }} products
+            {{ '{p0} products' | t: { p0: products().length } }}
           }
         </span>
         <div class="table-toolbar__hint">
-          <span>Drag a column header to move it.</span>
+          <span>{{ 'Drag a column header to move it.' | t }}</span>
           @if (columnOrder.isCustom()) {
             <button type="button" class="link-button" (click)="columnOrder.reset()">
-              Reset column order
+              {{ 'Reset column order' | t }}
             </button>
           }
         </div>
@@ -158,10 +158,10 @@
                   (drop)="columnOrder.drop($event, column.key)"
                   (dragend)="columnOrder.dragEnd()"
                 >
-                  {{ column.label }}
+                  {{ column.label | t }}
                 </th>
               }
-              <th>Actions</th>
+              <th>{{ 'Actions' | t }}</th>
             </tr>
           </thead>
           <tbody>
@@ -193,21 +193,21 @@
                           [class.badge--active]="product.status === 'active'"
                           [class.badge--inactive]="product.status === 'inactive'"
                         >
-                          {{ product.status === 'active' ? 'Active' : 'Not active' }}
+                          {{ product.status === 'active' ? ('Active' | t) : ('Not active' | t) }}
                         </span>
                       </td>
                     }
                     @case ('usage') {
-                      <td class="cell-nowrap">{{ usageLabels[product.usage] }}</td>
+                      <td class="cell-nowrap">{{ usageLabels[product.usage] | t }}</td>
                     }
                     @case ('posStatus') {
-                      <td class="cell-nowrap">{{ posStatusLabels[product.posStatus] }}</td>
+                      <td class="cell-nowrap">{{ posStatusLabels[product.posStatus] | t }}</td>
                     }
                     @case ('quantity') {
                       <td class="cell-figure">{{ product.quantity | number: '1.0-3' }}</td>
                     }
                     @case ('unit') {
-                      <td>{{ product.unit }}</td>
+                      <td>{{ product.unit | t }}</td>
                     }
                     @case ('costPrice') {
                       <td class="cell-figure">₾{{ product.costPrice | number: '1.2-2' }}</td>
@@ -224,7 +224,7 @@
                             (click)="stockOf.set(product)"
                           >
                             {{ product.stocks.length }}
-                            {{ product.stocks.length === 1 ? 'warehouse' : 'warehouses' }}
+                            {{ (product.stocks.length === 1 ? 'warehouse' : 'warehouses') | t }}
                           </button>
                         } @else {
                           <span class="muted">–</span>
@@ -238,8 +238,8 @@
                     <a
                       class="icon-action"
                       [routerLink]="['/wms/products', product.id]"
-                      title="View"
-                      aria-label="View {{ product.name }}"
+                      [title]="'View' | t"
+                      [attr.aria-label]="'View {name}' | t: { name: product.name }"
                     >
                       <lucide-icon [img]="ViewIcon" [size]="18"></lucide-icon>
                     </a>
@@ -247,8 +247,8 @@
                       type="button"
                       class="icon-action"
                       [disabled]="!canManage()"
-                      [title]="canManage() ? 'Edit' : 'Only the WMS admin can edit'"
-                      [attr.aria-label]="'Edit ' + product.name"
+                      [title]="canManage() ? ('Edit' | t) : ('Only the WMS admin can edit' | t)"
+                      [attr.aria-label]="'Edit {name}' | t: { name: product.name }"
                       (click)="editProduct(product)"
                     >
                       <lucide-icon [img]="EditIcon" [size]="18"></lucide-icon>
@@ -257,8 +257,8 @@
                       type="button"
                       class="icon-action icon-action--danger"
                       [disabled]="!canManage()"
-                      [title]="canManage() ? 'Delete' : 'Only the WMS admin can delete'"
-                      [attr.aria-label]="'Delete ' + product.name"
+                      [title]="canManage() ? ('Delete' | t) : ('Only the WMS admin can delete' | t)"
+                      [attr.aria-label]="'Delete {name}' | t: { name: product.name }"
                       (click)="deleteProduct(product)"
                     >
                       <lucide-icon [img]="DeleteIcon" [size]="18"></lucide-icon>
@@ -269,7 +269,7 @@
             } @empty {
               <tr>
                 <td class="muted" [attr.colspan]="columnOrder.columns().length + 1">
-                  No products match the search and filters.
+                  {{ 'No products match the search and filters.' | t }}
                 </td>
               </tr>
             }
@@ -283,7 +283,7 @@
 
 <app-modal
   [open]="isFormOpen()"
-  [title]="editing() ? 'Edit product' : 'Add product'"
+  [title]="editing() ? ('Edit product' | t) : ('Add product' | t)"
   (closed)="closeForm()"
 >
   @if (isFormOpen()) {
@@ -296,15 +296,15 @@
   }
 </app-modal>
 
-<app-modal [open]="isImportOpen()" title="Import products" (closed)="isImportOpen.set(false)">
+<app-modal [open]="isImportOpen()" [title]="'Import products' | t" (closed)="isImportOpen.set(false)">
   @if (isImportOpen()) {
     <app-xlsx-import
       [source]="productService.importSource"
       [columns]="importColumns"
       [noun]="{ one: 'product', many: 'products' }"
-      description="Add many products to the catalogue at once from an Excel file (.xlsx), one product per row. Start from the template: it has the right columns and dropdowns for unit, use and statuses. Quantities are not imported: stock comes in through a receipt."
+      [description]="'Add many products to the catalogue at once from an Excel file (.xlsx), one product per row. Start from the template: it has the right columns and dropdowns for unit, use and statuses. Quantities are not imported: stock comes in through a receipt.' | t"
       templateName="products-template.xlsx"
-      codeLabel="Barcode"
+      [codeLabel]="'Barcode' | t"
       (imported)="loadProducts()"
       (closed)="isImportOpen.set(false)"
     />
@@ -313,7 +313,7 @@
 
 <app-modal
   [open]="stockOf() !== null"
-  [title]="'Stock of ' + (stockOf()?.name ?? '')"
+  [title]="'Stock of {name}' | t: { name: stockOf()?.name ?? '' }"
   (closed)="stockOf.set(null)"
 >
   @if (stockOf(); as product) {

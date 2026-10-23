@@ -35,10 +35,12 @@ import {
   ProductUsage,
 } from '../product.model';
 import { ProductService } from '../product.service';
+import { TranslatePipe } from '../../../../core/i18n/t.pipe';
+import { I18nService } from '../../../../core/i18n/i18n.service';
 
 @Component({
   selector: 'app-products-list',
-  imports: [
+  imports: [TranslatePipe, 
     DecimalPipe,
     FormsModule,
     RouterLink,
@@ -53,6 +55,7 @@ import { ProductService } from '../product.service';
   templateUrl: './products-list.html',
 })
 export class ProductsList implements OnInit {
+  private readonly i18n = inject(I18nService);
   protected readonly productService = inject(ProductService);
   private readonly auth = inject(AuthService);
 
@@ -263,7 +266,7 @@ export class ProductsList implements OnInit {
   }
 
   deleteProduct(product: Product): void {
-    if (!confirm(`Delete ${product.name} (${product.barcode})?`)) {
+    if (!this.i18n.confirm(this.i18n.t('Delete {name} ({barcode})?', { name: product.name, barcode: product.barcode }))) {
       return;
     }
 

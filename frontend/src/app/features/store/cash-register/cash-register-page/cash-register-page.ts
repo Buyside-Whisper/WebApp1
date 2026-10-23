@@ -8,10 +8,11 @@ import { Store } from '../../stores/store.model';
 import { StoreService } from '../../stores/store.service';
 import { RegisterAvailability, RegisterSession, RegisterSessionDetail } from '../cash-register.model';
 import { CashRegisterService } from '../cash-register.service';
+import { TranslatePipe } from '../../../../core/i18n/t.pipe';
 
 @Component({
   selector: 'app-cash-register-page',
-  imports: [DatePipe, DecimalPipe, FormsModule, RouterLink],
+  imports: [TranslatePipe, DatePipe, DecimalPipe, FormsModule, RouterLink],
   templateUrl: './cash-register-page.html',
   styleUrl: './cash-register-page.css',
 })

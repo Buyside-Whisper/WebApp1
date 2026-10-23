@@ -1,9 +1,9 @@
 @let p = pagination();
 <div class="pager">
   <div class="pager__info">
-    <span>{{ p.from() }}–{{ p.to() }} of {{ p.total() }}</span>
+    <span>{{ '{p0}–{p1} of {p2}' | t: { p0: p.from(), p1: p.to(), p2: p.total() } }}</span>
     <label class="pager__size">
-      Rows per page
+      {{ 'Rows per page' | t }}
       <select class="text-select" [value]="p.pageSize()" (change)="changeSize($event)">
         @for (size of pageSizes; track size) {
           <option [value]="size" [selected]="size === p.pageSize()">{{ size }}</option>
@@ -13,12 +13,12 @@
   </div>
 
   @if (p.pageCount() > 1) {
-    <nav class="pager__pages" aria-label="Pages">
+    <nav class="pager__pages" [aria-label]="'Pages' | t">
       <button
         type="button"
         class="pager__button"
         [disabled]="p.current() === 1"
-        aria-label="Previous page"
+        [aria-label]="'Previous page' | t"
         (click)="p.goTo(p.current() - 1)"
       >
         <lucide-icon [img]="PrevIcon" [size]="16"></lucide-icon>
@@ -42,7 +42,7 @@
         type="button"
         class="pager__button"
         [disabled]="p.current() === p.pageCount()"
-        aria-label="Next page"
+        [aria-label]="'Next page' | t"
         (click)="p.goTo(p.current() + 1)"
       >
         <lucide-icon [img]="NextIcon" [size]="16"></lucide-icon>

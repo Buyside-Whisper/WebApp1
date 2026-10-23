@@ -4,13 +4,16 @@ import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../../core/auth/auth.service';
 import { Store, StoreOptions } from '../store.model';
 import { StoreService } from '../store.service';
+import { TranslatePipe } from '../../../../core/i18n/t.pipe';
+import { I18nService } from '../../../../core/i18n/i18n.service';
 
 @Component({
   selector: 'app-stores-list',
-  imports: [FormsModule],
+  imports: [TranslatePipe, FormsModule],
   templateUrl: './stores-list.html',
 })
 export class StoresList implements OnInit {
+  private readonly i18n = inject(I18nService);
   private readonly storeService = inject(StoreService);
   private readonly auth = inject(AuthService);
 
@@ -95,7 +98,7 @@ export class StoresList implements OnInit {
   }
 
   remove(store: Store): void {
-    if (!confirm(`Delete ${store.name}? Its register history is deleted too.`)) {
+    if (!this.i18n.confirm(this.i18n.t('Delete {name}? Its register history is deleted too.', { name: store.name }))) {
       return;
     }
     this.storeService.remove(store.id).subscribe({

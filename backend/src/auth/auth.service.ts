@@ -86,6 +86,11 @@ export class AuthService implements OnModuleInit {
     return { token: signToken(user.id), user: toSessionUser(authUser) };
   }
 
+  async setLanguage(actor: AuthUser, language: string): Promise<SessionUser> {
+    await this.usersRepository.update({ id: actor.userId }, { language });
+    return toSessionUser({ ...actor, language });
+  }
+
   async authenticate(token: string): Promise<AuthUser | null> {
     const userId = verifyToken(token);
     if (!userId) {
@@ -116,6 +121,7 @@ export class AuthService implements OnModuleInit {
       companyName: user.company?.name ?? null,
       companyModules: user.company?.modules ?? [],
       employeeId: user.employeeId,
+      language: user.language,
     };
   }
 }

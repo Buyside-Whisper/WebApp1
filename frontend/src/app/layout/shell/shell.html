@@ -7,7 +7,7 @@
       <button
         type="button"
         class="shell-icon-button"
-        [attr.aria-label]="isSidebarOpen() ? 'Collapse sidebar' : 'Expand sidebar'"
+        [attr.aria-label]="isSidebarOpen() ? ('Collapse sidebar' | t) : ('Expand sidebar' | t)"
         (click)="toggleSidebar()"
       >
         <lucide-icon [img]="MenuIcon" [size]="20"></lucide-icon>
@@ -25,7 +25,7 @@
             <span class="shell-nav__main">
               <lucide-icon [img]="UsersIcon" class="shell-nav__icon" [size]="18"></lucide-icon>
               @if (isSidebarOpen()) {
-                <span class="shell-nav__label">HR</span>
+                <span class="shell-nav__label">{{ 'HR' | t }}</span>
               }
             </span>
             @if (isSidebarOpen()) {
@@ -46,7 +46,7 @@
                 routerLink="/hr/employees"
                 routerLinkActive="shell-nav__subitem--active"
               >
-                Employees
+                {{ 'Employees' | t }}
               </a>
               @if (isSystemAdmin()) {
                 <a
@@ -54,7 +54,7 @@
                   routerLink="/hr/audit"
                   routerLinkActive="shell-nav__subitem--active"
                 >
-                  Audit log
+                  {{ 'Audit log' | t }}
                 </a>
               }
             </div>
@@ -73,7 +73,7 @@
             <span class="shell-nav__main">
               <lucide-icon [img]="RsIcon" class="shell-nav__icon" [size]="18"></lucide-icon>
               @if (isSidebarOpen()) {
-                <span class="shell-nav__label">RS</span>
+                <span class="shell-nav__label">{{ 'RS' | t }}</span>
               }
             </span>
             @if (isSidebarOpen()) {
@@ -94,7 +94,7 @@
                 routerLink="/rs/waybills"
                 routerLinkActive="shell-nav__subitem--active"
               >
-                RS waybills
+                {{ 'RS waybills' | t }}
               </a>
             </div>
           }
@@ -112,7 +112,7 @@
             <span class="shell-nav__main">
               <lucide-icon [img]="BoxesIcon" class="shell-nav__icon" [size]="18"></lucide-icon>
               @if (isSidebarOpen()) {
-                <span class="shell-nav__label">WMS</span>
+                <span class="shell-nav__label">{{ 'WMS' | t }}</span>
               }
             </span>
             @if (isSidebarOpen()) {
@@ -133,7 +133,7 @@
                 routerLink="/wms/warehouses"
                 routerLinkActive="shell-nav__subitem--active"
               >
-                Warehouses
+                {{ 'Warehouses' | t }}
               </a>
               @if (isAdmin()) {
                 <a
@@ -141,7 +141,7 @@
                   routerLink="/wms/products"
                 routerLinkActive="shell-nav__subitem--active"
               >
-                Products
+                {{ 'Products' | t }}
               </a>
               }
               <a
@@ -149,14 +149,14 @@
                 routerLink="/wms/receipts"
                 routerLinkActive="shell-nav__subitem--active"
               >
-                Receipts
+                {{ 'Receipts' | t }}
               </a>
               <a
                 class="shell-nav__subitem"
                 routerLink="/wms/transfers"
                 routerLinkActive="shell-nav__subitem--active"
               >
-                Transfers
+                {{ 'Transfers' | t }}
               </a>
             </div>
           }
@@ -174,7 +174,7 @@
             <span class="shell-nav__main">
               <lucide-icon [img]="StoreIcon" class="shell-nav__icon" [size]="18"></lucide-icon>
               @if (isSidebarOpen()) {
-                <span class="shell-nav__label">Store</span>
+                <span class="shell-nav__label">{{ 'Store' | t }}</span>
               }
             </span>
             @if (isSidebarOpen()) {
@@ -196,7 +196,7 @@
                   routerLink="/store/stores"
                   routerLinkActive="shell-nav__subitem--active"
                 >
-                  Stores
+                  {{ 'Stores' | t }}
                 </a>
               }
               <a
@@ -204,7 +204,7 @@
                 routerLink="/store/cash-register"
                 routerLinkActive="shell-nav__subitem--active"
               >
-                Cash register
+                {{ 'Cash register' | t }}
               </a>
               @if (worksARegister()) {
                 <a
@@ -212,7 +212,7 @@
                   routerLink="/store/pos"
                 routerLinkActive="shell-nav__subitem--active"
               >
-                POS
+                {{ 'POS' | t }}
               </a>
               }
               <a
@@ -220,7 +220,7 @@
                 routerLink="/store/record-expense"
                 routerLinkActive="shell-nav__subitem--active"
               >
-                Recording an expense
+                {{ 'Recording an expense' | t }}
               </a>
             </div>
           }
@@ -238,7 +238,7 @@
             <span class="shell-nav__main">
               <lucide-icon [img]="UtensilsIcon" class="shell-nav__icon" [size]="18"></lucide-icon>
               @if (isSidebarOpen()) {
-                <span class="shell-nav__label">Restaurant</span>
+                <span class="shell-nav__label">{{ 'Restaurant' | t }}</span>
               }
             </span>
             @if (isSidebarOpen()) {
@@ -259,28 +259,28 @@
                 routerLink="/restaurant/table-service"
                 routerLinkActive="shell-nav__subitem--active"
               >
-                Table service
+                {{ 'Table service' | t }}
               </a>
               <a
                 class="shell-nav__subitem"
                 routerLink="/restaurant/menu-management"
                 routerLinkActive="shell-nav__subitem--active"
               >
-                Menu management
+                {{ 'Menu management' | t }}
               </a>
               <a
                 class="shell-nav__subitem"
                 routerLink="/restaurant/kitchen-screen"
                 routerLinkActive="shell-nav__subitem--active"
               >
-                Kitchen screen
+                {{ 'Kitchen screen' | t }}
               </a>
               <a
                 class="shell-nav__subitem"
                 routerLink="/restaurant/waiter-view"
                 routerLinkActive="shell-nav__subitem--active"
               >
-                Waiter view
+                {{ 'Waiter view' | t }}
               </a>
             </div>
           }
@@ -292,16 +292,19 @@
       @if (isSidebarOpen()) {
         <div class="shell-user__info">
           <div class="shell-user__name">{{ user()?.displayName }}</div>
-          <div class="shell-user__meta">{{ roleLabel() }} · {{ user()?.companyName }}</div>
+          <div class="shell-user__meta">{{ roleLabel() | t }} · {{ user()?.companyName }}</div>
         </div>
       }
-      <button type="button" class="shell-icon-button" aria-label="Sign out" title="Sign out" (click)="auth.logout()">
+      <button type="button" class="shell-icon-button" [aria-label]="'Sign out' | t" [title]="'Sign out' | t" (click)="auth.logout()">
         <lucide-icon [img]="LogOutIcon" [size]="18"></lucide-icon>
       </button>
     </div>
   </aside>
 
   <div class="shell-main">
+    <div class="shell-topbar">
+      <app-language-switch />
+    </div>
     <div class="shell-content">
       <router-outlet />
     </div>

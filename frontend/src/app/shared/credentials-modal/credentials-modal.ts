@@ -1,10 +1,11 @@
 import { Component, input, output, signal } from '@angular/core';
 import { Credentials } from '../../core/auth/auth.model';
 import { Modal } from '../modal/modal';
+import { TranslatePipe } from '../../core/i18n/t.pipe';
 
 @Component({
   selector: 'app-credentials-modal',
-  imports: [Modal],
+  imports: [TranslatePipe, Modal],
   templateUrl: './credentials-modal.html',
   styleUrl: './credentials-modal.css',
 })

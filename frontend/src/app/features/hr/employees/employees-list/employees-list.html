@@ -1,31 +1,27 @@
 <div class="page-stack">
   <div class="page-header">
     <div>
-      <p class="page-eyebrow">HR</p>
-      <h1 class="page-title">Employees</h1>
+      <p class="page-eyebrow">{{ 'HR' | t }}</p>
+      <h1 class="page-title">{{ 'Employees' | t }}</h1>
       <p class="page-description">
         @if (isSystemAdmin()) {
-          Your whole team. A role gives a person a login and a limited view; with no role they are
-          just a record here, described by their position.
+          {{ 'Your whole team. A role gives a person a login and a limited view; with no role they are just a record here, described by their position.' | t }}
         } @else if (isManager()) {
-          The people of your {{ placeKind() }}s. Add someone without a role{{
-            placeKind() === 'store' ? ', or a cashier (they get a login),' : ''
-          }}
-          and pick the {{ placeKind() }}(s) they work in.
+          {{ (placeKind() === 'store' ? 'The people of your stores. Add someone without a role, or a cashier (they get a login), and pick the stores they work in.' : 'The people of your warehouses. Add someone without a role and pick the warehouses they work in.') | t }}
         } @else {
-          The people of your module. Add managers (they get a login) or people without a role.
+          {{ 'The people of your module. Add managers (they get a login) or people without a role.' | t }}
         }
       </p>
     </div>
     <button type="button" class="button button--primary" (click)="openAddForm()">
       <lucide-icon [img]="PlusIcon" [size]="16"></lucide-icon>
-      Add employee
+      {{ 'Add employee' | t }}
     </button>
   </div>
 
   <div class="page-card employee-filters">
     <div class="field employee-filters__search">
-      <label for="employeeSearch">Search</label>
+      <label for="employeeSearch">{{ 'Search' | t }}</label>
       <div class="search-input">
         <lucide-icon [img]="SearchIcon" [size]="16" class="search-input__icon"></lucide-icon>
         <input
@@ -33,62 +29,62 @@
           class="text-input"
           type="search"
           [(ngModel)]="search"
-          placeholder="Name, personal ID, phone or email"
+          [placeholder]="'Name, personal ID, phone or email' | t"
         />
       </div>
     </div>
 
     <div class="field employee-filters__role">
-      <label for="employeeRoleFilter">Role</label>
+      <label for="employeeRoleFilter">{{ 'Role' | t }}</label>
       <select id="employeeRoleFilter" class="text-select" [(ngModel)]="roleFilter">
-        <option value="all">All roles</option>
+        <option value="all">{{ 'All roles' | t }}</option>
         @for (role of filterRoles(); track role) {
-          <option [value]="role">{{ roleLabels[role] }}</option>
+          <option [value]="role">{{ roleLabels[role] | t }}</option>
         }
-        <option value="none">No role</option>
+        <option value="none">{{ 'No role' | t }}</option>
       </select>
     </div>
 
     @if (hasActiveFilters()) {
-      <button type="button" class="button button--secondary" (click)="clearFilters()">Clear</button>
+      <button type="button" class="button button--secondary" (click)="clearFilters()">{{ 'Clear' | t }}</button>
     }
   </div>
 
   @if (notice()) {
-    <p class="notice-success">{{ notice() }}</p>
+    <p class="notice-success">{{ notice() | t }}</p>
   }
 
   @if (loginError()) {
-    <p class="field-error">{{ loginError() }}</p>
+    <p class="field-error">{{ loginError() | t }}</p>
   }
 
   <div class="page-card">
     @if (isLoading()) {
-      <p class="page-description">Loading…</p>
+      <p class="page-description">{{ 'Loading…' | t }}</p>
     } @else if (employees().length === 0) {
-      <p class="page-description">No employees yet. Use “Add employee” to add the first one.</p>
+      <p class="page-description">{{ 'No employees yet. Use “Add employee” to add the first one.' | t }}</p>
     } @else if (filteredEmployees().length === 0) {
-      <p class="page-description">No employees match your search.</p>
+      <p class="page-description">{{ 'No employees match your search.' | t }}</p>
     } @else {
       @if (hasActiveFilters()) {
         <p class="page-description results-count">
-          Showing {{ filteredEmployees().length }} of {{ employees().length }} employees
+          {{ 'Showing {p0} of {p1} employees' | t: { p0: filteredEmployees().length, p1: employees().length } }}
         </p>
       }
       <div class="table-scroll">
         <table class="data-table">
           <thead>
             <tr>
-              <th>Employee</th>
-              <th>Position</th>
-              <th>Personal ID</th>
-              <th>Email</th>
-              <th>Phone</th>
-              <th>Role</th>
-              <th>Login</th>
-              <th>Status</th>
-              <th>Hire date</th>
-              <th>Actions</th>
+              <th>{{ 'Employee' | t }}</th>
+              <th>{{ 'Position' | t }}</th>
+              <th>{{ 'Personal ID' | t }}</th>
+              <th>{{ 'Email' | t }}</th>
+              <th>{{ 'Phone' | t }}</th>
+              <th>{{ 'Role' | t }}</th>
+              <th>{{ 'Login' | t }}</th>
+              <th>{{ 'Status' | t }}</th>
+              <th>{{ 'Hire date' | t }}</th>
+              <th>{{ 'Actions' | t }}</th>
             </tr>
           </thead>
           <tbody>
@@ -113,10 +109,10 @@
                     [class.badge--admin]="employee.role !== null"
                     [class.badge--staff]="employee.role === null"
                   >
-                    {{ employee.role ? roleLabels[employee.role] : 'No role' }}
+                    {{ (employee.role ? roleLabels[employee.role] : 'No role') | t }}
                   </span>
                   @if (employee.module && isSystemAdmin()) {
-                    <div class="cell-sub">{{ moduleLabels[employee.module] }}</div>
+                    <div class="cell-sub">{{ moduleLabels[employee.module] | t }}</div>
                   }
                 </td>
                 <td>
@@ -126,7 +122,7 @@
                     <code class="code-tag">{{ employee.username }}</code>
                     <div>
                       <button type="button" class="link-button" (click)="issueLogin(employee)">
-                        Reset password
+                        {{ 'Reset password' | t }}
                       </button>
                     </div>
                   } @else if (canHaveLogin(employee)) {
@@ -135,7 +131,7 @@
                       class="button button--secondary button--sm"
                       (click)="issueLogin(employee)"
                     >
-                      Create login
+                      {{ 'Create login' | t }}
                     </button>
                   } @else {
                     <span class="muted">–</span>
@@ -147,17 +143,17 @@
                     [class.badge--active]="employee.status === 'active'"
                     [class.badge--inactive]="employee.status === 'former'"
                   >
-                    {{ employee.status === 'active' ? 'Active' : 'Former' }}
+                    {{ employee.status === 'active' ? ('Active' | t) : ('Former' | t) }}
                   </span>
                   @if (employee.endDate) {
                     <div class="cell-sub">
-                      {{ employee.status === 'former' ? 'since' : 'until' }}
-                      {{ employee.endDate | date: 'mediumDate' }}
+                      {{ (employee.status === 'former' ? 'since' : 'until') | t }}
+                      {{ employee.endDate | date: 'dd.MM.yyyy' }}
                     </div>
                   }
                 </td>
                 <td class="nowrap">
-                  {{ employee.hireDate ? (employee.hireDate | date: 'mediumDate') : '–' }}
+                  {{ employee.hireDate ? (employee.hireDate | date: 'dd.MM.yyyy') : '–' }}
                 </td>
                 <td>
                   @if (canManage(employee)) {
@@ -166,7 +162,7 @@
                       class="button button--secondary button--sm"
                       (click)="deleteEmployee(employee)"
                     >
-                      Remove
+                      {{ 'Remove' | t }}
                     </button>
                   }
                 </td>
@@ -179,92 +175,91 @@
   </div>
 </div>
 
-<app-modal [open]="isAddOpen()" title="Add employee" (closed)="closeAddForm()">
+<app-modal [open]="isAddOpen()" [title]="'Add employee' | t" (closed)="closeAddForm()">
   <form class="page-stack" [formGroup]="form" (ngSubmit)="addEmployee()" novalidate>
     @if (quickAdd) {
       <p class="field-hint">
-        Quick add (temporary): fill in first name, position, role and where they work. The
-        greyed-out fields are filled with random data.
+        {{ 'Quick add (temporary): fill in first name, position, role and where they work. The greyed-out fields are filled with random data.' | t }}
       </p>
     }
     <div class="employee-form-grid">
       <div class="field">
-        <label for="firstName">First name</label>
+        <label for="firstName">{{ 'First name' | t }}</label>
         <input
           id="firstName"
           class="text-input"
           formControlName="firstName"
-          placeholder="Enter first name"
+          [placeholder]="'Enter first name' | t"
         />
         @if (errorFor('firstName'); as message) {
-          <span class="field-error">{{ message }}</span>
+          <span class="field-error">{{ message | t }}</span>
         }
       </div>
 
       <div class="field">
-        <label for="lastName">Last name</label>
+        <label for="lastName">{{ 'Last name' | t }}</label>
         <input
           id="lastName"
           class="text-input"
           formControlName="lastName"
-          placeholder="Enter last name"
+          [placeholder]="'Enter last name' | t"
         />
         @if (errorFor('lastName'); as message) {
-          <span class="field-error">{{ message }}</span>
+          <span class="field-error">{{ message | t }}</span>
         }
       </div>
 
       <div class="field">
-        <label for="personalId">Personal ID number</label>
+        <label for="personalId">{{ 'Personal ID number' | t }}</label>
         <input
           id="personalId"
           class="text-input"
           formControlName="personalId"
           inputmode="numeric"
           maxlength="11"
-          placeholder="Enter personal ID number"
+          [placeholder]="'Enter personal ID number' | t"
         />
         @if (errorFor('personalId'); as message) {
-          <span class="field-error">{{ message }}</span>
+          <span class="field-error">{{ message | t }}</span>
         }
       </div>
 
       <div class="field">
-        <label for="email">Email</label>
+        <label for="email">{{ 'Email' | t }}</label>
         <input
           id="email"
           class="text-input"
           type="email"
           formControlName="email"
-          placeholder="Enter email"
+          [placeholder]="'Enter email' | t"
         />
         @if (errorFor('email'); as message) {
-          <span class="field-error">{{ message }}</span>
+          <span class="field-error">{{ message | t }}</span>
         }
       </div>
 
       <div class="field">
-        <label for="phone">Phone number</label>
+        <label for="phone">{{ 'Phone number' | t }}</label>
         <input
           id="phone"
           class="text-input"
           type="tel"
           formControlName="phone"
-          placeholder="Enter phone number"
+          [placeholder]="'Enter phone number' | t"
         />
         @if (errorFor('phone'); as message) {
-          <span class="field-error">{{ message }}</span>
+          <span class="field-error">{{ message | t }}</span>
         }
       </div>
 
       <div class="field">
-        <label for="position">Position</label>
+        <label for="position">{{ 'Position' | t }}</label>
         <input
           id="position"
           class="text-input"
           formControlName="position"
           list="employeePositions"
-          placeholder="e.g. Cashier"
+          [placeholder]="'e.g. Cashier' | t"
         />
         <datalist id="employeePositions">
           @for (option of positions(); track option) {
@@ -272,43 +267,43 @@
           }
         </datalist>
         @if (errorFor('position'); as message) {
-          <span class="field-error">{{ message }}</span>
+          <span class="field-error">{{ message | t }}</span>
         }
       </div>
 
       <div class="field">
         <label for="role"
-          >Role <span class="label-hint">(no role = no access to the app)</span></label
+          >{{ 'Role' | t }} <span class="label-hint">{{ '(no role = no access to the app)' | t }}</span></label
         >
         <select id="role" class="text-select" formControlName="role" (change)="onRoleChange()">
-          <option value="">No role</option>
+          <option value="">{{ 'No role' | t }}</option>
           @for (role of availableRoles(); track role) {
-            <option [value]="role">{{ roleLabels[role] }}</option>
+            <option [value]="role">{{ roleLabels[role] | t }}</option>
           }
         </select>
       </div>
 
       @if (isSystemAdmin()) {
         <div class="field">
-          <label for="module">Module</label>
+          <label for="module">{{ 'Module' | t }}</label>
           <select id="module" class="text-select" formControlName="module">
-            <option value="null">— None —</option>
+            <option value="null">{{ '— None —' | t }}</option>
             @for (module of availableModules(); track module) {
-              <option [value]="module">{{ moduleLabels[module] }}</option>
+              <option [value]="module">{{ moduleLabels[module] | t }}</option>
             }
           </select>
           @if (moduleError(); as message) {
-            <span class="field-error">{{ message }}</span>
+            <span class="field-error">{{ message | t }}</span>
           }
         </div>
       } @else {
         <div class="field">
-          <span class="field-label">Module</span>
+          <span class="field-label">{{ 'Module' | t }}</span>
           <div class="status-preview">
             <span class="badge badge--admin">{{
               ownModule() ? moduleLabels[ownModule()!] : '–'
             }}</span>
-            <span class="label-hint">Your own module</span>
+            <span class="label-hint">{{ 'Your own module' | t }}</span>
           </div>
         </div>
       }
@@ -316,7 +311,7 @@
       @if (isManager()) {
         <div class="field employee-form-grid__wide">
           <span class="field-label">
-            {{ placeKind() === 'warehouse' ? 'Warehouses' : 'Stores' }} this person works in
+            {{ '{p0} this person works in' | t: { p0: (placeKind() === 'warehouse' ? ('Warehouses' | t) : ('Stores' | t)) } }}
           </span>
           <div class="chip-list">
             @for (place of places(); track place.id) {
@@ -329,14 +324,14 @@
                 {{ place.name }}
               </label>
             } @empty {
-              <span class="field-hint">You don't manage any {{ placeKind() }} yet.</span>
+              <span class="field-hint">{{ (placeKind() === 'store' ? 'You don\'t manage any stores yet.' : 'You don\'t manage any warehouses yet.') | t }}</span>
             }
           </div>
         </div>
       }
 
       <div class="field">
-        <label for="birthDate">Date of birth</label>
+        <label for="birthDate">{{ 'Date of birth' | t }}</label>
         <input
           id="birthDate"
           class="text-input"
@@ -345,51 +340,51 @@
           [max]="today"
         />
         @if (errorFor('birthDate'); as message) {
-          <span class="field-error">{{ message }}</span>
+          <span class="field-error">{{ message | t }}</span>
         }
       </div>
 
       <div class="field">
-        <label for="hireDate">Hire date</label>
+        <label for="hireDate">{{ 'Hire date' | t }}</label>
         <input id="hireDate" class="text-input" type="date" formControlName="hireDate" />
         @if (errorFor('hireDate') || hireDateError(); as message) {
-          <span class="field-error">{{ message }}</span>
+          <span class="field-error">{{ message | t }}</span>
         }
       </div>
 
       <div class="field">
-        <label for="endDate">End date <span class="label-hint">(optional)</span></label>
+        <label for="endDate">{{ 'End date' | t }} <span class="label-hint">{{ '(optional)' | t }}</span></label>
         <input id="endDate" class="text-input" type="date" formControlName="endDate" />
         @if (endDateError(); as message) {
-          <span class="field-error">{{ message }}</span>
+          <span class="field-error">{{ message | t }}</span>
         }
       </div>
 
       <div class="field">
-        <span class="field-label">Status</span>
+        <span class="field-label">{{ 'Status' | t }}</span>
         <div class="status-preview">
           <span
             class="badge"
             [class.badge--active]="formStatus() === 'active'"
             [class.badge--inactive]="formStatus() === 'former'"
           >
-            {{ formStatus() === 'active' ? 'Active' : 'Former' }}
+            {{ formStatus() === 'active' ? ('Active' | t) : ('Former' | t) }}
           </span>
-          <span class="label-hint">Set automatically from the end date</span>
+          <span class="label-hint">{{ 'Set automatically from the end date' | t }}</span>
         </div>
       </div>
     </div>
 
     @if (serverError()) {
-      <p class="field-error">{{ serverError() }}</p>
+      <p class="field-error">{{ serverError() | t }}</p>
     }
 
     <div class="button-row modal-actions">
       <button type="button" class="button button--secondary" (click)="closeAddForm()">
-        Cancel
+        {{ 'Cancel' | t }}
       </button>
       <button type="submit" class="button button--primary" [disabled]="isSaving()">
-        {{ isSaving() ? 'Adding…' : 'Add employee' }}
+        {{ isSaving() ? ('Adding…' | t) : ('Add employee' | t) }}
       </button>
     </div>
   </form>
@@ -397,6 +392,6 @@
 
 <app-credentials-modal
   [credentials]="credentials()"
-  title="Login ready"
+  [title]="'Login ready' | t"
   (closed)="credentials.set(null)"
 />

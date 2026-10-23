@@ -9,13 +9,16 @@ import { Pager } from '../../../../shared/pager/pager';
 import { Pagination } from '../../../../shared/pager/pagination';
 import { RECEIPT_STATUS_LABELS, Receipt, ReceiptStatus } from '../receipt.model';
 import { ReceiptService } from '../receipt.service';
+import { TranslatePipe } from '../../../../core/i18n/t.pipe';
+import { I18nService } from '../../../../core/i18n/i18n.service';
 
 @Component({
   selector: 'app-receipts-list',
-  imports: [DatePipe, DecimalPipe, FormsModule, RouterLink, LucideAngularModule, Pager],
+  imports: [TranslatePipe, DatePipe, DecimalPipe, FormsModule, RouterLink, LucideAngularModule, Pager],
   templateUrl: './receipts-list.html',
 })
 export class ReceiptsList implements OnInit {
+  private readonly i18n = inject(I18nService);
   private readonly receiptService = inject(ReceiptService);
   private readonly auth = inject(AuthService);
 
@@ -85,7 +88,7 @@ export class ReceiptsList implements OnInit {
   }
 
   deleteDraft(receipt: Receipt): void {
-    if (!confirm(`Delete draft ${receipt.code}?`)) {
+    if (!this.i18n.confirm(this.i18n.t('Delete draft {code}?', { code: receipt.code }))) {
       return;
     }
     this.receiptService.remove(receipt.id).subscribe({

@@ -18,6 +18,8 @@ import { StoreService } from '../../../store/stores/store.service';
 import { WarehouseService } from '../../../wms/warehouses/warehouse.service';
 import { EMPLOYEE_ROLE_LABELS, Employee, EmployeeRole, EmployeeStatus } from '../employee.model';
 import { EmployeeService } from '../employee.service';
+import { TranslatePipe } from '../../../../core/i18n/t.pipe';
+import { I18nService } from '../../../../core/i18n/i18n.service';
 
 type FieldName =
   | 'firstName'
@@ -53,7 +55,7 @@ const ERROR_MESSAGES: Record<string, string> = {
 
 @Component({
   selector: 'app-employees-list',
-  imports: [
+  imports: [TranslatePipe, 
     CredentialsModal,
     DatePipe,
     FormsModule,
@@ -65,6 +67,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   styleUrl: './employees-list.css',
 })
 export class EmployeesList implements OnInit {
+  private readonly i18n = inject(I18nService);
   private readonly employeeService = inject(EmployeeService);
   private readonly fb = inject(FormBuilder).nonNullable;
   private readonly auth = inject(AuthService);
@@ -310,7 +313,7 @@ export class EmployeesList implements OnInit {
       return;
     }
     if (this.isManager() && this.placeIds().length === 0) {
-      this.serverError.set(`Choose the ${this.placeKind()}(s) this person works in.`);
+      this.serverError.set(this.i18n.t(this.placeKind() === 'store' ? 'Choose the stores this person works in.' : 'Choose the warehouses this person works in.'));
       return;
     }
 
@@ -341,7 +344,7 @@ export class EmployeesList implements OnInit {
             { ...created, username: created.username ?? null },
             ...list,
           ]);
-          this.showNotice(`Added ${created.firstName} ${created.lastName}`);
+          this.showNotice(this.i18n.t('Added {firstName} {lastName}', { firstName: created.firstName, lastName: created.lastName }));
           if (created.role && created.status === 'active') {
             this.issueLogin(created);
           }
@@ -367,8 +370,8 @@ export class EmployeesList implements OnInit {
   issueLogin(employee: Employee): void {
     if (
       employee.username &&
-      !confirm(
-        `Reset the password of ${employee.firstName} ${employee.lastName}? The old password stops working.`,
+      !this.i18n.confirm(
+        this.i18n.t('Reset the password of {firstName} {lastName}? The old password stops working.', { firstName: employee.firstName, lastName: employee.lastName }),
       )
     ) {
       return;
@@ -387,7 +390,7 @@ export class EmployeesList implements OnInit {
   }
 
   deleteEmployee(employee: Employee): void {
-    if (!confirm(`Remove ${employee.firstName} ${employee.lastName}?`)) {
+    if (!this.i18n.confirm(this.i18n.t('Remove {firstName} {lastName}?', { firstName: employee.firstName, lastName: employee.lastName }))) {
       return;
     }
     this.employeeService.remove(employee.id).subscribe(() => this.loadEmployees());

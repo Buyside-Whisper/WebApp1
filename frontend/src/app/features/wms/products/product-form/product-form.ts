@@ -7,10 +7,11 @@ import { Supplier } from '../../suppliers/supplier.model';
 import { SupplierService } from '../../suppliers/supplier.service';
 import { Product, ProductPosStatus, ProductStatus, ProductUnit, ProductUsage } from '../product.model';
 import { ProductService } from '../product.service';
+import { TranslatePipe } from '../../../../core/i18n/t.pipe';
 
 @Component({
   selector: 'app-product-form',
-  imports: [FormsModule],
+  imports: [TranslatePipe, FormsModule],
   templateUrl: './product-form.html',
 })
 export class ProductForm implements OnInit {
@@ -20,6 +21,7 @@ export class ProductForm implements OnInit {
 
   readonly product = input<Product | null>(null);
   readonly known = input<Pick<Product, 'category' | 'group'>[]>([]);
+  readonly initial = input<Partial<Pick<Product, 'name' | 'barcode' | 'unit'>> | null>(null);
   readonly hint = input(
     "Quantities aren't typed in here: stock comes in and goes out through stock documents " +
       "(receipts, transfers, write-offs), and the product's View page shows where it is.",
@@ -29,6 +31,7 @@ export class ProductForm implements OnInit {
 
   protected readonly isSaving = signal(false);
   protected readonly formError = signal('');
+  protected readonly submitted = signal(false);
 
   protected readonly name = signal('');
   protected readonly barcode = signal('');
@@ -51,6 +54,23 @@ export class ProductForm implements OnInit {
   protected readonly suppliers = computed(() =>
     this.choosable(this.allSuppliers(), this.product()?.supplierId),
   );
+  protected readonly errors = computed(() => {
+    const required = (value: string) => (value.trim() ? '' : 'This field is required.');
+    const price = (value: number) => (Number(value) < 0 ? "The price can't be negative." : '');
+    return {
+      name: required(this.name()),
+      barcode: required(this.barcode()),
+      categoryId: required(this.categoryId()),
+      group: required(this.group()),
+      supplierId: required(this.supplierId()),
+      costPrice: price(this.costPrice()),
+      salePrice: price(this.salePrice()),
+    };
+  });
+  protected readonly shownErrors = computed(() =>
+    this.submitted() ? this.errors() : { name: '', barcode: '', categoryId: '', group: '', supplierId: '', costPrice: '', salePrice: '' },
+  );
+
   protected readonly groups = computed(() => {
     const categoryId = this.categoryId();
     const inCategory = this.known().filter((p) => p.category.id === categoryId);
@@ -68,6 +88,10 @@ export class ProductForm implements OnInit {
     });
     const product = this.product();
     if (!product) {
+      const initial = this.initial();
+      this.name.set(initial?.name ?? '');
+      this.barcode.set(initial?.barcode ?? '');
+      this.unit.set(initial?.unit ?? 'pcs');
       return;
     }
     this.name.set(product.name);
@@ -85,6 +109,11 @@ export class ProductForm implements OnInit {
   }
 
   save(): void {
+    this.submitted.set(true);
+    if (Object.values(this.errors()).some((message) => message)) {
+      this.formError.set('');
+      return;
+    }
     const payload = {
       name: this.name().trim(),
       barcode: this.barcode().trim(),
@@ -98,14 +127,6 @@ export class ProductForm implements OnInit {
       costPrice: Number(this.costPrice()) || 0,
       salePrice: Number(this.salePrice()) || 0,
     };
-    if ([payload.name, payload.barcode, payload.categoryId, payload.group, payload.supplierId].some((v) => !v)) {
-      this.formError.set('Product, barcode, category, group and supplier are required.');
-      return;
-    }
-    if (payload.costPrice < 0 || payload.salePrice < 0) {
-      this.formError.set('Prices cannot be negative.');
-      return;
-    }
 
     const id = this.product()?.id;
     const request = id ? this.productService.update(id, payload) : this.productService.create(payload);

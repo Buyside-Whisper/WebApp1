@@ -4,15 +4,15 @@
     <div class="import-callout import-callout--done">
       <lucide-icon [img]="DoneIcon" [size]="20"></lucide-icon>
       <div>
-        <strong>Imported {{ count(imported.length) }}</strong> from {{ report!.fileName }}.
+        <strong>{{ 'Imported {p0}' | t: { p0: count(imported.length) } }}</strong> {{ 'from {p0}.' | t: { p0: report!.fileName } }}
       </div>
     </div>
     <div class="table-scroll">
       <table class="data-table">
         <thead>
           <tr>
-            <th>{{ codeLabel() }}</th>
-            <th>Name</th>
+            <th>{{ codeLabel() | t }}</th>
+            <th>{{ 'Name' | t }}</th>
           </tr>
         </thead>
         <tbody>
@@ -26,7 +26,7 @@
       </table>
     </div>
     <div class="button-row import-actions">
-      <button type="button" class="button button--dark" (click)="closed.emit()">Done</button>
+      <button type="button" class="button button--dark" (click)="closed.emit()">{{ 'Done' | t }}</button>
     </div>
   } @else {
     <p class="page-description">{{ description() }}</p>
@@ -39,7 +39,7 @@
         (click)="downloadTemplate()"
       >
         <lucide-icon [img]="DownloadIcon" [size]="16"></lucide-icon>
-        {{ busy() === 'template' ? 'Downloading…' : 'Download template' }}
+        {{ busy() === 'template' ? ('Downloading…' | t) : ('Download template' | t) }}
       </button>
     </div>
 
@@ -52,39 +52,39 @@
       />
       <lucide-icon [img]="FileIcon" [size]="28"></lucide-icon>
       @if (busy() === 'checking') {
-        <span><strong>Checking {{ file()?.name }}…</strong></span>
+        <span><strong>{{ 'Checking {p0}…' | t: { p0: file()?.name } }}</strong></span>
       } @else if (file()) {
         <span><strong>{{ file()!.name }}</strong></span>
-        <span class="muted">Click to choose another file</span>
+        <span class="muted">{{ 'Click to choose another file' | t }}</span>
       } @else {
-        <span><strong>Choose an .xlsx file</strong></span>
-        <span class="muted">Nothing is saved until you confirm the import</span>
+        <span><strong>{{ 'Choose an .xlsx file' | t }}</strong></span>
+        <span class="muted">{{ 'Nothing is saved until you confirm the import' | t }}</span>
       }
     </label>
 
     @if (errorMessage()) {
       <div class="import-callout import-callout--error">
         <lucide-icon [img]="ErrorIcon" [size]="20"></lucide-icon>
-        <div>{{ errorMessage() }}</div>
+        <div>{{ errorMessage() | t }}</div>
       </div>
     }
 
     @if (report) {
       <div class="stat-row">
         <div class="stat">
-          <div class="stat__label">Rows in file</div>
+          <div class="stat__label">{{ 'Rows in file' | t }}</div>
           <div class="stat__value">{{ report.totalRows }}</div>
         </div>
         <div class="stat">
-          <div class="stat__label">Ready to import</div>
+          <div class="stat__label">{{ 'Ready to import' | t }}</div>
           <div class="stat__value">{{ report.validRows }}</div>
         </div>
         <div class="stat">
-          <div class="stat__label">Errors</div>
+          <div class="stat__label">{{ 'Errors' | t }}</div>
           <div class="stat__value" [class.import-count--error]="errors().length">{{ errors().length }}</div>
         </div>
         <div class="stat">
-          <div class="stat__label">Warnings</div>
+          <div class="stat__label">{{ 'Warnings' | t }}</div>
           <div class="stat__value" [class.import-count--warning]="warnings().length">
             {{ warnings().length }}
           </div>
@@ -95,21 +95,21 @@
         <div class="import-callout import-callout--error">
           <lucide-icon [img]="ErrorIcon" [size]="20"></lucide-icon>
           <div>
-            <strong>Nothing can be imported yet.</strong>
+            <strong>{{ 'Nothing can be imported yet.' | t }}</strong>
             @if (badRows()) {
-              {{ badRows() }} {{ badRows() === 1 ? 'row has' : 'rows have' }} problems.
+              {{ '{p0} {p1} problems.' | t: { p0: badRows(), p1: (badRows() === 1 ? ('row has' | t) : ('rows have' | t)) } }}
             }
-            Fix them in Excel and choose the file again. Row numbers are the row numbers in Excel.
+            {{ 'Fix them in Excel and choose the file again. Row numbers are the row numbers in Excel.' | t }}
           </div>
         </div>
         <div class="table-scroll">
           <table class="data-table">
             <thead>
               <tr>
-                <th>Row</th>
-                <th>Column</th>
-                <th>Value</th>
-                <th>Problem</th>
+                <th>{{ 'Row' | t }}</th>
+                <th>{{ 'Column' | t }}</th>
+                <th>{{ 'Value' | t }}</th>
+                <th>{{ 'Problem' | t }}</th>
               </tr>
             </thead>
             <tbody>
@@ -121,10 +121,10 @@
                     @if (issue.value) {
                       <code class="code-tag">{{ issue.value }}</code>
                     } @else {
-                      <span class="muted">empty</span>
+                      <span class="muted">{{ 'empty' | t }}</span>
                     }
                   </td>
-                  <td class="import-problem">{{ issue.message }}</td>
+                  <td class="import-problem">{{ issue.message | t }}</td>
                 </tr>
               }
             </tbody>
@@ -136,18 +136,18 @@
         <div class="import-callout import-callout--warning">
           <lucide-icon [img]="WarningIcon" [size]="20"></lucide-icon>
           <div>
-            <strong>{{ warnings().length }} {{ warnings().length === 1 ? 'warning' : 'warnings' }}.</strong>
-            These don't stop the import, but check them.
+            <strong>{{ warnings().length }} {{ (warnings().length === 1 ? 'warning' : 'warnings') | t }}.</strong>
+            {{ 'These don\'t stop the import, but check them.' | t }}
           </div>
         </div>
         <div class="table-scroll">
           <table class="data-table">
             <thead>
               <tr>
-                <th>Row</th>
-                <th>Column</th>
-                <th>Value</th>
-                <th>Note</th>
+                <th>{{ 'Row' | t }}</th>
+                <th>{{ 'Column' | t }}</th>
+                <th>{{ 'Value' | t }}</th>
+                <th>{{ 'Note' | t }}</th>
               </tr>
             </thead>
             <tbody>
@@ -159,10 +159,10 @@
                     @if (issue.value) {
                       <code class="code-tag">{{ issue.value }}</code>
                     } @else {
-                      <span class="muted">empty</span>
+                      <span class="muted">{{ 'empty' | t }}</span>
                     }
                   </td>
-                  <td>{{ issue.message }}</td>
+                  <td>{{ issue.message | t }}</td>
                 </tr>
               }
             </tbody>
@@ -171,14 +171,14 @@
       }
 
       @if (canImport()) {
-        <h3 class="card-title">Will be added</h3>
+        <h3 class="card-title">{{ 'Will be added' | t }}</h3>
         <div class="table-scroll">
           <table class="data-table">
             <thead>
               <tr>
-                <th>Row</th>
+                <th>{{ 'Row' | t }}</th>
                 @for (column of columns(); track column.label) {
-                  <th>{{ column.label }}</th>
+                  <th>{{ column.label | t }}</th>
                 }
               </tr>
             </thead>
@@ -188,7 +188,7 @@
                   <td class="cell-figure">{{ row.row }}</td>
                   @for (column of columns(); track column.label) {
                     <td [class.cell-strong]="column.strong" [class.cell-figure]="column.figure">
-                      {{ column.value(row) }}
+                      {{ column.value(row) | t }}
                     </td>
                   }
                 </tr>
@@ -200,7 +200,7 @@
     }
 
     <div class="button-row import-actions">
-      <button type="button" class="button button--outline" (click)="closed.emit()">Cancel</button>
+      <button type="button" class="button button--outline" (click)="closed.emit()">{{ 'Cancel' | t }}</button>
       @if (canImport()) {
         <button
           type="button"
@@ -208,7 +208,7 @@
           [disabled]="busy() === 'importing'"
           (click)="runImport()"
         >
-          {{ busy() === 'importing' ? 'Importing…' : 'Import ' + count(report!.validRows) }}
+          {{ busy() === 'importing' ? ('Importing…' | t) : ('Import {rows}' | t: { rows: count(report!.validRows) }) }}
         </button>
       }
     </div>

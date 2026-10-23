@@ -1,32 +1,31 @@
 <div class="page-stack">
   <div class="page-header">
     <div>
-      <p class="page-eyebrow">WMS</p>
-      <h1 class="page-title">Receipts</h1>
+      <p class="page-eyebrow">{{ 'WMS' | t }}</p>
+      <h1 class="page-title">{{ 'Receipts' | t }}</h1>
       <p class="page-description">
-        Goods that arrived from suppliers. A draft changes nothing; posting it adds the goods to the
-        warehouse.
+        {{ 'Goods that arrived from suppliers. A draft changes nothing; posting it adds the goods to the warehouse.' | t }}
       </p>
     </div>
     @if (canWrite()) {
       <div class="button-row page-header__actions">
         <a class="button button--dark" routerLink="/wms/receipts/new">
           <lucide-icon [img]="PlusIcon" [size]="16"></lucide-icon>
-          New receipt
+          {{ 'New receipt' | t }}
         </a>
       </div>
     }
   </div>
 
   @if (errorMessage()) {
-    <p class="field-error">{{ errorMessage() }}</p>
+    <p class="field-error">{{ errorMessage() | t }}</p>
   }
 
   <div class="page-card">
     @if (isLoading()) {
-      <p class="page-description">Loading…</p>
+      <p class="page-description">{{ 'Loading…' | t }}</p>
     } @else if (receipts().length === 0) {
-      <p class="page-description">No receipts yet.</p>
+      <p class="page-description">{{ 'No receipts yet.' | t }}</p>
     } @else {
       <div class="table-filters">
         <div class="search-input table-filters__search">
@@ -34,25 +33,25 @@
           <input
             class="text-input"
             type="search"
-            aria-label="Search receipts"
+            [aria-label]="'Search receipts' | t"
             [(ngModel)]="search"
-            placeholder="Number, supplier, waybill or warehouse"
+            [placeholder]="'Number, supplier, waybill or warehouse' | t"
           />
         </div>
-        <select class="text-select" aria-label="Status" [(ngModel)]="statusFilter">
-          <option value="all">All statuses</option>
-          <option value="draft">Draft</option>
-          <option value="posted">Posted</option>
-          <option value="cancelled">Cancelled</option>
+        <select class="text-select" [aria-label]="'Status' | t" [(ngModel)]="statusFilter">
+          <option value="all">{{ 'All statuses' | t }}</option>
+          <option value="draft">{{ 'Draft' | t }}</option>
+          <option value="posted">{{ 'Posted' | t }}</option>
+          <option value="cancelled">{{ 'Cancelled' | t }}</option>
         </select>
-        <select class="text-select" aria-label="Warehouse" [(ngModel)]="warehouseFilter">
-          <option value="all">All warehouses</option>
+        <select class="text-select" [aria-label]="'Warehouse' | t" [(ngModel)]="warehouseFilter">
+          <option value="all">{{ 'All warehouses' | t }}</option>
           @for (warehouse of warehousesInList(); track warehouse.id) {
             <option [value]="warehouse.id">{{ warehouse.code }} · {{ warehouse.name }}</option>
           }
         </select>
         @if (hasFilters()) {
-          <button type="button" class="link-button" (click)="clearFilters()">Clear</button>
+          <button type="button" class="link-button" (click)="clearFilters()">{{ 'Clear' | t }}</button>
         }
       </div>
 
@@ -60,16 +59,16 @@
         <table class="data-table">
           <thead>
             <tr>
-              <th>Number</th>
-              <th>Date</th>
-              <th>Warehouse</th>
-              <th>Supplier</th>
-              <th>Waybill</th>
-              <th>Lines</th>
-              <th>Total</th>
-              <th>Status</th>
-              <th>Created by</th>
-              <th>Actions</th>
+              <th>{{ 'Number' | t }}</th>
+              <th>{{ 'Date' | t }}</th>
+              <th>{{ 'Warehouse' | t }}</th>
+              <th>{{ 'Supplier' | t }}</th>
+              <th>{{ 'Waybill' | t }}</th>
+              <th>{{ 'Lines' | t }}</th>
+              <th>{{ 'Total' | t }}</th>
+              <th>{{ 'Status' | t }}</th>
+              <th>{{ 'Created by' | t }}</th>
+              <th>{{ 'Actions' | t }}</th>
             </tr>
           </thead>
           <tbody>
@@ -86,7 +85,7 @@
                 <td>
                   {{ receipt.supplier.name }}
                   @if (receipt.rsWaybillId) {
-                    <span class="chip chip--rs" title="Made from an RS waybill">RS</span>
+                    <span class="chip chip--rs" [title]="'Made from an RS waybill' | t">{{ 'RS' | t }}</span>
                   }
                 </td>
                 <td>{{ receipt.waybillNumber ?? '–' }}</td>
@@ -99,27 +98,27 @@
                     [class.badge--done]="receipt.status === 'posted'"
                     [class.badge--cancelled]="receipt.status === 'cancelled'"
                   >
-                    {{ statusLabels[receipt.status] }}
+                    {{ statusLabels[receipt.status] | t }}
                   </span>
                 </td>
                 <td class="cell-nowrap">{{ receipt.createdByName }}</td>
                 <td>
                   <div class="icon-actions">
-                    <a class="icon-action" [routerLink]="['/wms/receipts', receipt.id]" title="View">
+                    <a class="icon-action" [routerLink]="['/wms/receipts', receipt.id]" [title]="'View' | t">
                       <lucide-icon [img]="ViewIcon" [size]="18"></lucide-icon>
                     </a>
                     @if (canWrite() && receipt.status === 'draft') {
                       <a
                         class="icon-action"
                         [routerLink]="['/wms/receipts', receipt.id, 'edit']"
-                        title="Edit draft"
+                        [title]="'Edit draft' | t"
                       >
                         <lucide-icon [img]="EditIcon" [size]="18"></lucide-icon>
                       </a>
                       <button
                         type="button"
                         class="icon-action icon-action--danger"
-                        title="Delete draft"
+                        [title]="'Delete draft' | t"
                         (click)="deleteDraft(receipt)"
                       >
                         <lucide-icon [img]="DeleteIcon" [size]="18"></lucide-icon>
@@ -130,7 +129,7 @@
               </tr>
             } @empty {
               <tr>
-                <td class="muted" colspan="10">No receipts match the search and filters.</td>
+                <td class="muted" colspan="10">{{ 'No receipts match the search and filters.' | t }}</td>
               </tr>
             }
           </tbody>

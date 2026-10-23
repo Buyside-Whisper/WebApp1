@@ -1,12 +1,12 @@
 <div class="page-stack">
   <div class="page-header">
     <div>
-      <p class="page-eyebrow">WMS</p>
-      <h1 class="page-title">Suppliers</h1>
+      <p class="page-eyebrow">{{ 'WMS' | t }}</p>
+      <h1 class="page-title">{{ 'Suppliers' | t }}</h1>
       <p class="page-description">
-        Companies and people the products come from. Every product has one supplier.
+        {{ 'Companies and people the products come from. Every product has one supplier.' | t }}
         @if (!canManage()) {
-          They are added and edited by the WMS admin.
+          {{ 'They are added and edited by the WMS admin.' | t }}
         }
       </p>
     </div>
@@ -14,7 +14,7 @@
       <div class="button-row page-header__actions">
         <button type="button" class="button button--dark" (click)="openAddForm()">
           <lucide-icon [img]="PlusIcon" [size]="16"></lucide-icon>
-          Add supplier
+          {{ 'Add supplier' | t }}
         </button>
       </div>
     }
@@ -23,18 +23,18 @@
   <app-product-tabs />
 
   @if (errorMessage()) {
-    <p class="field-error">{{ errorMessage() }}</p>
+    <p class="field-error">{{ errorMessage() | t }}</p>
   }
 
   <div class="page-card">
     @if (isLoading()) {
-      <p class="page-description">Loading…</p>
+      <p class="page-description">{{ 'Loading…' | t }}</p>
     } @else if (suppliers().length === 0) {
       <p class="page-description">
         @if (canManage()) {
-          No suppliers yet. Use “Add supplier” to create the first one.
+          {{ 'No suppliers yet. Use “Add supplier” to create the first one.' | t }}
         } @else {
-          No suppliers yet. The WMS admin adds them.
+          {{ 'No suppliers yet. The WMS admin adds them.' | t }}
         }
       </p>
     } @else {
@@ -44,36 +44,36 @@
           <input
             class="text-input"
             type="search"
-            aria-label="Search suppliers"
+            [aria-label]="'Search suppliers' | t"
             [(ngModel)]="search"
-            placeholder="Name, ID code, contact, phone, email or address"
+            [placeholder]="'Name, ID code, contact, phone, email or address' | t"
           />
         </div>
-        <select class="text-select" aria-label="Type" [(ngModel)]="typeFilter">
-          <option value="all">All types</option>
-          <option value="company">Company</option>
-          <option value="individual">Individual</option>
+        <select class="text-select" [aria-label]="'Type' | t" [(ngModel)]="typeFilter">
+          <option value="all">{{ 'All types' | t }}</option>
+          <option value="company">{{ 'Company' | t }}</option>
+          <option value="individual">{{ 'Individual' | t }}</option>
         </select>
-        <select class="text-select" aria-label="VAT" [(ngModel)]="vatFilter">
-          <option value="all">VAT: any</option>
-          <option value="yes">VAT payer</option>
-          <option value="no">Not a VAT payer</option>
+        <select class="text-select" [aria-label]="'VAT' | t" [(ngModel)]="vatFilter">
+          <option value="all">{{ 'VAT: any' | t }}</option>
+          <option value="yes">{{ 'VAT payer' | t }}</option>
+          <option value="no">{{ 'Not a VAT payer' | t }}</option>
         </select>
-        <select class="text-select" aria-label="Status" [(ngModel)]="statusFilter">
-          <option value="all">All statuses</option>
-          <option value="active">Active</option>
-          <option value="inactive">Inactive</option>
+        <select class="text-select" [aria-label]="'Status' | t" [(ngModel)]="statusFilter">
+          <option value="all">{{ 'All statuses' | t }}</option>
+          <option value="active">{{ 'Active' | t }}</option>
+          <option value="inactive">{{ 'Inactive' | t }}</option>
         </select>
         @if (hasFilters()) {
-          <button type="button" class="link-button" (click)="clearFilters()">Clear</button>
+          <button type="button" class="link-button" (click)="clearFilters()">{{ 'Clear' | t }}</button>
         }
       </div>
       <div class="table-toolbar">
         <span>
           @if (hasFilters()) {
-            {{ filtered().length }} of {{ suppliers().length }} suppliers
+            {{ '{p0} of {p1} suppliers' | t: { p0: filtered().length, p1: suppliers().length } }}
           } @else {
-            {{ suppliers().length }} suppliers
+            {{ '{p0} suppliers' | t: { p0: suppliers().length } }}
           }
         </span>
       </div>
@@ -81,15 +81,15 @@
         <table class="data-table">
           <thead>
             <tr>
-              <th>Supplier</th>
-              <th>Type</th>
-              <th>ID code</th>
-              <th>VAT</th>
-              <th>Contact</th>
-              <th>Email</th>
-              <th>Products</th>
-              <th>Status</th>
-              <th>Actions</th>
+              <th>{{ 'Supplier' | t }}</th>
+              <th>{{ 'Type' | t }}</th>
+              <th>{{ 'ID code' | t }}</th>
+              <th>{{ 'VAT' | t }}</th>
+              <th>{{ 'Contact' | t }}</th>
+              <th>{{ 'Email' | t }}</th>
+              <th>{{ 'Products' | t }}</th>
+              <th>{{ 'Status' | t }}</th>
+              <th>{{ 'Actions' | t }}</th>
             </tr>
           </thead>
           <tbody>
@@ -101,7 +101,7 @@
                     <div class="muted">{{ supplier.address }}</div>
                   }
                 </td>
-                <td>{{ typeLabels[supplier.type] }}</td>
+                <td>{{ typeLabels[supplier.type] | t }}</td>
                 <td>
                   @if (supplier.identificationCode) {
                     <code class="code-tag">{{ supplier.identificationCode }}</code>
@@ -109,7 +109,7 @@
                     <span class="muted">—</span>
                   }
                 </td>
-                <td>{{ supplier.vatPayer ? 'VAT payer' : 'No' }}</td>
+                <td>{{ supplier.vatPayer ? ('VAT payer' | t) : ('No' | t) }}</td>
                 <td>
                   @if (supplier.contactPerson || supplier.phone) {
                     <div>{{ supplier.contactPerson }}</div>
@@ -128,7 +128,7 @@
                 <td class="cell-figure">{{ supplier.productCount }}</td>
                 <td>
                   <span class="badge" [class]="supplier.status === 'active' ? 'badge--active' : 'badge--inactive'">
-                    {{ supplier.status === 'active' ? 'Active' : 'Inactive' }}
+                    {{ supplier.status === 'active' ? ('Active' | t) : ('Inactive' | t) }}
                   </span>
                 </td>
                 <td>
@@ -137,8 +137,8 @@
                       type="button"
                       class="icon-action"
                       [disabled]="!canManage()"
-                      [title]="canManage() ? 'Edit' : 'Only the WMS admin can edit'"
-                      [attr.aria-label]="'Edit ' + supplier.name"
+                      [title]="canManage() ? ('Edit' | t) : ('Only the WMS admin can edit' | t)"
+                      [attr.aria-label]="'Edit {name}' | t: { name: supplier.name }"
                       (click)="editSupplier(supplier)"
                     >
                       <lucide-icon [img]="EditIcon" [size]="18"></lucide-icon>
@@ -147,8 +147,8 @@
                       type="button"
                       class="icon-action icon-action--danger"
                       [disabled]="!canManage() || supplier.productCount > 0"
-                      [title]="deleteTitle(supplier)"
-                      [attr.aria-label]="'Delete ' + supplier.name"
+                      [title]="deleteTitle(supplier) | t"
+                      [attr.aria-label]="'Delete {name}' | t: { name: supplier.name }"
                       (click)="deleteSupplier(supplier)"
                     >
                       <lucide-icon [img]="DeleteIcon" [size]="18"></lucide-icon>
@@ -158,7 +158,7 @@
               </tr>
             } @empty {
               <tr>
-                <td class="muted" colspan="9">No suppliers match the search and filters.</td>
+                <td class="muted" colspan="9">{{ 'No suppliers match the search and filters.' | t }}</td>
               </tr>
             }
           </tbody>
@@ -171,34 +171,34 @@
 
 <app-modal
   [open]="isFormOpen()"
-  [title]="editingId() ? 'Edit supplier' : 'Add supplier'"
+  [title]="editingId() ? ('Edit supplier' | t) : ('Add supplier' | t)"
   (closed)="isFormOpen.set(false)"
 >
   <form class="page-stack" (ngSubmit)="saveSupplier()">
     <div class="form-grid">
       <div class="field">
-        <label for="supplierName">Supplier</label>
+        <label for="supplierName">{{ 'Supplier' | t }}</label>
         <input
           id="supplierName"
           class="text-input"
           type="text"
           name="name"
           [(ngModel)]="name"
-          placeholder="e.g. Mars Georgia"
+          [placeholder]="'e.g. Mars Georgia' | t"
           required
         />
       </div>
 
       <div class="field">
-        <label for="supplierType">Type</label>
+        <label for="supplierType">{{ 'Type' | t }}</label>
         <select id="supplierType" class="text-select" name="type" [(ngModel)]="type">
-          <option value="company">Company</option>
-          <option value="individual">Individual</option>
+          <option value="company">{{ 'Company' | t }}</option>
+          <option value="individual">{{ 'Individual' | t }}</option>
         </select>
       </div>
 
       <div class="field">
-        <label for="supplierCode">Identification code (optional)</label>
+        <label for="supplierCode">{{ 'Identification code (optional)' | t }}</label>
         <input
           id="supplierCode"
           class="text-input"
@@ -206,89 +206,89 @@
           inputmode="numeric"
           name="identificationCode"
           [(ngModel)]="identificationCode"
-          [placeholder]="type() === 'company' ? '9 digits, e.g. 405123456' : 'Personal ID, 11 digits'"
+          [placeholder]="type() === 'company' ? ('9 digits, e.g. 405123456' | t) : ('Personal ID, 11 digits' | t)"
         />
       </div>
 
       <div class="field">
-        <label for="supplierVat">VAT</label>
+        <label for="supplierVat">{{ 'VAT' | t }}</label>
         <select id="supplierVat" class="text-select" name="vatPayer" [(ngModel)]="vatPayer">
-          <option [ngValue]="true">VAT payer</option>
-          <option [ngValue]="false">Not a VAT payer</option>
+          <option [ngValue]="true">{{ 'VAT payer' | t }}</option>
+          <option [ngValue]="false">{{ 'Not a VAT payer' | t }}</option>
         </select>
       </div>
 
       <div class="field">
-        <label for="supplierContact">Contact person (optional)</label>
+        <label for="supplierContact">{{ 'Contact person (optional)' | t }}</label>
         <input
           id="supplierContact"
           class="text-input"
           type="text"
           name="contactPerson"
           [(ngModel)]="contactPerson"
-          placeholder="e.g. Nino Beridze"
+          [placeholder]="'e.g. Nino Beridze' | t"
         />
       </div>
 
       <div class="field">
-        <label for="supplierPhone">Phone (optional)</label>
+        <label for="supplierPhone">{{ 'Phone (optional)' | t }}</label>
         <input
           id="supplierPhone"
           class="text-input"
           type="tel"
           name="phone"
           [(ngModel)]="phone"
-          placeholder="e.g. +995 555 12 34 56"
+          [placeholder]="'e.g. +995 555 12 34 56' | t"
         />
       </div>
 
       <div class="field">
-        <label for="supplierEmail">Email (optional)</label>
+        <label for="supplierEmail">{{ 'Email (optional)' | t }}</label>
         <input
           id="supplierEmail"
           class="text-input"
           type="email"
           name="email"
           [(ngModel)]="email"
-          placeholder="e.g. orders@supplier.ge"
+          [placeholder]="'e.g. orders@supplier.ge' | t"
         />
       </div>
 
       <div class="field">
-        <label for="supplierAddress">Address (optional)</label>
+        <label for="supplierAddress">{{ 'Address (optional)' | t }}</label>
         <input
           id="supplierAddress"
           class="text-input"
           type="text"
           name="address"
           [(ngModel)]="address"
-          placeholder="e.g. 12 Tsereteli Ave, Tbilisi"
+          [placeholder]="'e.g. 12 Tsereteli Ave, Tbilisi' | t"
         />
       </div>
 
       <div class="field">
-        <label for="supplierStatus">Status</label>
+        <label for="supplierStatus">{{ 'Status' | t }}</label>
         <select id="supplierStatus" class="text-select" name="status" [(ngModel)]="status">
-          <option value="active">Active</option>
-          <option value="inactive">Inactive</option>
+          <option value="active">{{ 'Active' | t }}</option>
+          <option value="inactive">{{ 'Inactive' | t }}</option>
         </select>
-        <span class="field-hint">Inactive suppliers can't be chosen for new products.</span>
+        <span class="field-hint">{{ 'Inactive suppliers can\'t be chosen for new products.' | t }}</span>
       </div>
     </div>
 
     @if (formError()) {
-      <p class="field-error">{{ formError() }}</p>
+      <p class="field-error">{{ formError() | t }}</p>
     }
 
     <div class="button-row">
       <button type="submit" class="button button--dark" [disabled]="isSaving()">
         @if (editingId()) {
-          {{ isSaving() ? 'Saving…' : 'Save changes' }}
+          {{ isSaving() ? ('Saving…' | t) : ('Save changes' | t) }}
         } @else {
-          {{ isSaving() ? 'Adding…' : 'Add supplier' }}
+          {{ isSaving() ? ('Adding…' | t) : ('Add supplier' | t) }}
         }
       </button>
-      <button type="button" class="button button--secondary" (click)="isFormOpen.set(false)">Cancel</button>
+      <button type="button" class="button button--secondary" (click)="isFormOpen.set(false)">{{ 'Cancel' | t }}</button>
     </div>
   </form>
 </app-modal>

@@ -2,32 +2,32 @@
 <div class="page-stack">
   <div class="stat-row">
     <div class="stat">
-      <div class="stat__label">In stock</div>
-      <div class="stat__value">{{ product.quantity | number: '1.0-3' }} {{ product.unit }}</div>
+      <div class="stat__label">{{ 'In stock' | t }}</div>
+      <div class="stat__value">{{ product.quantity | number: '1.0-3' }} {{ product.unit | t }}</div>
     </div>
     <div class="stat">
-      <div class="stat__label">Warehouses</div>
+      <div class="stat__label">{{ 'Warehouses' | t }}</div>
       <div class="stat__value">{{ product.stocks.length }}</div>
     </div>
     <div class="stat">
-      <div class="stat__label">Value (at cost ₾{{ product.costPrice | number: '1.2-2' }})</div>
+      <div class="stat__label">{{ 'Value (at cost ₾{p0})' | t: { p0: (product.costPrice | number: '1.2-2') } }}</div>
       <div class="stat__value">₾{{ totalValue() | number: '1.2-2' }}</div>
     </div>
   </div>
 
   @if (product.stocks.length === 0) {
-    <p class="page-description">Not in any warehouse yet. Stock comes in through a receipt.</p>
+    <p class="page-description">{{ 'Not in any warehouse yet. Stock comes in through a receipt.' | t }}</p>
   } @else {
     <div class="table-scroll">
       <table class="data-table">
         <thead>
           <tr>
-            <th>Warehouse</th>
-            <th>Type</th>
-            <th>Quantity</th>
-            <th>Share</th>
-            <th>Value</th>
-            <th>Last change</th>
+            <th>{{ 'Warehouse' | t }}</th>
+            <th>{{ 'Type' | t }}</th>
+            <th>{{ 'Quantity' | t }}</th>
+            <th>{{ 'Share' | t }}</th>
+            <th>{{ 'Value' | t }}</th>
+            <th>{{ 'Last change' | t }}</th>
           </tr>
         </thead>
         <tbody>
@@ -39,12 +39,12 @@
                 </a>
                 {{ row.warehouse.name }}
                 @if (row.warehouse.status === 'inactive') {
-                  <span class="muted">(inactive)</span>
+                  <span class="muted">{{ '(inactive)' | t }}</span>
                 }
               </td>
-              <td>{{ row.warehouse.type === 'main' ? 'Main' : 'Sales' }}</td>
+              <td>{{ row.warehouse.type === 'main' ? ('Main' | t) : ('Sales' | t) }}</td>
               <td class="cell-figure">
-                <strong>{{ row.quantity | number: '1.0-3' }}</strong> {{ product.unit }}
+                <strong>{{ row.quantity | number: '1.0-3' }}</strong> {{ product.unit | t }}
               </td>
               <td class="cell-figure">
                 <div class="share">
@@ -69,14 +69,14 @@
 
   @if (inTransit().length) {
     <div>
-      <h3 class="card-title">In transit</h3>
-      <p class="page-description">Sent but not received yet, so not counted in any warehouse above.</p>
+      <h3 class="card-title">{{ 'In transit' | t }}</h3>
+      <p class="page-description">{{ 'Sent but not received yet, so not counted in any warehouse above.' | t }}</p>
       <ul class="transit-list">
         @for (item of inTransit(); track item.documentId) {
           <li>
             <a [routerLink]="['/wms/transfers', item.documentId]">{{ item.code }}</a>:
-            <strong>{{ item.quantity | number: '1.0-3' }} {{ product.unit }}</strong>
-            from {{ item.from.code }} {{ item.from.name }}, sent {{ item.sentAt | date: 'dd.MM.yyyy' }}
+            <strong>{{ item.quantity | number: '1.0-3' }} {{ product.unit | t }}</strong>
+            {{ 'from {p0} {p1}, sent {p2}' | t: { p0: item.from.code, p1: item.from.name, p2: (item.sentAt | date: 'dd.MM.yyyy') } }}
           </li>
         }
       </ul>
@@ -85,7 +85,7 @@
 
   <div class="button-row">
     <a class="button button--outline" [routerLink]="['/wms/products', product.id]">
-      Open product page (full history)
+      {{ 'Open product page (full history)' | t }}
     </a>
   </div>
 </div>

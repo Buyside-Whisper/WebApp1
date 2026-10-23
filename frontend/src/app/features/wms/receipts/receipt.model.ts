@@ -23,6 +23,17 @@ export interface ReceiptLine {
 
 export const RS_UNIT_TO_PRODUCT_UNIT: Record<number, ProductUnit> = { 1: 'pcs', 2: 'kg' };
 
+const RS_OTHER_UNIT = 99;
+
+const UNIT_WORDS: Record<string, ProductUnit> = { 'ცალი': 'pcs', 'ც': 'pcs', pcs: 'pcs', 'კგ': 'kg', 'კილოგრამი': 'kg', kg: 'kg' };
+
+export function rsProductUnit(rs: { unitId: number | null; unit: string | null }): ProductUnit | undefined {
+  if (rs.unitId === RS_OTHER_UNIT) {
+    return UNIT_WORDS[(rs.unit ?? '').trim().toLowerCase().replace(/\.$/, '')];
+  }
+  return rs.unitId !== null ? RS_UNIT_TO_PRODUCT_UNIT[rs.unitId] : undefined;
+}
+
 export interface RsReceiptLink {
   rsWaybillId: string;
   receiptId: string;

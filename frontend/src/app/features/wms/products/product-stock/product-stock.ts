@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { StockMovement } from '../../stock/stock.model';
 import { StockService } from '../../stock/stock.service';
 import { Product } from '../product.model';
+import { TranslatePipe } from '../../../../core/i18n/t.pipe';
 
 interface InTransit {
   documentId: string;
@@ -15,7 +16,7 @@ interface InTransit {
 
 @Component({
   selector: 'app-product-stock',
-  imports: [DatePipe, DecimalPipe, RouterLink],
+  imports: [TranslatePipe, DatePipe, DecimalPipe, RouterLink],
   templateUrl: './product-stock.html',
 })
 export class ProductStock implements OnInit {
